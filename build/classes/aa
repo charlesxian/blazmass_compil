@@ -1,0 +1,27 @@
+./blazmass/dbindex/IndexedProtein.java:        this.accession = Fasta.getAccession(fastaDefLine);
+./blazmass/dbindex/IndexedProtein.java:    public String getAccession() {
+./blazmass/dbindex/DBIndexer.java:        final String protAccession = fasta.getAccession();
+./blazmass/dbindex/DBIndexer.java://	    System.out.println(fasta.getAccession());
+./blazmass/dbindex/DBIndexer.java:                    protCache.addProtein(fasta.getAccession(), fasta.getSequence());
+./blazmass/dbindex/DBIndexer.java:                protCache.addProtein(fasta.getAccession(), fasta.getSequence());
+./blazmass/dbindex/DBIndexStoreFiles.java:            protCache.addProtein(fasta.getAccession(), fasta.getSequence());
+./blazmass/Blazmass.java://                resultWriter.write("L\t" + iprotein.getAccession());
+./blazmass/Blazmass.java:                sb.append("L\t").append(iprotein.getAccession()).append("\t0\t").append(iseq.getWholeSequence()).append("\n");
+./blazmass/io/Fasta.java:    public static String getAccessionWithNoVersion(String ac) {
+./blazmass/io/Fasta.java:    public String getAccessionWithNoVersion() {
+./blazmass/io/Fasta.java:            return getAccession().substring(0, index);
+./blazmass/io/Fasta.java:    public String getAccession() {
+./blazmass/io/Fasta.java:            accession = getAccession(defline.substring(1));
+./blazmass/io/Fasta.java:        return getAccession().startsWith("Re");
+./blazmass/io/Fasta.java:    public static String getAccession(String accession)
+./blazmass/io/Fasta.java:		fasta.getAccession();
+./blazmass/io/Fasta.java:		System.out.println("===>>" + fasta.getAccession() + " " + fasta.getDefline() + "<===");
+./blazmass/io/Fasta.java://        System.out.println( "==>" + Fasta.getAccession("Reverse_IPI:IPI00\t Tax_Id=9606 Hypot") + "<==");
+./blazmass/io/FastaReader.java:            accessions.add(fasta.getAccession());
+./blazmass/Fasta.java:    public static String getAccessionWithNoVersion(String ac) {
+./blazmass/Fasta.java:    public String getAccessionWithNoVersion() {
+./blazmass/Fasta.java:            return getAccession().substring(0, index);
+./blazmass/Fasta.java:    public String getAccession() {
+./blazmass/Fasta.java:            accession = getAccession(defline.substring(1));
+./blazmass/Fasta.java:        return getAccession().startsWith("Re");
+./blazmass/Fasta.java:    public static String getAccession(String accession)

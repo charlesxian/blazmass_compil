@@ -1,0 +1,4 @@
+
+sp|Q91XV3|BASP1_MOUSE   8       10      42.5%   226     22087   4.5     U       Brain acid soluble protein 1 OS=Mus musculus GN=Basp1 PE=1 SV=3
+*       S74_42JJ_E1T2_03.6209.6209.2    6.2309  0.4077  100.0   1563.5999       1563.5974       1.6     110240.5        1       7.458578        4.4     80.5    1       K.KAEGAGT(79.9663)EEEGT(79.9663)PK.E
+

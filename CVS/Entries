@@ -1,0 +1,39 @@
+/.cvsignore/1.1/Wed Sep  5 20:21:07 2012//
+/aa.sqt/1.1/Fri Oct 11 17:50:54 2013//
+/blazmass.sh/1.1/Mon Nov 12 02:41:47 2012//
+/ivysettings.xml/1.1/Sun Nov  4 03:26:12 2012//
+/manifest.mf/1.1/Wed Sep  5 20:20:01 2012//
+/ms2.sqt/1.1/Fri Nov  9 23:12:11 2012//
+/sequest.params/1.8/Tue Nov  6 00:20:00 2012//
+/small.fasta/1.1/Fri Sep 28 05:05:56 2012//
+/small.ms2-/1.1/Tue Nov  6 00:20:00 2012//
+/small2.fasta/1.1/Tue Nov  6 00:20:00 2012//
+D/data////
+D/lib_local////
+D/mod_data////
+D/nbproject////
+D/src////
+D/tools////
+/build_simple.sh/1.1/Fri Jul 12 05:28:34 2013//
+/build_simple.xml/1.1/Fri Jul 12 05:29:14 2013//
+/deploy.sh/1.2/Tue Jul 16 22:46:04 2013//
+/build.xml/1.16/Tue Sep 17 14:13:26 2013//
+/ivy.xml/1.16/Tue Sep 17 14:13:26 2013//
+/fonslow.fasta/1.1/Wed Oct  2 00:59:13 2013//
+/fonslow.fasta.idx/1.1/Wed Oct  2 00:59:13 2013/-kb/
+/fonslow.fasta_a31cda3a7c5eeeb5b7fd25da7ba4e4b0.idx/1.1/Wed Oct  2 00:59:13 2013/-kb/
+/fonslow.ms2/1.2/Wed Oct  2 00:59:13 2013//
+/fonslow.txt/1.1/Wed Oct  2 00:59:13 2013//
+/test.fasta/1.1/Wed Oct  2 00:59:13 2013//
+/test.log/1.1/Wed Oct  2 00:59:13 2013//
+/test12.ms2/1.2/Wed Oct  2 00:59:13 2013//
+/test_01/1.1/Wed Oct  2 00:59:13 2013//
+/test_01.fasta/1.5/Wed Oct  2 00:59:13 2013//
+/test_01.fasta.idx/1.4/Wed Oct  2 00:59:13 2013/-kb/
+/test_01.ms2/1.1/Wed Oct  2 00:59:13 2013//
+/test_01.ms2-/1.1/Wed Oct  2 00:59:13 2013//
+/yeast030305_small.fasta/1.1/Wed Oct  2 00:59:13 2013//
+/yeast030305_small.fasta.sql/1.1/Wed Oct  2 00:59:13 2013//
+/yeast_small.fasta/1.1/Wed Oct  2 00:59:13 2013//
+/blazmass.mf/1.3/Tue Aug 27 06:23:48 2013//
+D/bin////

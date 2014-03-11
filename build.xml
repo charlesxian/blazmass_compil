@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Custom build.xml for blazmass, using default targets from nbproject unless overridden -->
+
+<project name="blazmass" default="default" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
+    <description>Builds, tests, and runs the project blazzmass.</description>
+    <import file="nbproject/build-impl.xml"/>
+ 
+    <property name="ivy.install.version" value="2.3.0-rc2" />
+    <condition property="ivy.home" value="${env.IVY_HOME}">
+        <isset property="env.IVY_HOME" />
+    </condition>
+    <property name="ivy.home" value="${user.home}/.ant" />
+    <property name="ivy.jar.dir" value="${ivy.home}/lib" />
+    <property name="ivy.jar.file" value="${ivy.jar.dir}/ivy.jar" />
+    
+    <property name="tools.dir" value="tools" />
+    <property name="proguard.jar.path" value="${tools.dir}/proguard.jar" />
+    
+
+    <target name="download-ivy" unless="offline">
+        <available file="${ivy.jar.file}" property="ivy.available"/>
+        <antcall target="-download-ivy" />
+    </target>
+    
+    <target name="-download-ivy" unless="ivy.available">
+        <mkdir dir="${ivy.jar.dir}"/>
+        <get src="http://repo2.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar" 
+             dest="${ivy.jar.file}" usetimestamp="true"/>
+    </target>
+
+    <!-- init-ivy will bootstrap Ivy if the user doesn't have it already -->
+    <target name="init-ivy" depends="download-ivy" unless="ivy.lib.path">
+        <path id="ivy.lib.path">
+            <fileset dir="${ivy.jar.dir}" includes="*.jar"/>
+        </path>
+        <taskdef resource="org/apache/ivy/ant/antlib.xml"
+                 uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path"/>
+    </target>
+
+    <target name="copy-local-libs" description="overlay local libs from lib_local onto lib">
+        <copy toDir="lib">
+            <fileset dir="lib_local">
+                <include name="**/*.jar"/>
+                 <include name="**/*.dll"/>
+                 <include name="**/*.so"/>
+            </fileset>
+        </copy>
+        
+        <get skipexisting="true" src="http://cdn.bitbucket.org/xerial/sqlite-jdbc/downloads/sqlite-jdbc-3.7.15-M1.jar"
+         dest="lib" />
+        
+    </target>
+
+    <target name="-post-init" depends="init-ivy">
+      
+        <!-- fetch all the dependencies from Ivy and stick them in the right places -->
+        <ivy:settings file="ivysettings.xml" />
+        <ivy:resolve/>
+        <ivy:retrieve conf="blazmass" sync="true" pattern="lib/[artifact]-[revision](-[classifier]).[ext]" />
+        
+        <antcall target="copy-local-libs" />
+       
+    </target>
+    
+     <target name="-post-jar">
+         <mkdir dir="dist/bin" />
+          <copy toDir="dist/bin">
+            <fileset dir="bin">
+                 <include name="**/*"/>
+            </fileset>
+        </copy>
+    </target>
+    
+    
+    <!-- Proguard setup start -->
+    <target name="proguard" depends="" description="run proguard on jar">
+        <taskdef resource="proguard/ant/task.properties"
+             classpath="${proguard.jar.path}" />
+
+        <echo message="Obfuscating ${dist.jar}..."/>
+    
+        <!-- move out original jar -->
+        <mkdir dir="${dist.dir}/orig" />
+        <move file="${dist.jar}" todir="${dist.dir}/orig" />
+    
+        <proguard printmapping="${dist.dir}/mapfile.map"
+              renamesourcefileattribute="SourceFile" ignorewarnings="true">
+
+            <!-- Specify the input jars, output jars, and library jars. -->
+        
+            <injar  file="${dist.dir}/orig/blazmass.jar" />
+            <outjar file="${dist.jar}" />
+
+            <libraryjar path="${javac.classpath}" />
+            <libraryjar file="${jdk.home}/jre/lib/rt.jar" /> 
+
+            <!-- Keep some useful attributes. -->
+
+            <keepattribute name="InnerClasses" />
+            <keepattribute name="SourceFile" />
+            <keepattribute name="LineNumberTable" />
+            <keepattribute name="Deprecated" />
+            <keepattribute name="*Annotation*" />
+            <keepattribute name="Signature" />
+
+            <!-- Preserve all public classes,
+            and their public and protected fields and methods. -->
+
+            <keep access="public">
+                <field  access="public protected" />
+                <method access="public protected" />
+            </keep>
+
+
+            <!-- Preserve all .class method names. -->
+
+            <keepclassmembernames access="public">
+                <method type      ="java.lang.Class"
+                    name      ="class$"
+                    parameters="java.lang.String" />
+                <method type      ="java.lang.Class"
+                    name      ="class$"
+                    parameters="java.lang.String,boolean" />
+            </keepclassmembernames>
+
+            <!-- Preserve all native method names and the names of their classes. -->
+
+            <keepclasseswithmembernames>
+                <method access="native" />
+            </keepclasseswithmembernames>
+
+            <!-- Preserve the methods that are required in all enumeration classes. -->
+
+            <keepclassmembers extends="java.lang.Enum">
+                <method access="public static"
+                    type="**[]"
+                    name="values"
+                    parameters="" />
+                <method access="public static"
+                    type="**"
+                    name="valueOf"
+                    parameters="java.lang.String" />
+            </keepclassmembers>
+
+            <!-- Explicitly preserve all serialization members. The Serializable
+            interface is only a marker interface, so it wouldn't save them.
+            You can comment this out if your library doesn't use serialization.
+            With this code serializable classes will be backward compatible -->
+
+            <keepnames implements="java.io.Serializable"/>
+            <keepclassmembers implements="java.io.Serializable">
+                <field  access    ="final"
+                    type      ="long"
+                    name      ="serialVersionUID" />
+                <field  access    ="!static !transient"
+                    name      ="**"/>
+                <field  access    ="!private"
+                    name      ="**"/>
+                <method access    ="!private"
+                    name      ="**"/>
+                <method access    ="private"
+                    type      ="void"
+                    name      ="writeObject"
+                    parameters="java.io.ObjectOutputStream" />
+                <method access    ="private"
+                    type      ="void"
+                    name      ="readObject"
+                    parameters="java.io.ObjectOutputStream" />
+                <method type      ="java.lang.Object"
+                    name      ="writeReplace"
+                    parameters="" />
+                <method type      ="java.lang.Object"
+                    name      ="readResolve"
+                    parameters="" />
+            </keepclassmembers>
+
+            <!-- Your application may contain more items that need to be preserved;
+            typically classes that are dynamically created using Class.forName -->
+
+        </proguard>
+    </target>
+    <!-- Proguard setup end -->
+
+</project>
