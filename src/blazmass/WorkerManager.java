@@ -489,13 +489,13 @@ public class WorkerManager {
             this.bmass = new Blazmass();
 
             final IndexerMode indexerMode = params.isUseIndex() ? IndexerMode.SEARCH_INDEXED : IndexerMode.SEARCH_UNINDEXED;
-            try {
+            /*try {
                 this.indexer = new DBIndexer(params, indexerMode);
                 this.indexer.init();
             } catch (DBIndexerException ex) {
                 logger.log(Level.SEVERE, "Could not initialize the indexer in search mode and init the worker thread");
                 throw new WorkerManagerException("Could not initialize the indexer and init the worker thread", ex);
-            }
+            }*/
         }
 
         void setStop() {

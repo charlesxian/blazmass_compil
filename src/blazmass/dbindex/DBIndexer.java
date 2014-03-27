@@ -158,7 +158,7 @@ public class DBIndexer {
             else {
                 //index_type=2
                 //this.indexStore = new DBIndexStoreFiles();
-                this.indexStore = new DBIndexStoreMongoDb(sparam);
+//                this.indexStore = new DBIndexStoreMongoDb(sparam);
                 ////this.indexStore = new DBIndexStoreLucene();
             }
             logger.log(Level.INFO, "Using database index type: " + indexType);
