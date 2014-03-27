@@ -183,9 +183,9 @@ public class Blazmass {
 
         final IndexerMode indexerMode = sParam.isUseIndex()?IndexerMode.SEARCH_INDEXED: IndexerMode.SEARCH_UNINDEXED;
         DBIndexer indexer = new DBIndexer(sParam, indexerMode);
-        indexer.init();
+///        indexer.init();
         
-        run(path, new File(path + File.separator + ms2File), sParam, indexer);
+  //      run(path, new File(path + File.separator + ms2File), sParam, indexer);
         indexer.close();
     }
     
@@ -1107,6 +1107,83 @@ public class Blazmass {
        
 //System.out.println( System.currentTimeMillis()); 
         
+       // pepList = indexer.getSequences(rList);
+        pepList = mongoconnect.Mongoconnect.getSequences(rList); //, massTolerance)
+        
+        
+        if (null != pepList || pepList.size() > 0) {
+            for (Iterator<IndexedSequence> itr = pepList.iterator(); itr.hasNext();) {
+               // System.out.println("Printing the range "+ itr);
+                IndexedSequence iSeq = itr.next();
+                
+        
+
+// System.exit(0);
+                
+                PeptideResult pr = calcScore(iSeq, scoreArray, chargeState, scoreHistogram, sParam, masses);
+
+                System.out.println(iSeq.getSequence() + "\t" + iSeq.getMass() + "\t" + pr.getxCorr());
+                if (null == pr) {
+                    continue;
+                }
+                        
+                numMatched += 2;
+
+                PeptideResult prtmp = pArr[pArr.length - 1];
+                //PeptideResult prtmp = pArr[0];
+                
+                if (null != prtmp) 
+                {
+                    if( prtmp.getxCorr() < pr.getxCorr()) {
+                        pArr[pArr.length - 1] = pr;
+                        Arrays.sort(pArr);                        
+                    }
+                }
+        
+                
+              //  System.out.println("");
+                
+            }
+        }
+
+
+        /////////////////////////
+        // 4. modificaiton search
+        /////////////////////////
+
+        return numMatched;
+
+    }
+
+    private int runSearch_orig(DBIndexer indexer, SearchParams sParam, float[] scoreArray, int chargeState, float precursorMass, int[] scoreHistogram,
+        PeptideResult[] pArr, List<Float> masses) throws Exception {
+
+        //long start = System.currentTimeMillis();
+        //System.out.println("search.........." );
+        List<IndexedSequence> pepList = null;
+
+        int numMatched = 0;
+
+        float massTolerance = sParam.getRelativePeptideMassTolerance();
+        float ppmTolerance = this.getPpm(precursorMass, massTolerance);
+    
+        
+        //List<PeptideResult> pList = new ArrayList<PeptideResult>(sParam.getNumPeptideOutputLnes());        
+        
+        List<MassRange> rList = new ArrayList<MassRange>();
+       
+        int isotopeNum = chargeState * 2 + 1; //robin move it to config file later
+
+	if(sParam.isPrecursorHighResolution()) {
+		for (int i = 0; i < isotopeNum; i++) {
+			rList.add(new MassRange(precursorMass - i * AssignMass.DIFFMASSC12C13, ppmTolerance));            
+		}
+	} else {
+		rList.add(new MassRange(precursorMass, ppmTolerance));            
+	}
+       
+//System.out.println( System.currentTimeMillis()); 
+        
         pepList = indexer.getSequences(rList);
         
         if (null != pepList || pepList.size() > 0) {
@@ -1283,7 +1360,6 @@ public class Blazmass {
         return numMatched;
 
     }
-
     
                 
     private int runSearchHigh(DBIndexer indexer, SearchParams sParam, float[] signalArr, float[] backgroundArr, int chargeState, float precursorMass, PeptideResult[] pArr, List<Float> masses) throws Exception {

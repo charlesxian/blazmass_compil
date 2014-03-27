@@ -7,7 +7,7 @@ split_scan_size = 1000000
 #database_name = /opt/applications/yates/dbase/UniProt_Human_sprot_11-08-2010_reversed.fasta
 #database_name = C:\Users\Harshil\Documents\NetBeansProjects\blaz_data\EBI-IPI_rat_3.30_06-28-2007_con.fasta
 #database_name = C:\Users\Harshil\Documents\NetBeansProjects\blaz_data\small.fasta
-database_name = rnaseqDB
+database_name = miniDB
 ppm_peptide_mass_tolerance = 6.0
 isotopes = 1                           ; 0=search only monoisotopic peak, 1=search isotopes
 create_output_files = 1                ; 0=no, 1=yes
@@ -31,7 +31,7 @@ ppm_fragment_ion_tolerance_high = 0
 [MONGODB]
 #mongodb_server = thrall.scripps.edu
 mongodb_server = localhost
-mongodb_collection = rnaseqK562
+mongodb_collection = miniColl
 
 [MASSandLABEL]
 mass_label = true

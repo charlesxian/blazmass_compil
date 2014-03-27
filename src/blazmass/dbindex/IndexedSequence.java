@@ -6,6 +6,7 @@ import java.util.ArrayList;
 
 /**
  * Representation of an indexed peptide sequence with mass and residues
+ * Modified by Sandip
  * 
  * @author Adam
  */
@@ -33,6 +34,21 @@ public class IndexedSequence {
     public static final int OFFSET_UNKNOWN = -1;
     
     
+    // mongoObjectID is a unique string identifier for each MongoDB document 
+    // (there exists one document per unique peptide sequence in the database)
+    // Used for lookups of top scoring peptides after all mass range queries and scoring have been performed
+    // Added by Sandip
+    private String mongoObjectID;
+    
+    // constructor for IndexedSequence for mongoconnect package
+    // Added by Sandip
+    public IndexedSequence(float precMass, String sequence, int sequenceLen, String objID) {
+        this.mass = precMass;
+        this.sequence = sequence;
+        this.sequenceLen = sequenceLen;
+        this.mongoObjectID = objID;
+        this.sequenceOffset = OFFSET_UNKNOWN;
+    }
 
     /**
      * Implementation that does not use sequence offsets
@@ -290,6 +306,10 @@ public class IndexedSequence {
         this.proteinDescArray = proteinDescArray;
     }
 
-    
+    // method for mongoconnect package
+    // Added by Sandip
+    public String getObjID() {
+        return mongoObjectID;
+    }
     
 }

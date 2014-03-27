@@ -86,16 +86,19 @@ public class DBIndexStoreMongoDb implements DBIndexStore {
         
         File f= new File(sparam.getDatabaseName());
         String filename= f.getName();
-          this.dbName=filename.replaceAll(".fasta", "");
+//          this.dbName=filename.replaceAll(".fasta", "");
+            this.dbName = "miniDB";
+            
           f=new File(sparam.getFullIndexFileName());     
           filename= f.getName();
-         this.COLLECTION =filename.substring(filename.indexOf("fasta")+6, filename.length());
+//         this.COLLECTION =filename.substring(filename.indexOf("fasta")+6, filename.length());
+    //      this.
       //  this.dbName= sparam.getFullIndexFileName();
-        this.MongoServerName = sparam.getMongodbServer();
+      //  this.MongoServerName = sparam.getMongodbServer();
              //     this.MongoServerName = "localhost";
 //        System.out.println("The file name is :" + sparam.getDatabaseName());
-        fastadefreader.setDefs(sparam.getDatabaseName());
-        setProteinCache(fastadefreader.getproteinCache());
+//        fastadefreader.setDefs(sparam.getDatabaseName());
+//        setProteinCache(fastadefreader.getproteinCache());
     }
 
     //creates mongdo db dir for the index 
