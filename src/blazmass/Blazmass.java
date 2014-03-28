@@ -1109,7 +1109,11 @@ public class Blazmass {
 //System.out.println( System.currentTimeMillis()); 
         
        // pepList = indexer.getSequences(rList);
-        pepList = mongoconnect.Mongoconnect.getSequences(rList); //, massTolerance)
+        if (sParam.isUsingMongoDB()) {
+            pepList = mongoconnect.Mongoconnect.getSequences(rList,sParam);
+        } else {
+            pepList = indexer.getSequences(rList);
+        }
         
         if (null != pepList || pepList.size() > 0) {
             for (Iterator<IndexedSequence> itr = pepList.iterator(); itr.hasNext();) {

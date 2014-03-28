@@ -100,7 +100,10 @@ public class SearchParams {
     private int scoreWin=10;
     private boolean neturalLossIsotope=false;
     
-    private String mongodbServer;
+    private boolean usingMongoDB = false;
+    private String mongoServer;
+    private int mongoPort;
+    private String mongoDBname;
     private String mongoCollection;
     
     public static SearchParams getInstance() {
@@ -807,22 +810,56 @@ public class SearchParams {
         this.enzyme = enzyme;
     }
 
-    public String getMongodbServer() {
-        return mongodbServer;
-    }
-
-    public void setMongodbServer(String mongodbServer) {
-        this.mongodbServer = mongodbServer;
-    }
-    public void setMongoCollection(String collectionName) {
-        this.mongoCollection = collectionName;
-    }
-
     public float getWeight(int i) {
         return this.weightArr[i];
     }
     
+    /**
+     * @return the usingMongoDB
+     */
+    public boolean isUsingMongoDB() {
+        return usingMongoDB;
+    }
     
+    public String getMongoServer() {
+        return mongoServer;
+    }
+
+    public int getMongoPort() {
+        return mongoPort;
+    }
+    
+    public String getMongoDBname() {
+        return mongoDBname;
+    }
+    
+    public String getMongoCollection() {
+        return mongoCollection;
+    }
+    
+    /**
+     * @param usingMongoDB the useMongoDB to set
+     */
+    public void setUsingMongoDB(boolean useMongoDB) {
+        this.usingMongoDB = useMongoDB;
+    }
+    
+    public void setMongoServer(String mongoServerAddress) {
+        this.mongoServer = mongoServerAddress;
+    }
+    
+    public void setMongoPort(int mongoPortNum) {
+        this.mongoPort = mongoPortNum;
+    }
+    
+    public void setMongoDBName(String mongoDatabaseName) {
+//        this.mongoDBname = mongoDatabaseName;
+        this.mongoDBname = this.databaseName; // using 'database_name' from blazmass.params for now
+    }
+    
+    public void setMongoCollection(String collectionName) {
+        this.mongoCollection = collectionName;
+    }
     
 }
 

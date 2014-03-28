@@ -23,10 +23,11 @@ import java.util.List;
 import java.util.ArrayList;
 import blazmass.dbindex.MassRange;
 import blazmass.dbindex.IndexedSequence;
+import blazmass.io.SearchParams;
 
 //import dbindex.IndexedSequence;
 //import java.io.IOException;
-import java.util.Map;
+//import java.util.Map;
 
 /**
  *
@@ -41,8 +42,8 @@ public class Mongoconnect {
     // These static variables / information can all be pulled from blazmass.params instead of being hardcoded here:
     private static final String mongoHost = "localhost";
     private static final int mongoPort = 27017;
-    private static final String dbName = "miniDB";
-    private static final String collName = "miniColl";
+    private static final String dbName = "uniprotDB";
+    private static final String collName = "uniprotColl";
 //    private static final float massTolerance = 0.2f; // units are amu, not ppm
     
     private static MongoClient mongoClient = null;
@@ -50,16 +51,22 @@ public class Mongoconnect {
 
     public Mongoconnect() {}
     
-    public static DBCollection connectToCollection() throws Exception {
+    public static DBCollection connectToCollection(SearchParams sParam) throws Exception {
         try {
             //
+//            String collName = null;
             if(mongoClient == null) {
-                mongoClient = new MongoClient(mongoHost,mongoPort);
-                System.out.println("-------------Making new connection to MongoDB at "+mongoHost);   
-                db = mongoClient.getDB(dbName);
+//                System.out.println("-------------MONGODBHOST NAME FROM PARAMS FILE: "+sParam.getMongoServer());
+//                System.out.println("-------------MONGODBPORT NUMBER FROM PARAMS FILE: "+String.valueOf(sParam.getMongoPort()));
+//                System.out.println("-------------DATABASE NAME FROM PARAMS FILE: "+sParam.getDatabaseName());
+//                System.out.println("-------------COLLECTION NAME FROM PARAMS FILE: "+sParam.getDatabaseName());
+//                mongoClient = new MongoClient(mongoHost,mongoPort);
+                mongoClient = new MongoClient(sParam.getMongoServer(),sParam.getMongoPort());
+                System.out.println("-------------Making new connection to MongoDB at "+sParam.getMongoServer());
+                db = mongoClient.getDB(sParam.getDatabaseName());
             }
             
-            return db.getCollection(collName);
+            return db.getCollection(sParam.getMongoCollection());
 
         } catch(Exception e){
             System.out.println("MongoDB Connection / Collection Connection error");
@@ -69,11 +76,11 @@ public class Mongoconnect {
     
     // substitute for getSequences() method from DBIndexer
 //    public static List<IndexedSequence> getSequences(List<Float> precursorMasses, float massTolerance) throws Exception {
-    public static List<IndexedSequence> getSequences(List<MassRange> rList) throws Exception {
+    public static List<IndexedSequence> getSequences(List<MassRange> rList, SearchParams sParam) throws Exception {
         
         try {
             
-            DBCollection coll = Mongoconnect.connectToCollection(); //should move this outside this method... only want to make one connection, not one per instance...
+            DBCollection coll = Mongoconnect.connectToCollection(sParam); //should move this outside this method... only want to make one connection, not one per instance...
             return Mongoconnect.getSequencesFromColl(rList, coll);
 
         } catch(Exception e){
@@ -202,7 +209,7 @@ public class Mongoconnect {
     
     public DBObject getDocumentByObjectID(String objID) {
         try {
-
+/*
             DBCollection coll = connectToCollection();
 
             DBObject qResult = coll.findOne(new BasicDBObject("_id",new ObjectId(objID)));
@@ -212,7 +219,8 @@ public class Mongoconnect {
             System.out.println(String.valueOf(qResult.get("SEQ")));
             //
             
-        return qResult;
+        return qResult;*/
+            return null;
         
         } catch(Exception e){
             System.out.println("getDocumentByObjectID error");
@@ -229,15 +237,15 @@ public class Mongoconnect {
             
             // test list of 2 floats for mass range query (+/- massTolerance value):
 //            List<Float> precursorMasses = new ArrayList<>();
-            List<MassRange> rList = new ArrayList<>();
+//            List<MassRange> rList = new ArrayList<>();
             
 //            rList.add(new MassRange(precursorMass, ppmTolerance));
-            rList.add(new MassRange(2490.097f, 6.0f));
+//            rList.add(new MassRange(2490.097f, 6.0f));
 //            rList.add(new MassRange(4259.330f, 6.0f));
 
             //connection.getSequences(precursorMasses);
 //            Mongoconnect.getSequences(precursorMasses, 0.02f);
-            Mongoconnect.getSequences(rList);
+//            Mongoconnect.getSequences(rList);
 
 
             
