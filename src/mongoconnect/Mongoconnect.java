@@ -17,13 +17,14 @@ import com.mongodb.DBObject;
 import com.mongodb.DBCursor;
 //import com.mongodb.ServerAddress;
 //import com.mongodb.MongoClientOptions;
-import org.bson.types.ObjectId;
+//import org.bson.types.ObjectId;
 
 import java.util.List;
 import java.util.ArrayList;
 import blazmass.dbindex.MassRange;
 import blazmass.dbindex.IndexedSequence;
 import blazmass.io.SearchParams;
+import java.util.Iterator;
 
 //import dbindex.IndexedSequence;
 //import java.io.IOException;
@@ -129,11 +130,22 @@ public class Mongoconnect {
 //            Object objID = obj.get("_id");
             String objID = obj.get("_id").toString();
             IndexedSequence indSeq = new IndexedSequence(precMass,sequence,sequenceLen,resLeft,resRight,objID);
-
+            String protIDLRRR;
+            for (Iterator<Object> it = parentsList.iterator(); it.hasNext();) {
+                BasicDBObject parent = (BasicDBObject) it.next();
+                protIDLRRR = ((String) parent.get("PROT_ID"))+
+                                        "|"+
+                                        ((String) parent.get("LR"))+
+                                        "|"+
+                                        ((String) parent.get("RR"));
+                indSeq.addToMongoProteinIDStrings(protIDLRRR);
+            }
             
             // can be removed (just here for testing)
-//            System.out.println("precMass:");
-//            System.out.println(indSeq.getMass());
+//            System.out.println("PARENTS PROT_IDs:");
+//            if (indSeq.getMongoProteinIDStrings().size() > 1) {
+//                System.out.println("----=");
+//                System.out.println(indSeq.getMongoProteinIDStrings());}
 //            System.out.println("sequence:");
 //            System.out.println(indSeq.getSequence());
 //            System.out.println("resLeft:");

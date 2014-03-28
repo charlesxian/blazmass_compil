@@ -40,6 +40,16 @@ public class IndexedSequence {
     // Added by Sandip
     private String mongoObjectID;
     
+    // mongoProteinIDStrings is a list of unique string identifiers for each MongoDB document (each individual peptide)
+    // This list contains the value of the 'PROT_ID' field for each object in the 'PARENTS' array (for each document)
+    // Added by Sandip
+    private List<String> mongoProteinIDStrings = new ArrayList<>();
+    
+    // mongoProteinIDs is a list of unique string identifiers for each MongoDB document  (each individual peptide)
+    // This list contains the value of the 'PROT_ID' field for each object in the 'PARENTS' array (for each document)
+    // Added by Sandip
+    private List<Integer> mongoProteinIDs = new ArrayList<>();
+    
     // constructor for IndexedSequence for mongoconnect package
     // Added by Sandip
     public IndexedSequence(float precMass, String sequence, int sequenceLen, String resLeft, String resRight, String objID) {
@@ -308,10 +318,26 @@ public class IndexedSequence {
         this.proteinDescArray = proteinDescArray;
     }
 
-    // method for mongoconnect package
+    // methods for mongoconnect package
     // Added by Sandip
     public String getObjID() {
         return mongoObjectID;
+    }
+    
+    public List<String> getMongoProteinIDStrings() {
+        return mongoProteinIDStrings;
+    }
+    
+    public List<Integer> getMongoProteinIDs() {
+        return mongoProteinIDs;
+    }
+    
+    public void addToMongoProteinIDStrings(String newProtID) {
+        this.mongoProteinIDStrings.add(newProtID);
+    }
+    
+    public void addToMongoProteinIDs(int newProtID) {
+        this.mongoProteinIDs.add(newProtID);
     }
     
 }
