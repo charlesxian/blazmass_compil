@@ -1043,30 +1043,31 @@ public class Blazmass {
             //resultWriter.write("M\t" + count + "\t" + count + "\t" + each.getPeptideMass() + "\t" + deltCN + "\t"
             //        + each.getxCorr() + "\t" + each.getzScore() + "\t" + each.getMatchedIon() + "\t" + each.getTotalIon() + "\t");            
             
-            try {
-                
-                List<IndexedProtein> iproteins = indexer.getProteins(iseq);
-                if (iproteins.size() > 0)
-                {
-                    
-                    for (IndexedProtein iprotein : iproteins) {
-        //                resultWriter.write("L\t" + iprotein.getAccession());
-                        sb.append("L\t").append(iprotein.getAccession()).append("\t0\t").append(iseq.getWholeSequence()).append("\n");
-                    }
-                }
-                else
-                {
-                    List proteinId= iseq.getProteinDescArray();
-                    for(int i=0;i<proteinId.size();i++)
-                    {
-                        sb.append("L\t").append(proteinId.get(i)).append("\t0\t").append(iseq.getWholeSequence()).append("\n");
-                    }
-                }
-
-            } catch(Exception e) {
-                
-                e.printStackTrace();
-            }
+//            try {
+//
+//                List<IndexedProtein> iproteins = indexer.getProteins(iseq);
+//
+//                if (iproteins.size() > 0)
+//                {
+//                    
+//                    for (IndexedProtein iprotein : iproteins) {
+//        //                resultWriter.write("L\t" + iprotein.getAccession());
+//                        sb.append("L\t").append(iprotein.getAccession()).append("\t0\t").append(iseq.getWholeSequence()).append("\n");
+//                    }
+//                }
+//                else
+//                {
+//                    List proteinId= iseq.getProteinDescArray();
+//                    for(int i=0;i<proteinId.size();i++)
+//                    {
+//                        sb.append("L\t").append(proteinId.get(i)).append("\t0\t").append(iseq.getWholeSequence()).append("\n");
+//                    }
+//                }
+//
+//            } catch(Exception e) {
+//                
+//                e.printStackTrace();
+//            }
 
             count++;
         }
@@ -1109,7 +1110,7 @@ public class Blazmass {
         
        // pepList = indexer.getSequences(rList);
         pepList = mongoconnect.Mongoconnect.getSequences(rList); //, massTolerance)
-        
+        System.out.printf("----------------"); //remove
         
         if (null != pepList || pepList.size() > 0) {
             for (Iterator<IndexedSequence> itr = pepList.iterator(); itr.hasNext();) {
@@ -1123,6 +1124,7 @@ public class Blazmass {
                 PeptideResult pr = calcScore(iSeq, scoreArray, chargeState, scoreHistogram, sParam, masses);
 
                 System.out.println(iSeq.getSequence() + "\t" + iSeq.getMass() + "\t" + pr.getxCorr());
+                
                 if (null == pr) {
                     continue;
                 }
@@ -1130,6 +1132,7 @@ public class Blazmass {
                 numMatched += 2;
 
                 PeptideResult prtmp = pArr[pArr.length - 1];
+
                 //PeptideResult prtmp = pArr[0];
                 
                 if (null != prtmp) 

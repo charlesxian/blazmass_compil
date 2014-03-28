@@ -42,10 +42,12 @@ public class IndexedSequence {
     
     // constructor for IndexedSequence for mongoconnect package
     // Added by Sandip
-    public IndexedSequence(float precMass, String sequence, int sequenceLen, String objID) {
+    public IndexedSequence(float precMass, String sequence, int sequenceLen, String resLeft, String resRight, String objID) {
         this.mass = precMass;
         this.sequence = sequence;
         this.sequenceLen = sequenceLen;
+        this.resLeft = resLeft;
+        this.resRight = resRight;
         this.mongoObjectID = objID;
         this.sequenceOffset = OFFSET_UNKNOWN;
     }
