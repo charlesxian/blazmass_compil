@@ -26,7 +26,7 @@ import blazmass.dbindex.IndexedSequence;
 
 //import dbindex.IndexedSequence;
 //import java.io.IOException;
-//import java.util.Map;
+import java.util.Map;
 
 /**
  *
@@ -132,15 +132,17 @@ public class Mongoconnect {
             List<String> proteinID = new ArrayList<>();
             
             // LR and RR for just first PARENT:
-//            Map<String,List> objMap = obj.toMap();             
-//            List<Map> objParents = objMap.get("PARENTS");
+            Map<String,List> objMap = obj.toMap();             
+            List<Map> objParents = objMap.get("PARENTS");
 //            String resLeft = String.valueOf(objParents.get(0).get("LR"));
-//            resRight = String.valueOf(objParents.get(0).get("RR"));
+//            String resRight = String.valueOf(objParents.get(0).get("RR"));
+            String resLeft = "AAA";
+            String resRight = "ZZZ";
 
 //            IndexedSequence indSeq = new IndexedSequence(precMass,sequence,resLeft,resRight,sequenceLen,proteinID);
 //            Object objID = obj.get("_id");
             String objID = obj.get("_id").toString();
-            IndexedSequence indSeq = new IndexedSequence(precMass,sequence,sequenceLen,objID);
+            IndexedSequence indSeq = new IndexedSequence(precMass,sequence,sequenceLen,resLeft,resRight,objID);
 
             
             // can be removed (just here for testing)
@@ -148,12 +150,16 @@ public class Mongoconnect {
 //            System.out.println(indSeq.getMass());
 //            System.out.println("sequence:");
 //            System.out.println(indSeq.getSequence());
+//            System.out.println("resLeft:");
+//            System.out.println(indSeq.getResLeft());
+//            System.out.println("resRight:");
+//            System.out.println(indSeq.getResRight());
 //            System.out.println("sequenceLen:");
 //            System.out.println(indSeq.getSequenceLen());
 //            System.out.println("ObjectID:");
 //            System.out.println(indSeq.getObjID());
 //            System.out.println("------------------");
-            System.out.println("Retrieved one document "+indSeq.getObjID()+" and created one IndexedSequence from peptide "+indSeq.getSequence());
+//            System.out.println("Retrieved one document "+indSeq.getObjID()+" and created one IndexedSequence from peptide "+indSeq.getSequence());
             //
             
             return indSeq;
