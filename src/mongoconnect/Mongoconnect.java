@@ -39,13 +39,6 @@ public class Mongoconnect {
      * @param args the command line arguments
      */
     
-    // These static variables / information can all be pulled from blazmass.params instead of being hardcoded here:
-    private static final String mongoHost = "localhost";
-    private static final int mongoPort = 27017;
-    private static final String dbName = "uniprotDB";
-    private static final String collName = "uniprotColl";
-//    private static final float massTolerance = 0.2f; // units are amu, not ppm
-    
     private static MongoClient mongoClient = null;
     private static DB db = null;
 
@@ -53,14 +46,9 @@ public class Mongoconnect {
     
     public static DBCollection connectToCollection(SearchParams sParam) throws Exception {
         try {
-            //
-//            String collName = null;
+
             if(mongoClient == null) {
-//                System.out.println("-------------MONGODBHOST NAME FROM PARAMS FILE: "+sParam.getMongoServer());
-//                System.out.println("-------------MONGODBPORT NUMBER FROM PARAMS FILE: "+String.valueOf(sParam.getMongoPort()));
-//                System.out.println("-------------DATABASE NAME FROM PARAMS FILE: "+sParam.getDatabaseName());
-//                System.out.println("-------------COLLECTION NAME FROM PARAMS FILE: "+sParam.getDatabaseName());
-//                mongoClient = new MongoClient(mongoHost,mongoPort);
+                
                 mongoClient = new MongoClient(sParam.getMongoServer(),sParam.getMongoPort());
                 System.out.println("-------------Making new connection to MongoDB at "+sParam.getMongoServer());
                 db = mongoClient.getDB(sParam.getDatabaseName());

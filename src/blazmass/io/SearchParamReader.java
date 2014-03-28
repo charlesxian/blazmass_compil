@@ -196,8 +196,10 @@ public class SearchParamReader {
             else 
                 param.setHighResolution(false);
             
-            int useMongoDB = Integer.parseInt(getParam("use_mongodb")); // 1 if using MongoDB, 0 if not
-            if (useMongoDB == 1) {
+            String mongoParam = getParam("use_mongodb");
+            if (mongoParam == null || Integer.parseInt(mongoParam) == 0) {
+                param.setUsingMongoDB(false);
+            } else {
                 param.setUsingMongoDB(true);
                 String mongoServer = getParam("mongodb_server");
                 int mongoPort = Integer.parseInt(getParam("mongodb_port"));
@@ -207,8 +209,6 @@ public class SearchParamReader {
                 param.setMongoPort(mongoPort);
                 param.setMongoDBName(mongoDBname);
                 param.setMongoCollection(mongoCollection);
-            } else {
-                param.setUsingMongoDB(false);
             }
 
             String massTypeParent = getParam("mass_type_parent").trim();
