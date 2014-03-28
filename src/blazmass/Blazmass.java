@@ -1043,8 +1043,8 @@ public class Blazmass {
             //resultWriter.write("M\t" + count + "\t" + count + "\t" + each.getPeptideMass() + "\t" + deltCN + "\t"
             //        + each.getxCorr() + "\t" + each.getzScore() + "\t" + each.getMatchedIon() + "\t" + each.getTotalIon() + "\t");            
             
-//            try {
-//
+            try {
+                // temporarily commented out by Sandip...
 //                List<IndexedProtein> iproteins = indexer.getProteins(iseq);
 //
 //                if (iproteins.size() > 0)
@@ -1064,10 +1064,10 @@ public class Blazmass {
 //                    }
 //                }
 //
-//            } catch(Exception e) {
-//                
-//                e.printStackTrace();
-//            }
+            } catch(Exception e) {
+                
+                e.printStackTrace();
+            }
 
             count++;
         }
@@ -1110,7 +1110,6 @@ public class Blazmass {
         
        // pepList = indexer.getSequences(rList);
         pepList = mongoconnect.Mongoconnect.getSequences(rList); //, massTolerance)
-        System.out.printf("----------------"); //remove
         
         if (null != pepList || pepList.size() > 0) {
             for (Iterator<IndexedSequence> itr = pepList.iterator(); itr.hasNext();) {
