@@ -52,17 +52,12 @@ public class Mongoconnect {
     
     public static DBCollection connectToCollection() throws Exception {
         try {
-            // can be removed:
-            System.out.println("Connecting to MongoDB at "+mongoHost);
             //
             if(mongoClient == null) {
                 mongoClient = new MongoClient(mongoHost,mongoPort);
+                System.out.println("-------------Making new connection to MongoDB at "+mongoHost);   
                 db = mongoClient.getDB(dbName);
             }
-
-            // can be removed:
-            System.out.println("Connected to "+dbName+" on port "+mongoPort);
-            //
             
             return db.getCollection(collName);
 
@@ -78,8 +73,6 @@ public class Mongoconnect {
         
         try {
             
-            System.out.println("--------------------------------------");
-            System.out.println("--------------------------------------");
             DBCollection coll = Mongoconnect.connectToCollection(); //should move this outside this method... only want to make one connection, not one per instance...
             return Mongoconnect.getSequencesFromColl(rList, coll);
 
@@ -132,13 +125,11 @@ public class Mongoconnect {
             List<String> proteinID = new ArrayList<>();
             
             // LR and RR for just first PARENT:
-            Map<String,List> objMap = obj.toMap();             
-            List<Map> objParents = objMap.get("PARENTS");
-//            String resLeft = String.valueOf(objParents.get(0).get("LR"));
-//            String resRight = String.valueOf(objParents.get(0).get("RR"));
-            String resLeft = "AAA";
-            String resRight = "ZZZ";
-
+            BasicDBList parentsList = (BasicDBList) obj.get("PARENTS");
+            BasicDBObject firstParent = (BasicDBObject) parentsList.get(0);
+            String resLeft = String.valueOf(firstParent.get("LR"));
+            String resRight = String.valueOf(firstParent.get("RR"));
+            
 //            IndexedSequence indSeq = new IndexedSequence(precMass,sequence,resLeft,resRight,sequenceLen,proteinID);
 //            Object objID = obj.get("_id");
             String objID = obj.get("_id").toString();
@@ -192,14 +183,13 @@ public class Mongoconnect {
                 lowMass = Math.round((mRange.getPrecMass()-mRange.getTolerance())*1000);
                 highMass = Math.round((mRange.getPrecMass()+mRange.getTolerance())*1000);
                 orQuery.add(new BasicDBObject("MASS", new BasicDBObject("$gte", lowMass).append("$lte", highMass)));
-                System.out.printf("MASS RANGE: ");
-                System.out.printf(String.valueOf(lowMass));
-                System.out.printf(" to ");
-                System.out.println(String.valueOf(highMass));
-//                System.out.println(highMass);
+//                System.out.printf("MASS RANGE: ");
+//                System.out.printf(String.valueOf(lowMass));
+//                System.out.printf(" to ");
+//                System.out.println(String.valueOf(highMass));
             }
             
-            BasicDBObject queryProjection = new BasicDBObject("MASS",1).append("SEQ",1).append("LEN",1);
+            BasicDBObject queryProjection = new BasicDBObject("MASS",1).append("SEQ",1).append("LEN",1).append("PARENTS",1);
             DBCursor cursor = coll.find(new BasicDBObject("$or",orQuery),queryProjection);
 
             return cursor;
