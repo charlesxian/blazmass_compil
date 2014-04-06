@@ -492,7 +492,7 @@ public class DBIndexer {
                 }
             }
 //               System.out.print("Printing the last buffer....");
-               indexStore.lastBuffertoDatabase();
+              // indexStore.lastBuffertoDatabase();
 
         } catch (IOException ex) {
             logger.log(Level.SEVERE, "Error initializing and adding sequences", ex);
