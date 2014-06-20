@@ -24,7 +24,9 @@ import java.util.ArrayList;
 import blazmass.dbindex.MassRange;
 import blazmass.dbindex.IndexedSequence;
 import blazmass.io.SearchParams;
+//import com.mongodb.ReadPreference;
 import java.util.Iterator;
+//import java.util.HashSet;
 
 //import dbindex.IndexedSequence;
 //import java.io.IOException;
@@ -53,6 +55,7 @@ public class Mongoconnect {
                 mongoClient = new MongoClient(sParam.getMongoServer(),sParam.getMongoPort());
                 System.out.println("-------------Making new connection to MongoDB at "+sParam.getMongoServer());
                 db = mongoClient.getDB(sParam.getDatabaseName());
+//                db.setReadOnly(Boolean.TRUE);
             }
             
             return db.getCollection(sParam.getMongoCollection());
@@ -64,14 +67,11 @@ public class Mongoconnect {
     }
     
     // substitute for getSequences() method from DBIndexer
-//    public static List<IndexedSequence> getSequences(List<Float> precursorMasses, float massTolerance) throws Exception {
     public static List<IndexedSequence> getSequences(List<MassRange> rList, SearchParams sParam) throws Exception {
         
         try {
-            
-            DBCollection coll = Mongoconnect.connectToCollection(sParam); //should move this outside this method... only want to make one connection, not one per instance...
+            DBCollection coll = Mongoconnect.connectToCollection(sParam);
             return Mongoconnect.getSequencesFromColl(rList, coll);
-
         } catch(Exception e){
             System.out.println("DB Query / getSequences error");
             return null;
@@ -80,11 +80,9 @@ public class Mongoconnect {
 
     // helper method for getSequences()
     // handles iteration through a MongoDB query cursor
-    public static List<IndexedSequence> getSequencesFromColl(List<MassRange> rList, DBCollection coll) throws Exception {
-//    public static List<IndexedSequence> getSequencesFromColl(List<Float> precursorMasses, float massTolerance, DBCollection coll) throws Exception {
+/*    public static List<IndexedSequence> getSequencesFromColl_old(List<MassRange> rList, DBCollection coll) throws Exception {
         
         try {
-//            DBCursor cursor = Mongoconnect.getCursor(coll,massTolerance,precursorMasses);
             DBCursor cursor = Mongoconnect.getCursor(coll,rList);
             List<IndexedSequence> queryResults = new ArrayList<>();
             
@@ -92,8 +90,8 @@ public class Mongoconnect {
                 while(cursor.hasNext()) {
                     queryResults.add(convertDBObjectToIndexedSequence(cursor.next()));
                 }
-                System.out.println("Number of results from query:");
-                System.out.println(queryResults.size());
+                System.out.printf("Number of results from query: "+queryResults.size());
+                
             } finally {
                 cursor.close();
             }
@@ -105,9 +103,93 @@ public class Mongoconnect {
             return null;
           }
     }
+*/
+    
+    // helper method for getSequences()
+    // handles iteration through a MongoDB query cursor
+    // returns an arraylist of IndexedSequence objects
+    public static List<IndexedSequence> getSequencesFromColl(List<MassRange> rList, DBCollection coll) throws Exception {
+        
+        try {
+            List<IndexedSequence> queryResults = new ArrayList<>();
+//            HashSet<String> docIDsFromDBQuery = new HashSet<>();
+            
+//            long startTime = System.currentTimeMillis(); //REMOVE
+//            long endTime = System.currentTimeMillis(); //REMOVE
+            int intMass;
+            String sequence;
+            
+            for (MassRange mRange : rList) {
+
+                DBCursor cursor = Mongoconnect.getCursor(coll,mRange).batchSize(300);
+                
+                try {
+                    while(cursor.hasNext()) {
+//                        startTime = System.currentTimeMillis(); //REMOVE
+
+                        DBObject obj = cursor.next();
+//                        endTime = System.currentTimeMillis(); //REMOVE
+//                        System.out.println("Time taken for cursor.next(): " + (endTime - startTime) + " milliseconds"); //REMOVE
+
+//                        startTime = System.currentTimeMillis(); //REMOVE
+//                        String objID = obj.get("_id").toString();
+//                        if (!docIDsFromDBQuery.contains(objID)) {
+//                            docIDsFromDBQuery.add(objID);
+//                            queryResults.add(convertDBObjectToIndexedSequence(obj,objID));
+                        intMass = (int) obj.get("_id"); // gets intMass from current document
+//                        queryResults.add(convertDBObjectToIndexedSequence(obj));
+
+                        BasicDBList peptideSequences = (BasicDBList) obj.get("s");
+
+                        for (Iterator<Object> it = peptideSequences.iterator(); it.hasNext();) {
+                            sequence = (String) it.next();
+                            queryResults.add(makeIndexedSequence(intMass,sequence));
+                        }
+                            
+//                        }
+//                        endTime = System.currentTimeMillis(); //REMOVE
+//                        System.out.println("Time taken for conversion to IndexedSequence: " + (endTime - startTime) + " milliseconds"); //REMOVE
+
+                    }
+                    System.out.println("Number of peptide sequence results from query: "+queryResults.size());
+
+                } finally {
+                    cursor.close();
+                }
+            }
+            
+            return queryResults;
+            
+        } catch(Exception e){
+            System.out.println("DB Query / getSequencesFromColl error");
+            return null;
+          }
+    }
+
+    public static IndexedSequence makeIndexedSequence(int intMass, String sequence) throws Exception {
+        try {            
+            
+            float floatMass = (float) intMass/1000; //'_id' is 'MASS'
+//            String[] parts = pepSeqLR.split("\\.");
+//            String resLeft = parts[0];
+//            String sequence = parts[1];
+//            String resRight = parts[2];
+            
+//            IndexedSequence indSeq = new IndexedSequence(floatMass,sequence,sequence.length(),resLeft,resRight);
+            IndexedSequence indSeq = new IndexedSequence(floatMass,sequence,sequence.length(),"---","---");
+
+            
+            return indSeq;
+            
+        } catch(Exception e){
+            System.out.println("DB Query / getSequencesFromColl error");
+            return null;
+          }
+    }
+
     
     // parses DBObject returned from a MongoDB query
-    // input: a single MongoDB 'DBObject'
+    // input: a single MongoDB 'DBObject' and its ObjectID (converted to String)
     // (this can be returned from a db.collection.findOne() query, or from a single item returned from a query cursor
     // output: a single IndexedSequence object
     public static IndexedSequence convertDBObjectToIndexedSequence(DBObject obj) throws Exception {
@@ -115,7 +197,30 @@ public class Mongoconnect {
             // using IndexedSequence constructor below:
             // public IndexedSequence(float precMass, String sequence, int sequenceLen, String objID) {}
             
-            float precMass = (Float.parseFloat(String.valueOf(obj.get("MASS"))))/1000;
+//            float precMass = (Float.parseFloat(String.valueOf(obj.get("MASS"))))/1000;
+//            String sequence = String.valueOf(obj.get("SEQ"));
+//            int sequenceLen = Integer.parseInt(String.valueOf(obj.get("LEN")));
+//            List<String> proteinID = new ArrayList<>();
+//            
+//            // LR and RR for just first PARENT:
+//            BasicDBList parentsList = (BasicDBList) obj.get("PARENTS");
+//            BasicDBObject firstParent = (BasicDBObject) parentsList.get(0);
+//            String resLeft = String.valueOf(firstParent.get("LR"));
+//            String resRight = String.valueOf(firstParent.get("RR"));
+//            String objID = obj.get("_id").toString();
+//            IndexedSequence indSeq = new IndexedSequence(precMass,sequence,sequenceLen,resLeft,resRight,objID);
+//            String protIDLRRR;
+//            for (Iterator<Object> it = parentsList.iterator(); it.hasNext();) {
+//                BasicDBObject parent = (BasicDBObject) it.next();
+//                protIDLRRR = ((String) parent.get("PROT_ID"))+
+//                                        "|"+
+//                                        ((String) parent.get("LR"))+
+//                                        "|"+
+//                                        ((String) parent.get("RR"));
+//                indSeq.addToMongoProteinIDStrings(protIDLRRR);
+            
+            
+            float precMass = (Float.parseFloat(String.valueOf(obj.get("_id"))))/1000; //'_id' is 'MASS
             String sequence = String.valueOf(obj.get("SEQ"));
             int sequenceLen = Integer.parseInt(String.valueOf(obj.get("LEN")));
             List<String> proteinID = new ArrayList<>();
@@ -125,9 +230,6 @@ public class Mongoconnect {
             BasicDBObject firstParent = (BasicDBObject) parentsList.get(0);
             String resLeft = String.valueOf(firstParent.get("LR"));
             String resRight = String.valueOf(firstParent.get("RR"));
-            
-//            IndexedSequence indSeq = new IndexedSequence(precMass,sequence,resLeft,resRight,sequenceLen,proteinID);
-//            Object objID = obj.get("_id");
             String objID = obj.get("_id").toString();
             IndexedSequence indSeq = new IndexedSequence(precMass,sequence,sequenceLen,resLeft,resRight,objID);
             String protIDLRRR;
@@ -167,17 +269,39 @@ public class Mongoconnect {
             return null;
           }
     }
- 
-    // structures MongoDB query, calls convertDBObjectToIndexedSequence() to convert type
-    public static DBCursor getCursor(DBCollection coll, List<MassRange> rList) throws Exception {
-//    public static DBCursor getCursor(DBCollection coll, float massTolerance, List<Float> precursorMasses) throws Exception {
+
+    public static DBCursor getCursor(DBCollection coll, MassRange mRange) throws Exception {
 
         try {
+            int lowMass;
+            int highMass;
+//            BasicDBObject query = new BasicDBObject();
+
+            lowMass = Math.round((mRange.getPrecMass()-mRange.getTolerance())*1000);
+            highMass = Math.round((mRange.getPrecMass()+mRange.getTolerance())*1000);
+//            query = new BasicDBObject("MASS", new BasicDBObject("$gte", lowMass).append("$lte", highMass));
+            BasicDBObject query = new BasicDBObject("_id", new BasicDBObject("$gte", lowMass).append("$lte", highMass));
+            
+//            BasicDBObject queryProjection = new BasicDBObject("MASS",1).append("SEQ",1).append("LEN",1).append("PARENTS",1);
+//            DBCursor cursor = coll.find(query,queryProjection);
+            DBCursor cursor = coll.find(query);
+
+            return cursor;
         
-//            BasicDBObject query = new BasicDBObject("MASS", new BasicDBObject("$gte", lowMass).append("$lte", highMass));
+        } catch(Exception e){
+            System.out.println("DB Query / Cursor retrieval error");
+            return null;
+          }
+    }
+
+    public static DBCursor getCursor_old(DBCollection coll, List<MassRange> rList) throws Exception {
+
+        try {
+            
             BasicDBList orQuery = new BasicDBList();
             int lowMass;
             int highMass;
+            String queryString = "db.collection.find({ $or: [ ";
             
 //            for (float precursorMass : precursorMasses) {
 //                lowMass = Math.round((precursorMass-massTolerance)*1000);
@@ -194,10 +318,16 @@ public class Mongoconnect {
 //                System.out.printf(String.valueOf(lowMass));
 //                System.out.printf(" to ");
 //                System.out.println(String.valueOf(highMass));
+                queryString += "{ MASS: { $gte: "+lowMass+", $lte: "+highMass+"} },";
+                //"{ $or: [ { MASS: { $gte: 1193526, $lte: 1193574 } }, { MASS: { $gte: 1192523, $lte: 1192571 } }, { MASS: { $gte: 1191519, $lte: 1191567 } }, { MASS: { $gte: 1190516, $lte: 1190564 } }, { MASS: { $gte: 1189513, $lte: 1189561 } } ] }";
             }
             
             BasicDBObject queryProjection = new BasicDBObject("MASS",1).append("SEQ",1).append("LEN",1).append("PARENTS",1);
             DBCursor cursor = coll.find(new BasicDBObject("$or",orQuery),queryProjection);
+            
+            queryString = queryString.substring(0, queryString.length() - 1); //remove trailing comma
+            queryString += "] })";
+            System.out.println("Query performed: "+queryString);
 
             return cursor;
         

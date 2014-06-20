@@ -229,7 +229,8 @@ public class Blazmass {
             //dirName, threads
             String threads = args[1];
             if (threads.trim().equals("1")) {
-                bmass.runFolder(args[0]); 
+//                bmass.runFolder(args[0]);  //temp commented out by Sandip
+                WorkerManager.run(args[0], threads);                
             }
             else {
                 WorkerManager.run(args[0], threads);
@@ -242,7 +243,8 @@ public class Blazmass {
             // path, filename, param file, threads
             String threads = args[3];
             if (threads.trim().equals("1")) {
-                bmass.runFile(args[0], args[1], args[2]); 
+//                bmass.runFile(args[0], args[1], args[2]); //temp commented out by Sandip
+                WorkerManager.run(args[0], args[1], args[2], threads);
             }
             else {
                 WorkerManager.run(args[0], args[1], args[2], threads);

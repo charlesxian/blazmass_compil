@@ -5,8 +5,8 @@ version = 0.983
 split_scan_size = 2000
 #index_database_name = /data/2/rpark/ip2_data/niesses/database//UniProt_Human_06-15-2012_reversed.fasta_4c95be12a3cf8af411620417c132eb3c.idx
 #database_name = /opt/applications/yates/dbase/UniProt_Human_06-15-2012_reversed.fasta
-#database_name = uniprotDB
-database_name = /Users/sandip/NetBeansProjects/UniProt_Human_06-15-2012_reversed.fasta
+database_name = uniprotDB
+#database_name = /Users/sandip/NetBeansProjects/UniProt_Human_06-15-2012_reversed.fasta
 ppm_peptide_mass_tolerance = 50.0
 isotopes = 1                           ; 0=search only monoisotopic peak, 1=search isotopes
 create_output_files = 1                ; 0=no, 1=yes
@@ -28,7 +28,7 @@ enzyme_nocut_residues = P
 xcorr_mode = 0                         ; 0 regular Xcorr(default), 1 - EE, 2 - ET, 3 - TT
 
 [MONGODB]
-use_mongodb = 0							; 0=no, 1=yes
+use_mongodb = 1							; 0=no, 1=yes
 mongodb_server = localhost				; MongoDB host (if running locally, use 'localhost')
 mongodb_port = 27017					; connection port for MongoDB host (default: 27017)
 mongodb_dbname = testDB 				; MongoDB database name (unused for now -- DB name is taken from database_name above)

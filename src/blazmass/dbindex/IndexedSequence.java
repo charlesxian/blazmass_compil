@@ -61,6 +61,18 @@ public class IndexedSequence {
         this.mongoObjectID = objID;
         this.sequenceOffset = OFFSET_UNKNOWN;
     }
+    // new constructor for IndexedSequence for mongoconnect package
+    // for MassDB MongoDB implementation
+    // Added by Sandip 6/3/14
+    public IndexedSequence(float precMass, String sequence, int sequenceLen, String resLeft, String resRight) {
+        this.mass = precMass;
+        this.sequence = sequence;
+        this.sequenceLen = sequenceLen;
+        this.resLeft = resLeft;
+        this.resRight = resRight;
+//        this.mongoObjectID = objID;
+        this.sequenceOffset = OFFSET_UNKNOWN;
+    }
 
     /**
      * Implementation that does not use sequence offsets
