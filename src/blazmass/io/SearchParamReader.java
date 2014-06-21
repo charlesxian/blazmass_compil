@@ -201,14 +201,38 @@ public class SearchParamReader {
                 param.setUsingMongoDB(false);
             } else {
                 param.setUsingMongoDB(true);
-                String mongoServer = getParam("mongodb_server");
-                int mongoPort = Integer.parseInt(getParam("mongodb_port"));
-                String mongoDBname = getParam("mongodb_dbname");
-                String mongoCollection = getParam("mongodb_collection");
-                param.setMongoServer(mongoServer);
-                param.setMongoPort(mongoPort);
-                param.setMongoDBName(mongoDBname);
-                param.setMongoCollection(mongoCollection);
+                String massDBServer = getParam("MassDB_server");
+                int massDBPort = Integer.parseInt(getParam("MassDB_port"));
+                String massDBname = getParam("MassDB_dbname");
+                String massDBCollection = getParam("MassDB_collection");
+                param.setMassDBServer(massDBServer);
+                param.setMassDBPort(massDBPort);
+                param.setMassDBName(massDBname);
+                param.setMassDBCollection(massDBCollection);
+                
+                String seqDBParam = getParam("use_SeqDB");
+                if (seqDBParam != null && Integer.parseInt(seqDBParam) == 1) {
+                    //use SeqDB
+                    String seqDBServer = getParam("SeqDB_server");
+                    int seqDBPort = Integer.parseInt(getParam("SeqDB_port"));
+                    String seqDBname = getParam("SeqDB_dbname");
+                    String seqDBCollection = getParam("SeqDB_collection");
+                    param.setSeqDBServer(seqDBServer);
+                    param.setSeqDBPort(seqDBPort);
+                    param.setSeqDBName(seqDBname);
+                    param.setSeqDBCollection(seqDBCollection);
+                    
+                    String protDBParam = getParam("use_ProtDB");
+                    if (protDBParam != null && Integer.parseInt(protDBParam) == 1) {
+                        //use ProtDB
+                    }
+                    else {
+                        System.out.println("Not using ProtDB MongoDB database -- SQT output will be incomplete");
+                    }
+                }
+                else {
+                    System.out.println("Not using SeqDB MongoDB database -- SQT output will be incomplete");
+                }
             }
 
             String massTypeParent = getParam("mass_type_parent").trim();
