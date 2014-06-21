@@ -100,11 +100,23 @@ public class SearchParams {
     private int scoreWin=10;
     private boolean neturalLossIsotope=false;
     
+    // MongoDB params
     private boolean usingMongoDB = false;
-    private String mongoServer;
-    private int mongoPort;
-    private String mongoDBname;
-    private String mongoCollection;
+    
+    private String massDBServer;
+    private int massDBPort;
+    private String massDBName;
+    private String massDBCollection;
+    
+    private String seqDBServer;
+    private int seqDBPort;
+    private String seqDBName;
+    private String seqDBCollection;
+    
+    private String protDBServer;
+    private int protDBPort;
+    private String protDBName;
+    private String protDBCollection;
     
     public static SearchParams getInstance() {
         if (sparams == null)
@@ -813,53 +825,118 @@ public class SearchParams {
     public float getWeight(int i) {
         return this.weightArr[i];
     }
-    
-    /**
-     * @return the usingMongoDB
-     */
+
+    // MongoDB params
+    // MongoDB flag getter
     public boolean isUsingMongoDB() {
         return usingMongoDB;
     }
-    
-    public String getMongoServer() {
-        return mongoServer;
+
+    // MassDB MongoDB getters
+    public String getMassDBServer() {
+        return massDBServer;
     }
 
-    public int getMongoPort() {
-        return mongoPort;
+    public int getMassDBPort() {
+        return massDBPort;
     }
     
-    public String getMongoDBname() {
-        return mongoDBname;
+    public String getMassDBName() {
+        return massDBName;
     }
     
-    public String getMongoCollection() {
-        return mongoCollection;
+    public String getMassDBCollection() {
+        return massDBCollection;
     }
-    
-    /**
-     * @param usingMongoDB the useMongoDB to set
-     */
+
+    // SeqDB MongoDB getters
+    public String getSeqDBServer() {
+        return seqDBServer;
+    }
+
+    public int getSeqDBPort() {
+        return seqDBPort;
+    }
+
+    public String getSeqDBname() {
+        return seqDBName;
+    }
+
+    public String getSeqDBCollection() {
+        return seqDBCollection;
+    }
+
+    // ProtDB MongoDB getters
+    public String getProtDBServer() {
+        return protDBServer;
+    }
+
+    public int getProtDBPort() {
+        return protDBPort;
+    }
+
+    public String getProtDBName() {
+        return protDBName;
+    }
+
+    public String getProtDBCollection() {
+        return protDBCollection;
+    }
+
+    // MongoDB flag setter
     public void setUsingMongoDB(boolean useMongoDB) {
         this.usingMongoDB = useMongoDB;
     }
-    
-    public void setMongoServer(String mongoServerAddress) {
-        this.mongoServer = mongoServerAddress;
-    }
-    
-    public void setMongoPort(int mongoPortNum) {
-        this.mongoPort = mongoPortNum;
-    }
-    
-    public void setMongoDBName(String mongoDatabaseName) {
-//        this.mongoDBname = mongoDatabaseName;
-        this.mongoDBname = this.databaseName; // using 'database_name' from blazmass.params for now
-    }
-    
-    public void setMongoCollection(String collectionName) {
-        this.mongoCollection = collectionName;
-    }
-    
-}
 
+    // MassDB MongoDB setters
+    public void setMassDBServer(String massDBServer) {
+        this.massDBServer = massDBServer;
+    }
+
+    public void setMassDBPort(int massDBPort) {
+        this.massDBPort = massDBPort;
+    }
+
+    public void setMassDBName(String massDBName) {
+        this.massDBName = massDBName;
+    }
+
+    public void setMassDBCollection(String massDBCollection) {
+        this.massDBCollection = massDBCollection;
+    }
+
+    // SeqDB MongoDB setters
+    public void setSeqDBServer(String seqDBServer) {
+        this.seqDBServer = seqDBServer;
+    }
+
+    public void setSeqDBPort(int seqDBPort) {
+        this.seqDBPort = seqDBPort;
+    }
+
+    public void setSeqDBName(String seqDBName) {
+        this.seqDBName = seqDBName;
+    }
+
+    public void setSeqDBCollection(String seqDBCollectionName) {
+        this.seqDBCollection = seqDBCollectionName;
+    }
+
+    // ProtDB MongoDB setters
+    public void setProtDBServer(String protDBServer) {
+        this.protDBServer = protDBServer;
+    }
+
+    public void setProtDBPort(int protDBPort) {
+        this.protDBPort = protDBPort;
+    }
+
+    public void setProtDBName(String protDBName) {
+        this.protDBName = protDBName;
+    }
+
+    public void setProtDBCollection(String protDBCollectionName) {
+        this.protDBCollection = protDBCollectionName;
+    }
+
+}

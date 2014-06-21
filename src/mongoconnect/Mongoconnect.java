@@ -41,12 +41,12 @@ public class Mongoconnect {
 
             if(mongoClient == null) {
                 
-                mongoClient = new MongoClient(sParam.getMongoServer(),sParam.getMongoPort());
-                System.out.println("-------------Making new connection to MongoDB at "+sParam.getMongoServer());
+                mongoClient = new MongoClient(sParam.getMassDBServer(),sParam.getMassDBPort());
+                System.out.println("-------------Making new connection to MongoDB at "+sParam.getMassDBServer());
                 db = mongoClient.getDB(sParam.getDatabaseName());
             }
             
-            return db.getCollection(sParam.getMongoCollection());
+            return db.getCollection(sParam.getMassDBCollection());
 
         } catch(Exception e){
             System.out.println("MongoDB Connection / Collection Connection error");
