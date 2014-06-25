@@ -107,12 +107,14 @@ public class SearchParams {
     private int massDBPort;
     private String massDBName;
     private String massDBCollection;
-    
+
+    private boolean usingSeqDB = false;
     private String seqDBServer;
     private int seqDBPort;
     private String seqDBName;
     private String seqDBCollection;
     
+    private boolean usingProtDB = false;
     private String protDBServer;
     private int protDBPort;
     private String protDBName;
@@ -850,6 +852,10 @@ public class SearchParams {
     }
 
     // SeqDB MongoDB getters
+    public boolean isUsingSeqDB() {
+        return usingSeqDB;
+    }
+    
     public String getSeqDBServer() {
         return seqDBServer;
     }
@@ -858,7 +864,7 @@ public class SearchParams {
         return seqDBPort;
     }
 
-    public String getSeqDBname() {
+    public String getSeqDBName() {
         return seqDBName;
     }
 
@@ -867,6 +873,10 @@ public class SearchParams {
     }
 
     // ProtDB MongoDB getters
+    public boolean isUsingProtDB() {
+        return usingProtDB;
+    }
+    
     public String getProtDBServer() {
         return protDBServer;
     }
@@ -906,6 +916,10 @@ public class SearchParams {
     }
 
     // SeqDB MongoDB setters
+    public void setUsingSeqDB(boolean useSeqDB) {
+        this.usingSeqDB = useSeqDB;
+    }
+    
     public void setSeqDBServer(String seqDBServer) {
         this.seqDBServer = seqDBServer;
     }
@@ -923,6 +937,10 @@ public class SearchParams {
     }
 
     // ProtDB MongoDB setters
+    public void setUsingProtDB(boolean useProtDB) {
+        this.usingProtDB = useProtDB;
+    }
+    
     public void setProtDBServer(String protDBServer) {
         this.protDBServer = protDBServer;
     }
