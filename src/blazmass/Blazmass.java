@@ -1049,20 +1049,21 @@ public class Blazmass {
 
                 if (sParam.isUsingMongoDB()) {
                     //custom handling of 'L' lines for MongoDB here...
-                    List<String> parentProteins = iseq.getMongoProteinIDStrings();
-                    if (parentProteins.size() > 0) {
-                        // parentProtein is a string with format "protein_id|resLeft|resRight"
-                        // or, in indexDB/MongoDB terms, "'PROT_ID'|'LR'|'RR'"
-                        for (String parentProtein : parentProteins) {
-                            String[] tempArray = parentProtein.split("\\|");
-                            sb.append("L\t").append(tempArray[0]).append("\t0\t").append(tempArray[1]+"."+iseq.getSequence()+"."+tempArray[2]).append("\n");                            
+                    if (sParam.isUsingSeqDB()) {
+                        List<String> parentLines = mongoconnect.Mongoconnect.getParents(iseq.getSequence(), sParam);
+                        for (String parentLine : parentLines) {
+                            sb.append("L\t").append(parentLine).append("\n");
                         }
-                    } else {
-                    // parentProteins should NEVER have size 0...
+//                        }
+                    }
+                    else {
+                        // if not using SeqDB, no protein / locus information to add in L lines
+                        // (print empty L line)
                         sb.append("L\t").append("\n");
                     }
-                    
-                } else {
+                }
+                else {
+                    // if NOT using MongoDB...
                     List<IndexedProtein> iproteins = indexer.getProteins(iseq);
 
                     if (iproteins.size() > 0)

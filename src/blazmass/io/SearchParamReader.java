@@ -196,41 +196,54 @@ public class SearchParamReader {
             else 
                 param.setHighResolution(false);
             
-            String mongoParam = getParam("use_mongodb");
+            String mongoParam = getParam("use_mongodb").trim();
+            String seqDBParam = getParam("use_SeqDB").trim();
+            String protDBParam = getParam("use_ProtDB").trim();
             if (mongoParam == null || Integer.parseInt(mongoParam) == 0) {
                 param.setUsingMongoDB(false);
             } else {
                 param.setUsingMongoDB(true);
-                String massDBServer = getParam("MassDB_server");
-                int massDBPort = Integer.parseInt(getParam("MassDB_port"));
-                String massDBname = getParam("MassDB_dbname");
-                String massDBCollection = getParam("MassDB_collection");
+                String massDBServer = getParam("MassDB_server").trim();
+                int massDBPort = Integer.parseInt(getParam("MassDB_port").trim());
+                String massDBname = getParam("MassDB_dbname").trim();
+                String massDBCollection = getParam("MassDB_collection").trim();
                 param.setMassDBServer(massDBServer);
                 param.setMassDBPort(massDBPort);
                 param.setMassDBName(massDBname);
                 param.setMassDBCollection(massDBCollection);
+                param.setDatabaseName(massDBname+"."+massDBCollection+" [MongoDB]");
                 
-                String seqDBParam = getParam("use_SeqDB");
                 if (seqDBParam != null && Integer.parseInt(seqDBParam) == 1) {
                     //use SeqDB
+                    param.setUsingSeqDB(true);
                     String seqDBServer = getParam("SeqDB_server");
                     int seqDBPort = Integer.parseInt(getParam("SeqDB_port"));
-                    String seqDBname = getParam("SeqDB_dbname");
+                    String seqDBName = getParam("SeqDB_dbname");
                     String seqDBCollection = getParam("SeqDB_collection");
                     param.setSeqDBServer(seqDBServer);
                     param.setSeqDBPort(seqDBPort);
-                    param.setSeqDBName(seqDBname);
+                    param.setSeqDBName(seqDBName);
                     param.setSeqDBCollection(seqDBCollection);
                     
-                    String protDBParam = getParam("use_ProtDB");
                     if (protDBParam != null && Integer.parseInt(protDBParam) == 1) {
                         //use ProtDB
+                        param.setUsingProtDB(true);
+                        String protDBServer = getParam("ProtDB_server");
+                        int protDBPort = Integer.parseInt(getParam("ProtDB_port"));
+                        String protDBName = getParam("ProtDB_dbname");
+                        String protDBCollection = getParam("ProtDB_collection");
+                        param.setProtDBServer(protDBServer);
+                        param.setProtDBPort(protDBPort);
+                        param.setProtDBName(protDBName);
+                        param.setProtDBCollection(protDBCollection);
                     }
                     else {
+                        param.setUsingProtDB(false);
                         System.out.println("Not using ProtDB MongoDB database -- SQT output will be incomplete");
                     }
                 }
                 else {
+                    param.setUsingSeqDB(false);
                     System.out.println("Not using SeqDB MongoDB database -- SQT output will be incomplete");
                 }
             }

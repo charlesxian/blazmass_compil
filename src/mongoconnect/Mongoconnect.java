@@ -18,8 +18,12 @@ import java.util.List;
 import java.util.ArrayList;
 import blazmass.dbindex.MassRange;
 import blazmass.dbindex.IndexedSequence;
+//import blazmass.io.SearchParamReader;
 import blazmass.io.SearchParams;
+import java.net.UnknownHostException;
 import java.util.Iterator;
+//import java.util.logging.Level;
+//import java.util.logging.Logger;
 
 /**
  *
@@ -30,46 +34,121 @@ public class Mongoconnect {
     /**
      * @param args the command line arguments
      */
+//    private static final Logger logger = Logger.getLogger(SearchParamReader.class.getName());
+    private static MongoClient massDBMongoClient = null;
+    private static MongoClient seqDBMongoClient = null;
+    private static MongoClient protDBMongoClient = null;
+    private static DB massDB = null;
+    private static DB seqDB = null;
+    private static DB protDB = null;
+    private static DBCollection massDBCollection = null;
+    private static DBCollection seqDBCollection = null;
+    private static DBCollection protDBCollection = null;
     
-    private static MongoClient mongoClient = null;
-    private static DB db = null;
-
     public Mongoconnect() {}
+
+    /*
+        connectToMassDB
     
-    public static DBCollection connectToCollection(SearchParams sParam) throws Exception {
+        Connects to MongoDB 'MassDB' with hostname, port, dbname, 
+        collection name specified in blazmass.params file (sParam object).
+        
+        Sets variables massDBMongoClient, massDB, massDBCollection for use 
+        throughout the class.  Should only make one of each object per thread.
+    */
+    private static void connectToMassDB(SearchParams sParam) throws Exception {
+        
         try {
 
-            if(mongoClient == null) {
+            if(massDBMongoClient == null) {
                 
-                mongoClient = new MongoClient(sParam.getMassDBServer(),sParam.getMassDBPort());
-                System.out.println("-------------Making new connection to MongoDB at "+sParam.getMassDBServer());
-                db = mongoClient.getDB(sParam.getDatabaseName());
+                massDBMongoClient = new MongoClient(sParam.getMassDBServer(),sParam.getMassDBPort());
+                System.out.println("-------------Making new connection to MongoDB/MassDB at "+sParam.getMassDBServer());
+                massDB = massDBMongoClient.getDB(sParam.getMassDBName());
+                massDBCollection = massDB.getCollection(sParam.getMassDBCollection());
             }
             
-            return db.getCollection(sParam.getMassDBCollection());
-
-        } catch(Exception e){
-            System.out.println("MongoDB Connection / Collection Connection error");
-            return null;
+        } catch(UnknownHostException e){
+            System.out.println("connectToMassDB error");
           }
     }
     
-    // substitute for getSequences() method from DBIndexer
+    /*
+        connectToSeqDB
+    
+        Connects to MongoDB 'SeqDB' with hostname, port, dbname, 
+        collection name specified in blazmass.params file (sParam object).
+        (using SeqDB is optional)
+        
+        Sets variables seqDBMongoClient, seqDB, seqDBCollection for use 
+        throughout the class.  Should only make one of each connection object, 
+        to be reused many times.
+    */
+    private static void connectToSeqDB(SearchParams sParam) throws Exception {
+        
+        try {
+
+            if(seqDBMongoClient == null) {
+                
+                seqDBMongoClient = new MongoClient(sParam.getSeqDBServer(),sParam.getSeqDBPort());
+                System.out.println("-------------Making new connection to MongoDB/SeqDB at "+sParam.getSeqDBServer());
+                seqDB = seqDBMongoClient.getDB(sParam.getSeqDBName());
+                seqDBCollection = seqDB.getCollection(sParam.getSeqDBCollection());
+            }
+            
+        } catch(UnknownHostException e){
+            System.out.println("connectToSeqDB error");
+          }
+    }
+
+    /*
+        connectToProtDB
+    
+        Connects to MongoDB 'ProtDB' with hostname, port, dbname, 
+        collection name specified in blazmass.params file (sParam object).
+        (using ProtDB is optional)
+        
+        Sets variables protDBMongoClient, protDB, protDBCollection for use 
+        throughout the class.  Should only make one of each connection object, 
+        to be reused many times.
+    */
+    private static void connectToProtDB(SearchParams sParam) throws Exception {
+        
+        try {
+
+            if(protDBMongoClient == null) {
+                
+                protDBMongoClient = new MongoClient(sParam.getProtDBServer(),sParam.getProtDBPort());
+                System.out.println("-------------Making new connection to MongoDB/ProtDB at "+sParam.getProtDBServer());
+                protDB = protDBMongoClient.getDB(sParam.getProtDBName());
+                protDBCollection = protDB.getCollection(sParam.getProtDBCollection());
+            }
+            
+        } catch(UnknownHostException e){
+            System.out.println("connectToProtDB error");
+          }
+    }
+    
+    /*
+        getSequences
+        
+        Drop-in substitute for getSequences() method from DBIndexer.
+        Takes MassRange list and sParam parameters objects as input - same as
+        DBIndexer.getSequences()
+
+        Handles iteration through a MongoDB query cursor.
+        Returns an ArrayList of IndexedSequence objects - same as 
+        DBIndexer.getSequences()
+    */
     public static List<IndexedSequence> getSequences(List<MassRange> rList, SearchParams sParam) throws Exception {
         
         try {
-            DBCollection coll = Mongoconnect.connectToCollection(sParam);
-            return Mongoconnect.getSequencesFromColl(rList, coll);
+            connectToMassDB(sParam);
         } catch(Exception e){
-            System.out.println("DB Query / getSequences error");
+            System.out.println("MassDB connection error");
+//            logger.log(Level.SEVERE, "MassDB connection error");
             return null;
           }
-    }
-    
-    // helper method for getSequences()
-    // handles iteration through a MongoDB query cursor
-    // returns an arraylist of IndexedSequence objects
-    public static List<IndexedSequence> getSequencesFromColl(List<MassRange> rList, DBCollection coll) throws Exception {
         
         try {
             List<IndexedSequence> queryResults = new ArrayList<>();
@@ -79,8 +158,9 @@ public class Mongoconnect {
             
             for (MassRange mRange : rList) {
 
-                DBCursor cursor = Mongoconnect.getCursor(coll,mRange).batchSize(300);
-                
+                DBCursor cursor = getMassDBCursor(mRange).batchSize(3000); // try modifying batch size to tune performance
+//                  DBCursor cursor = Mongoconnect.getMassDBCursor(coll,mRange); // try modifying batch size to tune performance
+              
                 try {
                     while(cursor.hasNext()) {
 
@@ -111,12 +191,19 @@ public class Mongoconnect {
           }
     }
 
+    /*
+        makeIndexedSequence
+    
+        Takes an integer mass (exact mass rounded to 3 decimal points * 1000) 
+        and a peptide sequence string as inputs.
+    
+        Returns an IndexedSequence object as output.
+    */
     public static IndexedSequence makeIndexedSequence(int intMass, String sequence) throws Exception {
         try {            
             
             float floatMass = (float) intMass/1000; //'_id' is 'MASS'
             IndexedSequence indSeq = new IndexedSequence(floatMass,sequence,sequence.length(),"---","---");
-
             
             return indSeq;
             
@@ -126,50 +213,18 @@ public class Mongoconnect {
           }
     }
 
+    /*
+        getMassDBCursor
     
-    // parses DBObject returned from a MongoDB query
-    // input: a single MongoDB 'DBObject' and its ObjectID (converted to String)
-    // (this can be returned from a db.collection.findOne() query, or from a single item returned from a query cursor
-    // output: a single IndexedSequence object
-    public static IndexedSequence convertDBObjectToIndexedSequence(DBObject obj) throws Exception {
-        try {
-            // using IndexedSequence constructor below:
-            // public IndexedSequence(float precMass, String sequence, int sequenceLen, String objID) {}            
-            
-            float precMass = (Float.parseFloat(String.valueOf(obj.get("_id"))))/1000; //'_id' is 'MASS
-            String sequence = String.valueOf(obj.get("SEQ"));
-            int sequenceLen = Integer.parseInt(String.valueOf(obj.get("LEN")));
-            List<String> proteinID = new ArrayList<>();
-            
-            // LR and RR for just first PARENT:
-            BasicDBList parentsList = (BasicDBList) obj.get("PARENTS");
-            BasicDBObject firstParent = (BasicDBObject) parentsList.get(0);
-            String resLeft = String.valueOf(firstParent.get("LR"));
-            String resRight = String.valueOf(firstParent.get("RR"));
-            String objID = obj.get("_id").toString();
-            IndexedSequence indSeq = new IndexedSequence(precMass,sequence,sequenceLen,resLeft,resRight,objID);
-            String protIDLRRR;
-            for (Iterator<Object> it = parentsList.iterator(); it.hasNext();) {
-                BasicDBObject parent = (BasicDBObject) it.next();
-                protIDLRRR = ((String) parent.get("PROT_ID"))+
-                                        "|"+
-                                        ((String) parent.get("LR"))+
-                                        "|"+
-                                        ((String) parent.get("RR"));
-                indSeq.addToMongoProteinIDStrings(protIDLRRR);
-            }
-                        
-            return indSeq;
-            
-        } catch(Exception e){
-            System.out.println("DB Query / getSequencesFromColl error");
-            return null;
-          }
-    }
-
-    public static DBCursor getCursor(DBCollection coll, MassRange mRange) throws Exception {
+        Takes a MassRange object as input.  Constructs and executes MongoDB
+        range-based query on mass ("_id") using massDBCollection object.
+    
+        Returns an a MongoDB MassDB query cursor object as output.
+    */
+    private static DBCursor getMassDBCursor(MassRange mRange) throws Exception {
 
         try {
+            
             int lowMass;
             int highMass;
 
@@ -177,45 +232,184 @@ public class Mongoconnect {
             highMass = Math.round((mRange.getPrecMass()+mRange.getTolerance())*1000);
             BasicDBObject query = new BasicDBObject("_id", new BasicDBObject("$gte", lowMass).append("$lte", highMass));
             
-            DBCursor cursor = coll.find(query);
+            DBCursor cursor = massDBCollection.find(query);
 
             return cursor;
         
-        } catch(Exception e){
-            System.out.println("DB Query / Cursor retrieval error");
+        } catch(Exception e) {
+            System.out.println("MassDB Query / Cursor retrieval error");
             return null;
           }
     }
 
-    public static DBCursor getCursor_old(DBCollection coll, List<MassRange> rList) throws Exception {
+    /*
+        getParents
+    
+        Takes a peptide sequence string and SearchParams object as inputs.  Uses
+        MongoDB SeqDB and (optionally) ProtDB.
+    
+        Returns a list of parent proteins, each formatted in SQT L line format.
+    */
+    public static List<String> getParents(String peptideSequence, SearchParams sParam) throws Exception {
+
+        List<String> parentProteinsOfPeptide = new ArrayList<>();
+        
+        if (sParam.isUsingSeqDB()) {
+            try {
+                connectToSeqDB(sParam);
+                if (sParam.isUsingProtDB()) {
+                    connectToProtDB(sParam);
+                }
+            } catch(Exception e) {
+                System.out.println("SeqDB/ProtDB connection error");
+                parentProteinsOfPeptide.add("");
+                return parentProteinsOfPeptide; // return list with a single empty string (if not using SeqDB)
+            }
+
+            return getParentsFromColl(peptideSequence, sParam);
+        }
+        else {
+            parentProteinsOfPeptide.add("");
+            return parentProteinsOfPeptide; // return list with a single empty string (if not using SeqDB)
+        }
+    }
+    
+    /*
+        getParentsFromColl
+    
+        Helper method for getParents.  Takes a peptide sequence string and 
+        SearchParams object as inputs.
+    
+        Constructs and executes MongoDB findOne query using peptide sequence.
+    
+        Returns a list of parent proteins, each formatted in SQT L line format.
+    */
+    private static List<String> getParentsFromColl(String peptideSequence, SearchParams sParam) throws Exception {
+
+        List<String> parentProteinsOfPeptide = new ArrayList<>();
 
         try {
+            BasicDBObject query = new BasicDBObject("_id", peptideSequence);
+            DBObject peptideDocument = seqDBCollection.findOne(query);
             
-            BasicDBList orQuery = new BasicDBList();
-            int lowMass;
-            int highMass;
-            String queryString = "db.collection.find({ $or: [ ";
-            for (MassRange mRange : rList) {
-                lowMass = Math.round((mRange.getPrecMass()-mRange.getTolerance())*1000);
-                highMass = Math.round((mRange.getPrecMass()+mRange.getTolerance())*1000);
-                orQuery.add(new BasicDBObject("MASS", new BasicDBObject("$gte", lowMass).append("$lte", highMass)));
-                queryString += "{ MASS: { $gte: "+lowMass+", $lte: "+highMass+"} },";
+            if (peptideDocument == null) {
+                parentProteinsOfPeptide.add(""); // return list with a single empty string (if no parent proteins found)
+            }
+            else {
+                BasicDBList parentProteins = (BasicDBList) peptideDocument.get("p");
 
+                if (parentProteins.isEmpty()) { // this shouldn't happen.  Shouldn't be peptides in SeqDB without parent proteins...
+                    parentProteinsOfPeptide.add(""); // return list with a single empty string (if no parent proteins found)
+                }
+                else {
+                    for (Iterator<Object> it = parentProteins.iterator(); it.hasNext();) {
+                        DBObject parent = (DBObject) it.next();
+                        parentProteinsOfPeptide.add(parseParentObjectSimple(peptideSequence, parent, sParam));
+                    }
+                }
             }
             
-            BasicDBObject queryProjection = new BasicDBObject("MASS",1).append("SEQ",1).append("LEN",1).append("PARENTS",1);
-            DBCursor cursor = coll.find(new BasicDBObject("$or",orQuery),queryProjection);
-            
-            queryString = queryString.substring(0, queryString.length() - 1); //remove trailing comma
-            queryString += "] })";
-            System.out.println("Query performed: "+queryString);
+            return parentProteinsOfPeptide;
 
-            return cursor;
-        
-        } catch(Exception e){
-            System.out.println("DB Query / Cursor retrieval error");
+        } catch(Exception e) {
+            System.out.println("SeqDB Query retrieval error");
             return null;
-          }
+        }
+    }
+    
+    /*
+        parseParentObjectSimple
+        
+        Helper method for getParentsFromColl.  Takes a peptide sequence and a
+        single parent DBObject as input (along with SearchParams object).
+    
+        Processes parent object and formats output in SQT L line format.
+        Calls parseParentObjectDetailed if using ProtDB.
+    */
+    private static String parseParentObjectSimple(String peptideSequence, DBObject parent, SearchParams sParam) throws Exception {
+        // example parent object:
+        // { "_id" : "DYMAAGLYDRAEDMFSQLINEEDFR", "p" : [ { "i" : 20915500, "r" : "VSA", "l" : "LGR", "o" : 115 }, { "i" : 21556668, "r" : "VSA", "l" : "LGR", "o" : 115 } ] }
+        try {
+
+            String myParent = "";
+            int parentID = (int) parent.get("i");
+            String parentIDString;
+            
+            if (sParam.isUsingProtDB()) {
+
+                parentIDString = parseParentObjectDetailed(parentID, sParam);
+                
+                if (parentIDString == null) {
+                    // if parent protein ID is not found in ProtDB...
+                    if (parent.containsField("d")) {
+                        if ((boolean) parent.get("d") == true) {
+                            myParent = "Reverse_";
+                        }
+                    }
+                    parentIDString = String.valueOf(parentID);
+                }
+            }
+            else {
+                if (parent.containsField("d")) {
+                    if ((boolean) parent.get("d") == true) {
+                        myParent = "Reverse_";
+                    }
+                }
+                parentIDString = String.valueOf(parentID);
+            }
+
+            
+            myParent += parentIDString + "\t0\t" + 
+                    (String) parent.get("l") + "." + 
+                    peptideSequence + "." + (String) parent.get("r");
+            
+            return myParent;
+
+        } catch(Exception e) {
+            System.out.println("SeqDB parseParentObjectSimple error");
+            return null;
+        }
+    }
+    
+    /*
+        parseParentObjectDetailed
+    
+        Helper method for parseParentObjectSimple.  Takes an integer parent 
+        protein ID and SearchParams object as inputs.
+    
+        Queries MongoDB ProtDB for FASTA defline (protein name, species etc.)
+    
+        Returns FASTA defline if found in ProtDB; otherwise returns string
+        parent protein ID.
+    */
+    private static String parseParentObjectDetailed(int parentID, SearchParams sParam) throws Exception {
+        try {
+
+            BasicDBObject query = new BasicDBObject("_id", parentID);
+            String proteinDefline;
+            DBObject proteinDocument = protDBCollection.findOne(query);
+
+            if (proteinDocument == null) {
+                // if there is no result from the ProtDB query...
+                return null;
+            }
+            else {
+                // if there is a result from the query...
+                proteinDefline = (String) proteinDocument.get("d");
+                if (proteinDefline == null) {
+                    // if there is no defline result from the query...
+                    return String.valueOf(parentID);
+                }
+                else {
+                    // if there is a defline key in the query result...
+                    return proteinDefline;
+                }
+            }
+
+        } catch(Exception e) {
+            System.out.println("SeqDB parseParentObjectDetailed error");
+            return null;
+        }
     }
     
     public static void main(String[] args) throws Exception {
