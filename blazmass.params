@@ -5,9 +5,10 @@ version = 0.983
 split_scan_size = 2000
 #index_database_name = /data/2/rpark/ip2_data/niesses/database//UniProt_Human_06-15-2012_reversed.fasta_4c95be12a3cf8af411620417c132eb3c.idx
 #database_name = /opt/applications/yates/dbase/UniProt_Human_06-15-2012_reversed.fasta
-database_name = uniprotDB
+database_name = MassDB
 #database_name = /Users/sandip/NetBeansProjects/UniProt_Human_06-15-2012_reversed.fasta
-ppm_peptide_mass_tolerance = 50.0
+#ppm_peptide_mass_tolerance = 50.0
+ppm_peptide_mass_tolerance = 30.0
 isotopes = 1                           ; 0=search only monoisotopic peak, 1=search isotopes
 create_output_files = 1                ; 0=no, 1=yes
 ion_series = 0 1 1 1.0 1.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0
@@ -28,11 +29,48 @@ enzyme_nocut_residues = P
 xcorr_mode = 0                         ; 0 regular Xcorr(default), 1 - EE, 2 - ET, 3 - TT
 
 [MONGODB]
+#
+# Use existing MongoDB database for peptide database (MassDB)
+#
 use_mongodb = 1							; 0=no, 1=yes
-mongodb_server = localhost				; MongoDB host (if running locally, use 'localhost')
-mongodb_port = 27017					; connection port for MongoDB host (default: 27017)
-mongodb_dbname = testDB 				; MongoDB database name (unused for now -- DB name is taken from database_name above)
-mongodb_collection = uniprotColl		; MongoDB collection to query
+
+
+# mongodb_server = localhost				; MongoDB mongod or mongos host (if running locally, use 'localhost')
+# mongodb_port = 27017					; connection port for MongoDB host (default: 27017)
+# mongodb_dbname = MassDB					; MongoDB database name (unused for now -- DB name is taken from database_name above)
+# mongodb_collection = MassDB_012714		; MongoDB collection to query
+
+#
+# MassDB MongoDB database info (overrides database_name above)
+# MassDB is a mass-indexed MongoDB database of all possible tryptic peptides
+# Connection and DB information must be present if use_mongodb is enabled above
+#
+MassDB_server = localhost					; MassDB mongod or mongos host (if running locally, use 'localhost')
+MassDB_port = 27018						; connection port for MongoDB host (default: 27017)
+MassDB_dbname = MassDB_072114
+MassDB_collection = MassDB_072114
+
+#
+# SeqDB is a peptide sequence-indexed MongoDB database of all possible tryptic peptides
+# Used for looking up parent protein information for identified peptides (Protein ID numbers only)
+# Used to fill in L lines in SQT output file
+#
+use_SeqDB = 1							; 0=no, 1=yes
+SeqDB_server = localhost					; SeqDB mongod or mongos host (if running locally, use 'localhost')
+SeqDB_port = 27018						; connection port for SeqDB host (default: 27017)
+SeqDB_dbname = SeqDB_072114
+SeqDB_collection = SeqDB_072114
+
+#
+# ProtDB is a protein-indexed MongoDB database of all proteins in a FASTA file
+# Used for looking up parent protein information for identified proteins
+# Used to fill in additional information for L lines in SQT output file
+#
+use_ProtDB = 1							; 0=no, 1=yes
+ProtDB_server = localhost					; ProtDB host (if running locally, use 'localhost')
+ProtDB_port = 27018						; connection port for ProtDB host (default: 27017)
+ProtDB_dbname = ProtDB_072114
+ProtDB_collection = ProtDB_072114
 
 #
 # Up to 3 differential searches can be performed.
