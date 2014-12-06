@@ -230,10 +230,11 @@ public class Mongoconnect {
 
             lowMass = Math.round((mRange.getPrecMass()-mRange.getTolerance())*1000);
             highMass = Math.round((mRange.getPrecMass()+mRange.getTolerance())*1000);
+//            System.out.println("!!!!! LOWMASS\t"+String.valueOf(lowMass)+"\tHIGHMASS"+String.valueOf(highMass)); // remove
             BasicDBObject query = new BasicDBObject("_id", new BasicDBObject("$gte", lowMass).append("$lte", highMass));
             
             DBCursor cursor = massDBCollection.find(query);
-
+//            System.out.println("==============" + mRange.getPrecMass() + " ==" + mRange.getTolerance() + " " + lowMass + " " + highMass);
             return cursor;
         
         } catch(Exception e) {

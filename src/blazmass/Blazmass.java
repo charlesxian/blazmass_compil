@@ -1051,10 +1051,15 @@ public class Blazmass {
                     //custom handling of 'L' lines for MongoDB here...
                     if (sParam.isUsingSeqDB()) {
                         List<String> parentLines = mongoconnect.Mongoconnect.getParents(iseq.getSequence(), sParam);
-                        for (String parentLine : parentLines) {
-                            sb.append("L\t").append(parentLine).append("\n");
+                        if(parentLines == null) {
+                            System.err.println("Error - found no parent proteins for peptide "+iseq.getSequence());
+                            sb.append("L\t").append("\n");
                         }
-//                        }
+                        else {
+                            for (String parentLine : parentLines) {
+                                sb.append("L\t").append(parentLine).append("\n");
+                            }
+                        }
                     }
                     else {
                         // if not using SeqDB, no protein / locus information to add in L lines
@@ -1066,19 +1071,15 @@ public class Blazmass {
                     // if NOT using MongoDB...
                     List<IndexedProtein> iproteins = indexer.getProteins(iseq);
 
-                    if (iproteins.size() > 0)
-                    {
-
+                    if (iproteins.size() > 0) {
                         for (IndexedProtein iprotein : iproteins) {
             //                resultWriter.write("L\t" + iprotein.getAccession());
                             sb.append("L\t").append(iprotein.getAccession()).append("\t0\t").append(iseq.getWholeSequence()).append("\n");
                         }
                     }
-                    else
-                    {
+                    else {
                         List proteinId= iseq.getProteinDescArray();
-                        for(int i=0;i<proteinId.size();i++)
-                        {
+                        for(int i=0;i<proteinId.size();i++) {
                             sb.append("L\t").append(proteinId.get(i)).append("\t0\t").append(iseq.getWholeSequence()).append("\n");
                         }
                     }
@@ -1118,7 +1119,9 @@ public class Blazmass {
        
         int isotopeNum = chargeState * 2 + 1; //robin move it to config file later
 
+       
 	if(sParam.isPrecursorHighResolution()) {
+//         if(false) {
 		for (int i = 0; i < isotopeNum; i++) {
 			rList.add(new MassRange(precursorMass - i * AssignMass.DIFFMASSC12C13, ppmTolerance));            
 		}
@@ -1135,7 +1138,8 @@ public class Blazmass {
             pepList = indexer.getSequences(rList);
         }
         
-        if (null != pepList || pepList.size() > 0) {
+        System.out.println("!!>>"+String.valueOf(precursorMass));
+        if (null != pepList && pepList.size() > 0) { // changed from || to && by Sandip 9/23/14...
             for (Iterator<IndexedSequence> itr = pepList.iterator(); itr.hasNext();) {
                // System.out.println("Printing the range "+ itr);
                 IndexedSequence iSeq = itr.next();
@@ -1146,7 +1150,7 @@ public class Blazmass {
                 
                 PeptideResult pr = calcScore(iSeq, scoreArray, chargeState, scoreHistogram, sParam, masses);
 
-                System.out.println(iSeq.getSequence() + "\t" + iSeq.getMass() + "\t" + pr.getxCorr());
+                System.out.println("!!"+iSeq.getSequence() + "\t" + iSeq.getMass() + "\t" + pr.getxCorr());
                 
                 if (null == pr) {
                     continue;
@@ -1170,6 +1174,8 @@ public class Blazmass {
               //  System.out.println("");
                 
             }
+                System.out.println("!!------------------------------------");
+//                System.out.println("------------------------------------");
         }
 
 
@@ -1211,6 +1217,8 @@ public class Blazmass {
 //System.out.println( System.currentTimeMillis()); 
         
         pepList = indexer.getSequences(rList);
+        
+        
         
         if (null != pepList || pepList.size() > 0) {
             for (Iterator<IndexedSequence> itr = pepList.iterator(); itr.hasNext();) {
