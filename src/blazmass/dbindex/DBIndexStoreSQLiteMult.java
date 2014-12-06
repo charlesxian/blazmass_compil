@@ -282,8 +282,8 @@ public final class DBIndexStoreSQLiteMult implements DBIndexStore {
         }
         float maxMass = precMass + tolerance;
 
-
-//System.out.println("==============" + precMass + " ==" + tolerance + " " + minMass + " " + maxMass);
+//remove:
+System.out.println("==============" + precMass + " ==" + tolerance + " " + minMass + " " + maxMass);
         int[] bucketRange = getBucketsForMassRange(minMass, maxMass);
         if (bucketRange[0] > NUM_BUCKETS - 1 || bucketRange[1] > NUM_BUCKETS - 1) {
             logger.log(Level.WARNING, "Cannot query, unsupported precursor mass: "

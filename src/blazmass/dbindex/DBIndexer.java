@@ -308,7 +308,7 @@ public class DBIndexer {
                                 final String resRight = sbRight.toString();
 
                                 indexStore.addSequence(precMass, start, curSeqI, peptideSeqString, resLeft, resRight, proteinId);
-                               
+//                                System.out.println(precMass);
                             } //end if add sequence
                         }
                     }                    
