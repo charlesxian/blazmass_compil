@@ -68,7 +68,7 @@ public class Mongoconnect {
                 massDBCollection = massDB.getCollection(sParam.getMassDBCollection());
             }
             
-        } catch(UnknownHostException e){
+        } catch(Exception e){
             System.out.println("connectToMassDB error");
           }
     }
@@ -96,7 +96,7 @@ public class Mongoconnect {
                 seqDBCollection = seqDB.getCollection(sParam.getSeqDBCollection());
             }
             
-        } catch(UnknownHostException e){
+        } catch(Exception e){
             System.out.println("connectToSeqDB error");
           }
     }
@@ -124,7 +124,7 @@ public class Mongoconnect {
                 protDBCollection = protDB.getCollection(sParam.getProtDBCollection());
             }
             
-        } catch(UnknownHostException e){
+        } catch(Exception e){
             System.out.println("connectToProtDB error");
           }
     }
