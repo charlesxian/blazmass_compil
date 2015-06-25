@@ -15,6 +15,8 @@
 
 **Instructions**
 
+***All AMIs are in the US West (Oregon) region***
+
 * Start an EC2 instance for ComPIL using public AMI ID `ami-81eaeeb1`
  * *Recommended Instance Type: **r3.4xlarge***
  * *Recommended Volume Type: **General Purpose (SSD)** with volume size of at least 700GB *
