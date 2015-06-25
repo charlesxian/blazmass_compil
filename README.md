@@ -15,11 +15,11 @@
 
 **Instructions**
 
-* Start an EC2 instance for ComPIL using public AMI ID **ami-81eaeeb1** 
+* Start an EC2 instance for ComPIL using public AMI ID `ami-81eaeeb1`
  * *Recommended Instance Type: **r3.4xlarge***
  * *Recommended Volume Type: **General Purpose (SSD)** with volume size of at least 700GB *
  * **Configure Security Group to allow inbound TCP connections from any IP address on port 27017 *(required for use)* **
-* Start an EC2 instance for Blazmass using public AMI ID **ami-37fafe07**  
+* Start an EC2 instance for Blazmass using public AMI ID `ami-37fafe07`  
  * *Recommended: **r3.4xlarge, r3.8xlarge, or m4.10xlarge***
 * Log in to Blazmass instance via SSH
  * run `cd test_data`
