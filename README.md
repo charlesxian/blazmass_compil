@@ -9,9 +9,14 @@
 
 ----
 
-#### Amazon Machine Images
+### Amazon Machine Images
 
 **We have fully functional Amazon Machine Images (AMIs) for testing Blazmass and ComPIL**
+
+**Requirements**
+
+* An [Amazon Web Services](http://aws.amazon.com) account
+* An [SSH client](https://en.wikipedia.org/wiki/Comparison_of_SSH_clients)
 
 **Instructions**
 
@@ -32,7 +37,7 @@
 
 ----
 
-#### Running locally
+### Running locally
 
 *tested on CentOS 6 and RHEL 7*
 
