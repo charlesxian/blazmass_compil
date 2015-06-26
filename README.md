@@ -40,7 +40,11 @@
 
 * Java 1.7 (Oracle or OpenJDK)
 * [MongoDB 2.6+](http://www.mongodb.org/)
-    * MongoDB databases can be running locally (connect to `localhost`), remotely as a single node (typically using TCP port 27017), or behind a `mongos` process (typically port 27018)
+    * MongoDB databases can be running locally (connect to `localhost`), remotely as a single node (typically using TCP port 27017), or sharded behind a `mongos` process (typically port 27018)
+* Preexisting ComPIL databases -- *see metaproteomics repository for [build_compil](https://bitbucket.org/sulab/metaproteomics)*
+    * MassDB -- ***required***
+    * SeqDB -- optional, but needed for identifying parent protein IDs for peptide matches
+    * ProtDB -- optional, but needed for mapping protein IDs to FASTA deflines and other protein information
 
 **Instructions**
 
