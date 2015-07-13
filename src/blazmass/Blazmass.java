@@ -70,7 +70,7 @@ public class Blazmass {
     private String hostname;
     
     private final IonIntensitiesCache ionIntensitiesCache = new IonIntensitiesCache();
-    private HighResMassProcessor hprocessor;
+    public HighResMassProcessor hprocessor;
 
     public Blazmass() {
         try {
@@ -123,11 +123,13 @@ public class Blazmass {
 
         final IndexerMode indexerMode = sParam.isUseIndex()?IndexerMode.SEARCH_INDEXED: IndexerMode.SEARCH_UNINDEXED;
         final DBIndexer indexer = new DBIndexer(sParam, indexerMode);
-        try {
-            indexer.init();
-        } catch (DBIndexerException ex) {
-            logger.log(Level.SEVERE, "Error initializing the indexer in the search mode, cannot search", ex);
-            return;
+        if (!sParam.isUsingMongoDB()) {
+            try {
+                indexer.init();
+            } catch (DBIndexerException ex) {
+                logger.log(Level.SEVERE, "Error initializing the indexer in the search mode, cannot search", ex);
+                return;
+            }
         }
         
         
@@ -337,7 +339,7 @@ public class Blazmass {
                 dXCorr_Square_Sum = 0;
 
                 //int precursorMassBin = (int)((precursorMass + 50)*sParam.getFragmentIonToleranceBinScale());
-                System.out.println(this.hprocessor);
+                System.out.println("this hprocessor" + this.hprocessor);
                 scoreArray = new float[this.hprocessor.getBinSize(sParam)];
                 //double[] precursorMassArr = new double[2];
                 float[] precursorMassArr = new float[chargeState];
@@ -875,9 +877,12 @@ public class Blazmass {
             rList.add(new MassRange(precursorMass - i * AssignMass.DIFFMASSC12C13, ppmTolerance));            
         }
        
-//System.out.println( System.currentTimeMillis()); 
-        pepList = indexer.getSequences(rList);
-        if (null != pepList || pepList.size() > 0) {
+        if (sParam.isUsingMongoDB()) {
+            pepList = mongoconnect.Mongoconnect.getSequences(rList,sParam);
+        } else {
+            pepList = indexer.getSequences(rList);
+        }
+        if (null != pepList && pepList.size() > 0) {
             for (Iterator<IndexedSequence> itr = pepList.iterator(); itr.hasNext();) {
                 IndexedSequence iSeq = itr.next();
                 
@@ -909,12 +914,12 @@ public class Blazmass {
 
             //List<ModResidue> mList = sParam.getModList();
             
-            System.out.println("=====GSS1=====" + pepList);
+            //System.out.println("=====GSS1=====" + pepList);
             
             
             List<List<Double>> modGList = sParam.getModGroupList();
             
-            System.out.println("m list==========" + modGList);
+            //System.out.println("m list==========" + modGList);
                
           
             
@@ -944,7 +949,13 @@ public class Blazmass {
                     //System.out.println( "pep query " + (precursorMass - i * AssignMass.DIFFMASSC12C13) + " " + ppmTolerance);                    
                     rList.add(new MassRange(modPrecursorMass - i * AssignMass.DIFFMASSC12C13, ppmTolerance));            
                 }
-                pepList = indexer.getSequences(rList);
+
+                if (sParam.isUsingMongoDB()) {
+                    pepList = mongoconnect.Mongoconnect.getSequences(rList,sParam);
+                } else {
+                    pepList = indexer.getSequences(rList);
+                }
+                //System.out.println("****pepList*********" + pepList);
                                 
                 //for (int i = 0; i < isotopeNum; i++) {
                // System.out.println("4444=========" + eachModGroup + " " + precursorMass + " " + modPrecursorMass + " " + rList.size());
@@ -952,7 +963,7 @@ public class Blazmass {
                 
                // System.out.println(pepList);
                   //  System.out.print("=");        
-                if (null != pepList || pepList.size() > 0) {
+                if (null != pepList && pepList.size() > 0) {
                     for (Iterator<IndexedSequence> itr = pepList.iterator(); itr.hasNext();) {
                         IndexedSequence iSeq = itr.next();
 

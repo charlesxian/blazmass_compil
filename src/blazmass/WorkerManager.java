@@ -476,6 +476,7 @@ public class WorkerManager {
         private long startTime;
         private long endTime;
         private long totalTime;
+        private HighResMassProcessor hprocessor;
 
         Worker(final String id, MS2ScanQueue scanQueue, final ResultWriter resultWriter, final SearchParams params) throws WorkerManagerException {
             this.id = id;
@@ -487,6 +488,7 @@ public class WorkerManager {
             this.isRunning = false;
 
             this.bmass = new Blazmass();
+            
 
             final IndexerMode indexerMode = params.isUseIndex() ? IndexerMode.SEARCH_INDEXED : IndexerMode.SEARCH_UNINDEXED;
 
@@ -513,6 +515,7 @@ public class WorkerManager {
         public void run() {
             isRunning = true;
             this.startTime = System.currentTimeMillis();
+            this.bmass.hprocessor = new HighResMassProcessor();
 
             while (shouldRun) {
 
