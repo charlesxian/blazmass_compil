@@ -599,7 +599,7 @@ public class DBIndexer {
     }
 
     /**
-     * Get list of sequences in index for the ranges specified wit mass .
+     * Get list of sequences in index for the ranges specified with mass .
      * Requires call to init() and run() first, which might perform indexing, if
      * index for current set of sequest params does not exist
      *

@@ -655,21 +655,14 @@ public class SearchParamReader {
 		// Create a multi-combination generator to generate 3-combinations of
 		// the initial vector
 
-
-		gen = Factory.createMultiCombinationGenerator(initialVector, 2);
-
-		// Print all possible combinations
-		for (ICombinatoricsVector<String> combination : gen) {
-			System.out.println(combination);
-		}
-
-		gen = Factory.createMultiCombinationGenerator(initialVector, 1);
+*/
+		Generator<Double> gen = Factory.createMultiCombinationGenerator(initialVector, 2);
 
 		// Print all possible combinations
-		for (ICombinatoricsVector<String> combination : gen) {
+		for (ICombinatoricsVector<Double> combination : gen) {
 			System.out.println(combination);
 		}
-                */
+                
                                 
             }
 
