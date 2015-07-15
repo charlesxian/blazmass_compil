@@ -160,6 +160,8 @@ public class PeptideResult implements Comparable {
 
     public void addMatchedIon(String ionType, float mz) {
         this.matchedIonList.add(new MatchedIon(ionType, mz));
+        //System.out.println(ionType);
+        //System.out.println(mz);
     }
 
     public List<MatchedIon> getMatchedIonList() {
