@@ -41,6 +41,7 @@ public class SearchParams {
     private String databaseName;
     private String indexDatabaseName;
     
+    public boolean onlyDiffMod = false;
     private int maxNumDiffMod=3;
     private boolean variableTolerance=false;
     private float variablePeptideMassTolerance;
