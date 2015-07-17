@@ -60,9 +60,7 @@ public class MS2ScanReader implements Iterator<MS2Scan> {
 //            logger.log(Level.WARNING, "Cannot get total number of scans, index file cannot be read: " + indexFilePath);
             return -1;
         }
-        
-        
-        
+
         int totalNumScans;
         try {
             totalNumScans = Util.countLines(indexFilePath);

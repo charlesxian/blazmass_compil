@@ -56,35 +56,15 @@ public class WorkerManager {
             logger.log(Level.WARNING, "Already inited");
             return;
         }
-
         final SearchParamReader paramReader;
         try {
             paramReader = new SearchParamReader(paramsDir, paramsFile);
         } catch (IOException ex) {
             logger.log(Level.SEVERE, "Cannot read params and init worker manager", ex);
-
             return;
         }
         params = paramReader.getSearchParams();
-
-        //setup fasta database index
-
-
-        //create preliminary indexer to check index is ready
-        //workers should just use the existing index
-        if (false) { //disable for now, not really needed
-        final IndexerMode indexerMode = params.isUseIndex() ? IndexerMode.SEARCH_INDEXED : IndexerMode.SEARCH_UNINDEXED;
-        try {
-            final DBIndexer indexer = new DBIndexer(params, indexerMode);
-            indexer.init();
-        } catch (DBIndexerException ex) {
-            logger.log(Level.SEVERE, "Could not initialize the preliminary indexer to ensure it is ready for the indexing mode: " + indexerMode, ex);
-            return;
-        }
-        }
-
         inited = true;
-
     }
 
     private static void usage_exit() {
@@ -98,7 +78,6 @@ public class WorkerManager {
             logger.severe("Not inited");
             return;
         }
-
         //submit work for ms2 file
         logger.log(Level.INFO, "Processing MS2: " + ms2File.getAbsolutePath());
 
@@ -106,13 +85,10 @@ public class WorkerManager {
             WorkerPool workers = new WorkerPool(ms2File.getAbsolutePath(), params, numWorkers);
             workers.start();
             //workers are running and WorkerPool blocks til done
-
         } catch (WorkerManagerException ex) {
             logger.log(Level.SEVERE, null, ex);
         }
-
         logger.log(Level.INFO, "Done processing MS2: " + ms2File.getAbsolutePath());
-
     }
 
     public void runDir(File dataDir) {
@@ -123,8 +99,6 @@ public class WorkerManager {
         final File[] flist = dataDir.listFiles();
 
         //submit work for every file
-        
-        
         for (File ms2File : flist) {
             if (!ms2File.getName().endsWith(".ms2")) {
                 continue;
@@ -137,8 +111,6 @@ public class WorkerManager {
                 workers.start();
 
                 //workers are running and WorkerPool blocks til done
-
-
             } catch (WorkerManagerException ex) {
                 logger.log(Level.SEVERE, null, ex);
             }
@@ -179,7 +151,7 @@ public class WorkerManager {
         final WorkerManager manager = new WorkerManager(numWorkers);
         manager.init(ms2FilesDirPath, blazmass.io.SearchParamReader.DEFAULT_PARAM_FILE_NAME);
         manager.runDir(dataDir);
-        
+
     }
 
     /**
@@ -204,7 +176,7 @@ public class WorkerManager {
             System.out.println("Error: cannot read params file: " + paramsFilePath);
             System.exit(-1);
         }
-        
+
         final String dataFilePath = rootPath + File.separator + ms2FileName;
         final File dataFileF = new File(dataFilePath);
         if (!dataFileF.canRead()) {
@@ -212,7 +184,6 @@ public class WorkerManager {
             System.exit(-1);
         }
 
-        
         System.out.println("Using max. worker threads: " + numWorkers);
         final WorkerManager manager = new WorkerManager(numWorkers);
         manager.init(rootPath, paramsFileName);
@@ -263,7 +234,6 @@ public class WorkerManager {
             this.params = params;
             this.numWorkers = numWorkers;
 
-
             try {
                 this.scanReader = new MS2ScanReader(ms2FilePath);
                 this.scanQueue = new MS2ScanQueue();
@@ -286,7 +256,6 @@ public class WorkerManager {
          */
         void start() throws WorkerManagerException {
 
-
             //write header
             //write header just once, create temp blazmass for that...
             final Blazmass bmass = new Blazmass();
@@ -307,10 +276,8 @@ public class WorkerManager {
 
             logger.log(Level.INFO, "Workers started");
 
-
             //start a monitor and wait for it to finish
             //monitor exits when all work is done for this ms2
-
             logger.log(Level.INFO, "Starting monitor");
 
             final Monitor monitor = new Monitor();
@@ -324,7 +291,6 @@ public class WorkerManager {
             logger.log(Level.INFO, "Monitor Completed");
 
             resultWriter.close();
-
 
         }
 
@@ -488,7 +454,6 @@ public class WorkerManager {
             this.isRunning = false;
 
             this.bmass = new Blazmass();
-            
 
             final IndexerMode indexerMode = params.isUseIndex() ? IndexerMode.SEARCH_INDEXED : IndexerMode.SEARCH_UNINDEXED;
 
@@ -526,10 +491,11 @@ public class WorkerManager {
                 }
                 try {
 
-                    if(params.isHighResolution())
+                    if (params.isHighResolution()) {
                         bmass.runScanHigh(scan, params, indexer, resultWriter);
-                    else
+                    } else {
                         bmass.runScan(scan, params, indexer, resultWriter);
+                    }
                     ++spectraProcessed;
 
                     //update stats
@@ -574,7 +540,7 @@ public class WorkerManager {
         }
 
         /**
-         * get worker stats id, total spectrm, total time, time per spectrum,
+         * get worker stats id, total spectrum, total time, time per spectrum,
          * time reading, time writing is running
          *
          * @return
@@ -586,7 +552,6 @@ public class WorkerManager {
             }
 
 	//    return id;
-
             return id + ": spectra: " + spectraProcessed + ", errors: " + spectraErrors
                     + ", total run time: " + totalTime + "ms."
                     + ", per scan time: " + perSpectrumTime + "ms."

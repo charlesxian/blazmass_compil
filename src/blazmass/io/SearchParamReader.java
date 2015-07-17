@@ -567,7 +567,11 @@ public class SearchParamReader {
             }
             
             // Only search for diffmods?
-            param.onlyDiffMod = Integer.parseInt(getParam("only_diff_search")) == 1;
+            String only_diff_search = getParam("only_diff_search");
+            if (only_diff_search != null)
+                param.onlyDiffMod = Integer.parseInt(only_diff_search) == 1;
+            else
+                param.onlyDiffMod = false;
             System.out.println("onlyDiffMod: " + param.onlyDiffMod);
 
             if (null != getParam("diff_search_options") && !"".equals(getParam("diff_search_options"))) {

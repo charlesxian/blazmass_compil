@@ -214,14 +214,11 @@ public class Blazmass {
 
     public void run(String path, File ms2File, SearchParams sParam, DBIndexer indexer) {
         int scanCount = 0;
-
         String base = ms2File.getName().substring(0, ms2File.getName().length() - 3);
-
         String sqtOut = base + SQT_EXT;
         String sqtPath = path + File.separator + sqtOut;
 
         final String logOut = path + File.separator + base + LOG_EXT;
-
         FileWriter logWriter = null;
         try {
             logWriter = new FileWriter(logOut);
@@ -229,14 +226,14 @@ public class Blazmass {
             logger.log(Level.SEVERE, "Could not initialize log writer for file: " + logOut, ex);
         }
 
-//        logger.log(Level.INFO, "Starting blazmass search, file: " + ms2File.getAbsolutePath());
         ResultWriter resultWriter = null;
         try {
             final MS2ScanReader ms2Reader = new MS2ScanReader(ms2File.getAbsolutePath());
             final int totalScans = ms2Reader.getNumScansIdx();
-            String totalScansStr = null;
+            System.out.println(totalScans);
+            String totalScansStr;
             if (totalScans == -1) {
-                totalScansStr = "Unknown";
+                totalScansStr = "Scan count:";
             } else {
                 totalScansStr = Integer.toString(totalScans);
             }
@@ -249,18 +246,13 @@ public class Blazmass {
                 scanCount++;
                 final MS2Scan scan = ms2Reader.next();
 
-                if (sParam.isHighResolution()) {
-
-                    //System.out.println("each scan................." + scan.getScanType());
-                    // if("HCD".equals(scan.getScanType()))
-                    //     scan.processHCDScan();
+                if (sParam.isHighResolution())
                     runScanHigh(scan, sParam, indexer, resultWriter);
-                } else {
+                else
                     runScan(scan, sParam, indexer, resultWriter);
-                }
 
                 if (logWriter != null) {
-                    logWriter.append(totalScansStr).append("\t").append(Integer.toString(scanCount)).append("\n");
+                    logWriter.append(totalScansStr).append("\t").append(Integer.toString(scanCount)).append("\tScan num:\t").append(Integer.toString(scan.getIsScan1())).append("\n");
                     if (scanCount % 10 == 0) {
                         logWriter.flush();
                     }
