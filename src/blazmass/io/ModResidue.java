@@ -8,14 +8,12 @@ package blazmass.io;
  *
  * @author rpark
  */
-
 public class ModResidue {
 
     private char residue;
     private float massShift;
 
-    public ModResidue(char residue, float massShift)
-    {
+    public ModResidue(char residue, float massShift) {
         this.residue = residue;
         this.massShift = massShift;
     }
@@ -25,8 +23,6 @@ public class ModResidue {
         return "ModResidue{" + "residue=" + residue + ", massShift=" + massShift + '}';
     }
 
-    
-    
     public char getResidue() {
         return residue;
     }

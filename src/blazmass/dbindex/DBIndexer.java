@@ -1,4 +1,3 @@
-
 package blazmass.dbindex;
 
 import blazmass.AssignMass;
@@ -32,27 +31,28 @@ public class DBIndexer {
      */
     public enum IndexerMode {
 
-        INDEX, SEARCH_INDEXED, SEARCH_UNINDEXED, 
+        INDEX, SEARCH_INDEXED, SEARCH_UNINDEXED,
     };
+
     /**
      * Different operational modes supported
      */
     public enum IndexType {
 
         INDEX_NORMAL {
-            @Override
-            public String toString() {
-                return "Normal index (best for small and medium db)";
-            }
-            
-        }, 
+                    @Override
+                    public String toString() {
+                        return "Normal index (best for small and medium db)";
+                    }
+
+                },
         INDEX_LARGE {
-            @Override
-            public String toString() {
-                return "Large index (best for large db)";
-            }
-            
-        },
+                    @Override
+                    public String toString() {
+                        return "Large index (best for large db)";
+                    }
+
+                },
     };
     private IndexerMode mode;
     private IndexType indexType;
@@ -76,13 +76,13 @@ public class DBIndexer {
     }
 
     public static void runDBIndexer(String path) {
-	runDBIndexer(path, SearchParamReader.DEFAULT_PARAM_FILE_NAME);
+        runDBIndexer(path, SearchParamReader.DEFAULT_PARAM_FILE_NAME);
     }
-    
+
     public static void mergeLargeDBIndex(String path) {
         SearchParamReader preader;
         try {
-           // System.out.println("path"  + path);
+            // System.out.println("path"  + path);
             preader = new SearchParamReader(path, SearchParamReader.DEFAULT_PARAM_FILE_NAME);
             //preader = new SearchParamReader(args[0], SearchParamReader.DEFAULT_PARAM_FILE_NAME);
         } catch (IOException ex) {
@@ -90,8 +90,8 @@ public class DBIndexer {
             return;
         }
         SearchParams sparam = preader.getParam();
-        
-        if (! sparam.getIndexType().equals(IndexType.INDEX_LARGE)) {
+
+        if (!sparam.getIndexType().equals(IndexType.INDEX_LARGE)) {
             throw new RuntimeException("Merge only works for large db index type, other indexed have merge built-in");
         }
 
@@ -99,7 +99,7 @@ public class DBIndexer {
         DBIndexStoreFiles largeIndex = new DBIndexStoreFiles();
         try {
             largeIndex.merge(sparam);
-   
+
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "Error running merge on large index.", ex);
         }
@@ -116,7 +116,6 @@ public class DBIndexer {
             return;
         }
         SearchParams sparam = preader.getParam();
-
 
         //indexer in indexing mode
         final DBIndexer indexer = new DBIndexer(sparam, IndexerMode.INDEX);
@@ -141,8 +140,6 @@ public class DBIndexer {
         this.mode = mode;
 
         //this.massTolerance = sparam.getRelativePeptideMassTolerance();
-
-        
         if (!mode.equals(IndexerMode.SEARCH_UNINDEXED)) {
             indexType = sparam.getIndexType();
             if (indexType.equals(IndexType.INDEX_NORMAL)) {
@@ -154,15 +151,14 @@ public class DBIndexer {
                 }
                 this.indexStore = new DBIndexStoreSQLiteMult(sparam, inMemoryIndex);
                 ///this.indexStore = new DBIndexStoreSQLiteString();
-            }
-            else {
+            } else {
                 //index_type=2
                 //this.indexStore = new DBIndexStoreFiles();
 //                this.indexStore = new DBIndexStoreMongoDb(sparam);
                 ////this.indexStore = new DBIndexStoreLucene();
             }
             logger.log(Level.INFO, "Using database index type: " + indexType);
-            
+
         } else {
             //set up in memory temporary "index" that does the filtering
             //this is the nonindexed saerch
@@ -229,20 +225,16 @@ public class DBIndexer {
                 float precMass = Constants.H2O_PROTON;
                 precMass += AssignMass.getcTerm();
                 precMass += AssignMass.getnTerm();
-                
 
                 // System.out.println("===>>" + precMass + "\t" + Constants.MAX_PRECURSOR);
                 //System.out.println("==" + j + " " + length + " " + (j < length));
-
                 //int testC=0;
                 int pepSize = 0;
 
                 int intMisCleavageCount = -1;
 
-
                 //while (precMass <= Constants.MAX_PRECURSOR_MASS && end < length) {
-                while (precMass <= sparam.getMaxPrecursorMass() && end < length) 
-                {
+                while (precMass <= sparam.getMaxPrecursorMass() && end < length) {
                     pepSize++;
 
                     final char curIon = protSeq.charAt(end);
@@ -258,13 +250,13 @@ public class DBIndexer {
                     if (intMisCleavageCount > maxIntCleavage) {
                         break;
                     }
-                    
+
                     //if (precMass > Constants.MAX_PRECURSOR_MASS) {
                     if (precMass > sparam.getMaxPrecursorMass()) {
                         break;
                     }
-                    
-                    if (pepSize >= Constants.MIN_PEP_LENGTH && precMass >= sparam.getMinPrecursorMass() ) { //Constants.MIN_PRECURSOR ) {
+
+                    if (pepSize >= Constants.MIN_PEP_LENGTH && precMass >= sparam.getMinPrecursorMass()) { //Constants.MIN_PRECURSOR ) {
                         if (cleavageStatus >= maxMissedCleavages) {
                             //qualifies based on params
 
@@ -273,11 +265,10 @@ public class DBIndexer {
                             //check if index will accept it
                             final FilterResult filterResult = indexStore.filterSequence(precMass, peptideSeqString);
 
-                            if (filterResult.equals(FilterResult.SKIP_PROTEIN_START) ) {
+                            if (filterResult.equals(FilterResult.SKIP_PROTEIN_START)) {
                                 //bail out earlier as we are no longer interested in this protein starting at start
                                 break; //move to new start position
-                            }
-                            else if (filterResult.equals(FilterResult.INCLUDE) ) {
+                            } else if (filterResult.equals(FilterResult.INCLUDE)) {
                                 final int resLeftI = start >= Constants.MAX_INDEX_RESIDUE_LEN ? start - Constants.MAX_INDEX_RESIDUE_LEN : 0;
                                 final int resLeftLen = Math.min(Constants.MAX_INDEX_RESIDUE_LEN, start);
                                 StringBuilder sbLeft = new StringBuilder(Constants.MAX_INDEX_RESIDUE_LEN);
@@ -292,7 +283,6 @@ public class DBIndexer {
                                         sbRight.append(protSeq.charAt(jj + resRightI));
                                     }
                                 }
-
 
                                 //add -- markers to fill Constants.MAX_INDEX_RESIDUE_LEN length
                                 final int lLen = sbLeft.length();
@@ -311,8 +301,8 @@ public class DBIndexer {
 //                                System.out.println(precMass);
                             } //end if add sequence
                         }
-                    }                    
-        
+                    }
+
                     ++end;
                 }
 //
@@ -323,8 +313,6 @@ public class DBIndexer {
 
     }
 
-
-    
     /**
      * Initialize the indexer
      *
@@ -333,7 +321,7 @@ public class DBIndexer {
     public void init() throws DBIndexerException {
         if (inited) {
             throw new IllegalStateException("Already inited");
-        }         
+        }
 
         //reset prot number
         protNum = -1;
@@ -352,7 +340,7 @@ public class DBIndexer {
             //initialize index storage
             indexStore.init(indexName);
 //            if (mode.equals(IndexerMode.SEARCH_INDEXED)) {            
-            if (mode.equals(IndexerMode.SEARCH_INDEXED) && sparam.getIndexType() == DBIndexer.IndexType.INDEX_NORMAL ) {
+            if (mode.equals(IndexerMode.SEARCH_INDEXED) && sparam.getIndexType() == DBIndexer.IndexType.INDEX_NORMAL) {
 
                 if (!indexStore.indexExists()) {
                     logger.log(Level.SEVERE, "Error, cannot search, index does not exist: " + indexName);
@@ -405,7 +393,7 @@ public class DBIndexer {
                     Fasta fasta = itr.next();
                     protCache.addProtein(fasta.getSequestLikeAccession(), fasta.getSequence());
                 }
-                
+
                 logger.log(Level.INFO, "Done initializing protein cache");
             } else {
                 //logger.log(Level.INFO, "Protein cache already populated, reusing.");
@@ -481,7 +469,6 @@ public class DBIndexer {
                 cutSeq(fasta);
 //                System.out.print("Printing the last buffer....");
 //                indexStore.lastBuffertoDatabase();
-                      
 
                 ++indexedProteins;
                 if (statusWriter != null) {
@@ -492,7 +479,7 @@ public class DBIndexer {
                 }
             }
 //               System.out.print("Printing the last buffer....");
-              // indexStore.lastBuffertoDatabase();
+            // indexStore.lastBuffertoDatabase();
 
         } catch (IOException ex) {
             logger.log(Level.SEVERE, "Error initializing and adding sequences", ex);
@@ -539,7 +526,6 @@ public class DBIndexer {
         protNum = -1;
 
         //cut sequences in prot cache and check if qualify
-
         final ProteinCache protCache = ProteinCache.getInstance();
 
         final int numProteins = protCache.getNumberProteins();
@@ -560,11 +546,10 @@ public class DBIndexer {
         List<IndexedSequence> sequences = null;
         try {
             sequences = indexStore.getSequences(massRanges);
-            
+
         } catch (DBIndexStoreException ex) {
             logger.log(Level.SEVERE, "Error getting sequences from in-memory filtering index", ex);
         }
-
 
         return sequences;
 

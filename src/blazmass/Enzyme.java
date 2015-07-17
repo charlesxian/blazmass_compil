@@ -64,7 +64,6 @@ public class Enzyme {
         Enzyme.enzymeArr = enzymeArr;
     }
 
-
     public static boolean isEnzyme(char ch) {
         return enzymeArr[ch];
     }

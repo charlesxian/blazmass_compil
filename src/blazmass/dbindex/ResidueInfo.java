@@ -3,11 +3,11 @@ package blazmass.dbindex;
 /**
  *
  * Represents residue information for a peptide
- * 
+ *
  * @author Adam
  */
 public class ResidueInfo {
-    
+
     private String residueLeft;
     private String residueRight;
 
@@ -24,13 +24,9 @@ public class ResidueInfo {
         return residueRight;
     }
 
-    
-    
     @Override
     public String toString() {
         return "ResidueInfo{" + "residueLeft=" + residueLeft + ", residueRight=" + residueRight + '}';
     }
-    
-    
-    
+
 }

@@ -553,7 +553,7 @@ public class WorkerManager {
                 perSpectrumTime = (int) totalTime / spectraProcessed;
             }
 
-	//    return id;
+            //    return id;
             return id + ": spectra: " + spectraProcessed + ", errors: " + spectraErrors
                     + ", total run time: " + totalTime + "ms."
                     + ", per scan time: " + perSpectrumTime + "ms."

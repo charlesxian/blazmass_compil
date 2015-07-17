@@ -146,7 +146,7 @@ public class Mongoconnect {
         int lowMass;
         int highMass;
         String sequence;
-        
+
         // Build long "or" query using all mass ranges
         BasicDBList or = new BasicDBList();
         for (MassRange mRange : rList) {

@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package mongoconnect;
 
 /**
@@ -11,7 +10,7 @@ package mongoconnect;
  * @author sandip
  */
 public class ResidueInfo {
-    
+
     private String residueLeft;
     private String residueRight;
 
@@ -28,13 +27,9 @@ public class ResidueInfo {
         return residueRight;
     }
 
-    
-    
     @Override
     public String toString() {
         return "ResidueInfo{" + "residueLeft=" + residueLeft + ", residueRight=" + residueRight + '}';
     }
-    
-    
-    
+
 }

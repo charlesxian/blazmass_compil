@@ -12,9 +12,11 @@ public class MassRange {
 
     /**
      * Create new mass range
+     *
      * @param precMass precursor mass
-     * @param tolerance mass dependant pre-calculated tolerance for that mass to use
-     * example: resulting mass range will be <precMass-tolerance, precMass+tolerance>
+     * @param tolerance mass dependant pre-calculated tolerance for that mass to
+     * use example: resulting mass range will be
+     * <precMass-tolerance, precMass+tolerance>
      */
     public MassRange(float precMass, float tolerance) {
         this.precMass = precMass;
@@ -59,8 +61,5 @@ public class MassRange {
         }
         return true;
     }
-    
-    
-    
-    
+
 }

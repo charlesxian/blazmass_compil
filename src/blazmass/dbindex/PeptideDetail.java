@@ -11,9 +11,8 @@ import java.util.List;
  *
  * @author Harshil
  */
-public class PeptideDetail 
-{
-    
+public class PeptideDetail {
+
     private String sequence;
     private float mass;
     private int lenght;

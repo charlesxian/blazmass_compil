@@ -1,4 +1,3 @@
-
 package blazmass;
 
 import java.io.UnsupportedEncodingException;
@@ -11,7 +10,7 @@ public class Fasta implements Comparable<Fasta> {
     // description line of this Fasta sequence
     protected static String defline;
     // the sequence string of this Fasta
-    protected byte [] sequence;
+    protected byte[] sequence;
     private String seq;
     private String accession = null;
     private String sequestLikeAccession = null;
@@ -22,7 +21,7 @@ public class Fasta implements Comparable<Fasta> {
         this.defline = defline;
 //System.out.println("defline: " + this.defline);
         sequence = sequence.toUpperCase();
-    //    seq = sequence;
+        //    seq = sequence;
         try {
             this.sequence = sequence.getBytes("US-ASCII");
         } catch (UnsupportedEncodingException e) {
@@ -31,67 +30,79 @@ public class Fasta implements Comparable<Fasta> {
         }
 //System.out.println("hahaha, defline: " + this.defline);
     }
+
     public void setMPlusH(double mh) {
         mPlusH = mh;
     }
+
     public double getMPlusH() {
         return mPlusH;
     }
+
     //public double setMPlusH() {
     //    return mPlusH;
     //}
     // to order the sequence from long to short
+
     public int compareTo(Fasta f) {
-        if(f == null) return -1;
-        return f.getLength() - getLength(); 
+        if (f == null) {
+            return -1;
+        }
+        return f.getLength() - getLength();
     }
+
     public static String getAccessionWithNoVersion(String ac) {
         int index = ac.indexOf(".");
-        if(index == -1) {
+        if (index == -1) {
             return ac;
         } else {
             return ac.substring(0, index);
         }
     }
+
     public String getAccessionWithNoVersion() {
         int index = accession.indexOf(".");
-        if(index == -1) {
+        if (index == -1) {
             return accession;
         } else {
             return getAccession().substring(0, index);
         }
     }
+
     public String getSequence() {
-        if(seq == null) {
+        if (seq == null) {
             seq = new String(sequence);
         }
         return seq;
         //return new String(sequence);
     }
-    public byte [] getSequenceAsBytes() {
+
+    public byte[] getSequenceAsBytes() {
         return sequence;
     }
+
     public String getOriginalDefline() {
-        
+
         //return defline.substring(1,defline.length());
         return defline;
     }
+
     public String getDefline() {
-        
-        return defline.substring(1,defline.length());
+
+        return defline.substring(1, defline.length());
     }
 
     public byte byteAt(int index) {
         return sequence[index];
     }
+
     public int getLength() {
         return sequence.length;
     }
 
-
     // get accession without version
     public String getAccession() {
-        if(accession == null) {
+        if (accession == null) {
 //System.out.println("defline: " + defline);
             accession = getAccession(defline.substring(1));
 
@@ -101,42 +112,41 @@ public class Fasta implements Comparable<Fasta> {
     }
 
     public String getSequestLikeAccession() {
-        if(sequestLikeAccession == null) {
+        if (sequestLikeAccession == null) {
             sequestLikeAccession = getSequestLikeAccession(defline.substring(1));
         }
         return sequestLikeAccession;
     }
+
     public boolean isReversed() {
         return getAccession().startsWith("Re");
     }
+
     public static String getSequestLikeAccession(String acc) {
-        String [] arr = acc.split("\t");
-        String [] arr1 = arr[0].split(" ");
+        String[] arr = acc.split("\t");
+        String[] arr1 = arr[0].split(" ");
         String newacc = arr1[0];
-        if(newacc != null && newacc.length() > 40) {
+        if (newacc != null && newacc.length() > 40) {
             newacc = newacc.substring(0, 40);
         }
-        return newacc;        
+        return newacc;
 
     }
 
-    public static String getAccession(String accession)
-    {
+    public static String getAccession(String accession) {
         //NCBI, IPI, or others such as UNIT_PROT, SGD, NCI
 //        accession = getDefline().substring( getDefline().indexOf('>')+1 );
         //accession = getDefline();
 
         //There are many corruptted sqt file.  Ignore it.
-        try
-        {
-            if( accession.startsWith("gi") && accession.contains("|") ) //NCBI
+        try {
+            if (accession.startsWith("gi") && accession.contains("|")) //NCBI
             {
                 String[] arr = accession.split("\\|");
 
-		if( arr.length>=4 && ("gb".equals(arr[2]) || "ref".equals(arr[2]) || "emb".equals(arr[2]) || "dbj".equals(arr[2]) || "prf".equals(arr[2]) ||"sp".equals(arr[2])) || "tpd".equals(arr[2]) ||"tpg".equals(arr[2]) ||"tpe".equals(arr[2]) )
-		    accession = arr[3];
-                else
-                {
+                if (arr.length >= 4 && ("gb".equals(arr[2]) || "ref".equals(arr[2]) || "emb".equals(arr[2]) || "dbj".equals(arr[2]) || "prf".equals(arr[2]) || "sp".equals(arr[2])) || "tpd".equals(arr[2]) || "tpg".equals(arr[2]) || "tpe".equals(arr[2])) {
+                    accession = arr[3];
+                } else {
                     arr = accession.split(" ");
                     accession = arr[1];
                 }
@@ -144,76 +154,75 @@ public class Fasta implements Comparable<Fasta> {
                 //Accession # should end with digit.  If accession # does not end with digit,
                 //grap next string (We assume this next one ends with digit.)
 		/*
-                if( pattern.matcher(arr[3]).matches() )
-                    accession = arr[3];
-                else
-                    accession = arr[4].substring(0, arr[4].indexOf(" "));
-		*/
-
-            }
-            else if( accession.startsWith("IPI") ) //IPI
+                 if( pattern.matcher(arr[3]).matches() )
+                 accession = arr[3];
+                 else
+                 accession = arr[4].substring(0, arr[4].indexOf(" "));
+                 */
+            } else if (accession.startsWith("IPI")) //IPI
             {
                 String arr[] = accession.split("\\|");
                 String subArr[] = arr[0].split(":");
 
-                if(subArr.length>1)
+                if (subArr.length > 1) {
                     accession = subArr[1];
-                else
+                } else {
                     accession = subArr[0];
-            }
-            else if( accession.startsWith("Re") || accession.startsWith("contam") || accession.startsWith("Contam")) //Reverse database
+                }
+            } else if (accession.startsWith("Re") || accession.startsWith("contam") || accession.startsWith("Contam")) //Reverse database
             {
                 int space = accession.indexOf(" ");
                 int tab = accession.indexOf("\t");
 
-                if(space<0) space = 40;
-                if(tab<0) tab = 40;
+                if (space < 0) {
+                    space = 40;
+                }
+                if (tab < 0) {
+                    tab = 40;
+                }
 
-                int index = (tab>space)?space:tab;
+                int index = (tab > space) ? space : tab;
 
                 int end;
 
-                if(index<=0 || index>=40) //no space
+                if (index <= 0 || index >= 40) //no space
                 {
                     int length = accession.length();
-                    end = (length>40)?40:length;
-                }
-                else  //cut by the first space
+                    end = (length > 40) ? 40 : length;
+                } else //cut by the first space
+                {
                     end = index;
+                }
 
                 accession = accession.substring(0, end);
-            }
-            else //UNIT_PROT, NCI or SGD 
-
+            } else //UNIT_PROT, NCI or SGD 
             {
                 int spaceIndex = accession.indexOf(" ");
                 int tabIndex;
 
-                if(spaceIndex>0)
-                {
+                if (spaceIndex > 0) {
                     tabIndex = accession.indexOf("\t");
 
-                    if(tabIndex>0 && spaceIndex>tabIndex)
+                    if (tabIndex > 0 && spaceIndex > tabIndex) {
                         accession = accession.substring(0, tabIndex);
-                    else
+                    } else {
                         accession = accession.substring(0, spaceIndex);
+                    }
                 }
             }
-        }
-        catch(Exception e)
-        {
+        } catch (Exception e) {
             //System.out.println("No Correct Accession found, but this will be handled by MSP system." + accession + " " +  e);
 
             int i = accession.indexOf(" ");
-            if(i<0)
+            if (i < 0) {
                 return accession;
-            else
+            } else {
                 return accession.substring(0, i);
+            }
 
         }
 
         return accession;
     }
-
 
 }

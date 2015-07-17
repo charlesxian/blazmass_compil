@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Collections;
 
-
 /**
  * Represents MS2 scan
  *
@@ -107,92 +106,92 @@ public class MS2Scan {
     public void setScanType(String scanType) {
         this.scanType = scanType;
     }
-    
+
     public void processHCDScan() {
 
         /*
 
-        ArrayList<Peak> newpeaks = new ArrayList<Peak>(DEFAULTNUMPEAKS);
-        ArrayList<Peak> toberemoved = new ArrayList();
+         ArrayList<Peak> newpeaks = new ArrayList<Peak>(DEFAULTNUMPEAKS);
+         ArrayList<Peak> toberemoved = new ArrayList();
 
 
-        double maxmz = getMaxM2z();
+         double maxmz = getMaxM2z();
         
-        int peakindex = 0;    
-        */
-        
-        float max = this.masses.get(this.masses.size()-1);
-        int peakSize = masses.size(); 
-        int peakindex = 0;     
-     //   System.out.println("===" + max);
+         int peakindex = 0;    
+         */
+        float max = this.masses.get(this.masses.size() - 1);
+        int peakSize = masses.size();
+        int peakindex = 0;
+        //   System.out.println("===" + max);
         List<Float> tempMasses = new ArrayList<Float>();
         List<Float> tempIntensities = new ArrayList<Float>();
-        
-        for(int i = 0; i*100 < max; i++) {
+
+        for (int i = 0; i * 100 < max; i++) {
             ArrayList<MassIntensityModel> temp = new ArrayList(100);
-            double uppermzlimit = (i+1)*100;
-            
-            while(peakindex < peakSize) {
+            double uppermzlimit = (i + 1) * 100;
+
+            while (peakindex < peakSize) {
                 float mass = masses.get(peakindex);
 
               //  System.out.println("aa" + mass + " " + uppermzlimit);
-                
-                if(mass <  uppermzlimit) {
-                    
-                  //  System.out.println(mass);
+                if (mass < uppermzlimit) {
+
+                    //  System.out.println(mass);
                     temp.add(new MassIntensityModel(this.intensities.get(peakindex), peakindex));
                 } else {
                     break;
                 }
-                
+
                 peakindex++;
             }
-          
+
 //System.out.println("New Peak List:");
             //sort temp by intensity
-            
           //  for(int ii=0;ii<temp.size();ii++) {
-          //      System.out.println("------------\t" + ii + " " + temp.get(ii).getIntensity() + " " + temp.get(ii).getIndex());
-          //  }
-            
+            //      System.out.println("------------\t" + ii + " " + temp.get(ii).getIntensity() + " " + temp.get(ii).getIndex());
+            //  }
             Collections.sort(temp);
           //  for(int ii=0;ii<temp.size();ii++) {
-          //      System.out.println("------------>>\t" + ii + " " + temp.get(ii).getIntensity() + " " + temp.get(ii).getIndex());
-          //  }
-          //  System.out.println("aaaaaa");
-             
-            int[] indexArr = new int[18];
-            int tempCount=0;
+            //      System.out.println("------------>>\t" + ii + " " + temp.get(ii).getIntensity() + " " + temp.get(ii).getIndex());
+            //  }
+            //  System.out.println("aaaaaa");
 
-            for(int j=0;j<=18;j++) {
-            //for(int j = temp.size() - 18; j >=0 && j < temp.size(); j++) {
-                if(j>=temp.size()) break;
+            int[] indexArr = new int[18];
+            int tempCount = 0;
+
+            for (int j = 0; j <= 18; j++) {
+                //for(int j = temp.size() - 18; j >=0 && j < temp.size(); j++) {
+                if (j >= temp.size()) {
+                    break;
+                }
                 //System.out.println("==\t" + temp.get(j).getM2z());
                 int tmpIndex = temp.get(j).getIndex();
-                indexArr[tempCount++] = tmpIndex;                
+                indexArr[tempCount++] = tmpIndex;
 //System.out.println(temp.get(j).getM2z() + " " + temp.get(j).getIntensity());
             }
-            
+
             Arrays.sort(indexArr);
-            
-            for(int j=0;j<indexArr.length;j++) {
-                
-                if(indexArr[j]<=0) return;
-                
-            //    System.out.println(indexArr[j]);
+
+            for (int j = 0; j < indexArr.length; j++) {
+
+                if (indexArr[j] <= 0) {
+                    return;
+                }
+
+                //    System.out.println(indexArr[j]);
                 tempMasses.add(masses.get(indexArr[j]));
-                tempIntensities.add(intensities.get(indexArr[j]));                 
+                tempIntensities.add(intensities.get(indexArr[j]));
             }
-           
-        } 
-        
-        for(int i=0;i<tempMasses.size();i++) {
+
+        }
+
+        for (int i = 0; i < tempMasses.size(); i++) {
             System.out.println(tempMasses.get(i));
         }
 //System.out.println("Number of peaks before: " + peaks.size());
         this.masses = tempMasses;
         this.intensities = intensities;
-        
+
     }
-    
+
 }

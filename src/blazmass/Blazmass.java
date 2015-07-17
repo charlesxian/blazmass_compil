@@ -246,10 +246,11 @@ public class Blazmass {
                 scanCount++;
                 final MS2Scan scan = ms2Reader.next();
 
-                if (sParam.isHighResolution())
+                if (sParam.isHighResolution()) {
                     runScanHigh(scan, sParam, indexer, resultWriter);
-                else
+                } else {
                     runScan(scan, sParam, indexer, resultWriter);
+                }
 
                 if (logWriter != null) {
                     logWriter.append(totalScansStr).append("\t").append(Integer.toString(scanCount)).append("\tScan num:\t").append(Integer.toString(scan.getIsScan1())).append("\n");

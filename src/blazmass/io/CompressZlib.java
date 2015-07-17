@@ -13,9 +13,9 @@ import java.util.zip.Inflater;
 public class CompressZlib {
 
     private static final String ENCODING = "UTF-8";
-    
+
     private static final Logger logger = Logger.getLogger(CompressZlib.class.getName());
-    
+
     public byte[] compress(byte[] bytesToCompress) {
         Deflater deflater = new Deflater();
         deflater.setInput(bytesToCompress);
@@ -63,8 +63,8 @@ public class CompressZlib {
 
         int compressionFactorMaxLikely = 3;
 
-        int bufferSizeInBytes =
-                numberOfBytesToDecompress
+        int bufferSizeInBytes
+                = numberOfBytesToDecompress
                 * compressionFactorMaxLikely;
 
         byte[] bytesDecompressed = new byte[bufferSizeInBytes];

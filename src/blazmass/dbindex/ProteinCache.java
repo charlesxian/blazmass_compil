@@ -9,9 +9,9 @@ import java.util.List;
  * Supports addition of proteins and constant access of protein sequence by id
  * Abstracts out the underlying storage.
  *
- * Singleton, so we do not waste memory in multi-threaded setup
- * Thread-safe, can be shared between multiple reader threads.
- * 
+ * Singleton, so we do not waste memory in multi-threaded setup Thread-safe, can
+ * be shared between multiple reader threads.
+ *
  * @author Adam
  */
 public class ProteinCache {
@@ -78,14 +78,12 @@ public class ProteinCache {
      * 
      * 
      */
- public void addProtein(String def) {
+
+    public void addProtein(String def) {
         defs.add(def);
-      
+
     }
-    
-    
-    
-    
+
     /**
      * Get peptide sequence as protein subsequence, does not check bounds
      *
@@ -98,9 +96,7 @@ public class ProteinCache {
         String protSeq = getProteinSequence(protId);
         String peptideSeq = null;
 
-
         peptideSeq = protSeq.substring(seqOffset, seqOffset + seqLen);
-
 
         return peptideSeq;
     }
@@ -121,14 +117,14 @@ public class ProteinCache {
     synchronized boolean isPopulated() {
         return !sequences.isEmpty();
     }
-    
+
     public List<IndexedProtein> getProteins(IndexedSequence sequence) {
         List<IndexedProtein> ret = new ArrayList<IndexedProtein>();
 
         for (int proteinId : sequence.getProteinIds()) {
             IndexedProtein ip = new IndexedProtein(this.getProteinDef(proteinId), proteinId);
             ret.add(ip);
-        }          
+        }
         return ret;
     }
 }

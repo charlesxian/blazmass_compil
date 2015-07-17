@@ -39,7 +39,7 @@ public class FastaReader {
         int total = 0;
         while ((line = br.readLine()) != null) {
             line = line.trim();
-            if (! line.isEmpty() && line.charAt(0) == FIRSTCHAROFDEFLINE) {
+            if (!line.isEmpty() && line.charAt(0) == FIRSTCHAROFDEFLINE) {
                 ++total;
             }
         }
@@ -134,10 +134,12 @@ public class FastaReader {
 
             String defLine = fasta.getDefline();
             String seq = fasta.getSequence();
-System.out.println(seq);
-	}
+            System.out.println(seq);
+        }
 
-if(true) return;
+        if (true) {
+            return;
+        }
 
         int numEntries = 0;
         HashSet<String> accessions = new HashSet<String>(1000000);
@@ -186,6 +188,5 @@ if(true) return;
          System.out.println(seq);
          }
          */
-
     }
 }

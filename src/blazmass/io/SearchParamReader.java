@@ -63,11 +63,13 @@ public class SearchParamReader {
             //StringBuffer sb = new StringBuffer();
             //br.skip(2000);
             while ((eachLine = br.readLine()) != null) {
-                if (eachLine.startsWith("#"))
+                if (eachLine.startsWith("#")) {
                     continue;
+                }
                 String[] strArr = eachLine.split("=");
-                if (strArr.length < 2)
+                if (strArr.length < 2) {
                     continue;
+                }
 
                 ht.put(strArr[0].trim(), strArr[1].split(";")[0].trim());
             }
@@ -77,7 +79,7 @@ public class SearchParamReader {
             } else {
                 param.setSqtSuffix(sqtSuffix);
             }
-            
+
             param.setDatabaseName(trimValue(getParam("database_name")));
             param.setIndexDatabaseName(trimValue(getParam("index_database_name")));
 
@@ -100,7 +102,6 @@ public class SearchParamReader {
             if (null == pepTolerance) {
                 System.out.println("Error: ppm_peptide_mass_tolerance is missing");
             }
-
 
             param.setPeptideMassTolerance(trimValueAsFloat(pepTolerance));
             param.setFragmentIonTolerance(trimValueAsFloat(getParam("ppm_fragment_ion_tolerance")));
@@ -174,7 +175,7 @@ public class SearchParamReader {
 
             String massTypeFrag = getParam("mass_type_fragment").trim();
 
-           // System.out.println("=====---=====" + massTypeParent);
+            // System.out.println("=====---=====" + massTypeParent);
             // System.out.println("=====---=====" + massTypeFrag);
             if ("1".equals(massTypeFrag)) {
                 param.setUseMonoFragment(true);
@@ -356,13 +357,13 @@ public class SearchParamReader {
             }
             //amassFrag.addMass('T', f );
 
-        //System.out.println("====" + AssignMass.getMass('C') + " " + param.getN15Enrichment());
+            //System.out.println("====" + AssignMass.getMass('C') + " " + param.getN15Enrichment());
             //System.out.println("====>>" + f);        
             f = Float.parseFloat(getParam("add_C_Cysteine"));
             if (param.getN15Enrichment() > 0) {
                 f = f + param.getN15Enrichment() * (f - 57.02146f);
             }
-                //amassPar.addMass('C', f*param.getN15Enrichment());
+            //amassPar.addMass('C', f*param.getN15Enrichment());
 
             amassPar.addMass('C', f);
 
@@ -529,13 +530,14 @@ public class SearchParamReader {
             {
                 param.setEnzymeOffset(0);
             }
-            
+
             // Only search for diffmods?
             String only_diff_search = getParam("only_diff_search");
-            if (only_diff_search != null)
+            if (only_diff_search != null) {
                 param.onlyDiffMod = Integer.parseInt(only_diff_search) == 1;
-            else
+            } else {
                 param.onlyDiffMod = false;
+            }
             System.out.println("onlyDiffMod: " + param.onlyDiffMod);
 
             if (null != getParam("diff_search_options") && !"".equals(getParam("diff_search_options"))) {

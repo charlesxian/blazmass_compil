@@ -55,7 +55,7 @@ public class DBIndexStoreFiles implements DBIndexStore {
     private final static Charset ENCODING = Charset.forName("UTF-8");
     private final byte[] SEP;
     private final byte[] NLSEP;
-    private static final int MAX_MASS = (int) Constants.MAX_PRECURSOR_MASS + 400;    
+    private static final int MAX_MASS = (int) Constants.MAX_PRECURSOR_MASS + 400;
 //    private static final int MAX_MASS = (int)  + 400;
     private static final int READ_BUFF_SIZE = 10 * 1024 * 1024;
 
@@ -84,7 +84,6 @@ public class DBIndexStoreFiles implements DBIndexStore {
                 }
             }
 
-
         } else {
             File indexDirF = new File(indexDir);
             indexDirF.mkdir();
@@ -93,8 +92,6 @@ public class DBIndexStoreFiles implements DBIndexStore {
                 throw new DBIndexStoreException("Error creating index dir: " + indexDir);
             }
         }
-
-
 
         inited = true;
     }
@@ -109,7 +106,6 @@ public class DBIndexStoreFiles implements DBIndexStore {
 
         indexFiles = indexDirF.listFiles();
         return indexFiles.length > 0;
-
 
     }
 
@@ -137,9 +133,7 @@ public class DBIndexStoreFiles implements DBIndexStore {
         writerCache.clear();
 
         //TODO merge sequences (optional)
-
         //TODO sort every file by mass (use sort.exe)
-
         indexExists = true;
 
         System.out.println("Total sequences added to index: " + Long.toString(indexed));
@@ -206,7 +200,7 @@ public class DBIndexStoreFiles implements DBIndexStore {
     }
 
     private int[] getFileRangeForMassRange(float minMass, float maxMass) {
-        if (maxMass > MAX_MASS) {            
+        if (maxMass > MAX_MASS) {
             logger.log(Level.SEVERE, "Trying to get a sequence for more than supported mass: " + maxMass);
         }
 
@@ -239,13 +233,10 @@ public class DBIndexStoreFiles implements DBIndexStore {
         final List<IndexedSequence> ret = new ArrayList<IndexedSequence>();
 
 //        logger.log(Level.INFO, "Mass range query: " + massLow + " - " + massHigh + ", files: " + fileRange[0] + " - " + fileRange[1]);
-
-
         //go for every file
         for (int massKey = fileRange[0]; massKey <= fileRange[1]; ++massKey) {
 
             BufferedReader reader = null;
-
 
             //check map that stores mass keys if entry exists in index
             if (!indexedMassKeys.containsKey(massKey)) {
@@ -264,23 +255,18 @@ public class DBIndexStoreFiles implements DBIndexStore {
                 throw new DBIndexStoreException("Error initializing reader for mass key: " + massKey, ex);
             }
 
-
-
             //temp sequences, before merge by unique sequence, for a single file
             Map<String, List<IndexedSeqInternal>> temp = new HashMap<String, List<IndexedSeqInternal>>();
 
             //read all sequences, get the ones with masses in the range
-
             //TODO when we have sorted sequences, we can bail out quicker when passed max mass
             //and we can binary search to get to the start sequence (future optimization)
-
 //            try {
 //                reader.seek(0);
 //            } catch (IOException ex) {
 //                logger.log(Level.SEVERE, "Error resetting the stream, massKey", ex);
 //                throw new DBIndexStoreException("Error resetting the stream, massKey " + massKey, ex);
 //            }
-
             try {
                 String sequenceLine = reader.readLine();
                 for (; sequenceLine != null; sequenceLine = reader.readLine()) {
@@ -345,8 +331,6 @@ public class DBIndexStoreFiles implements DBIndexStore {
                 }
             }
 
-
-
             //group the same peptides from many proteins into single peptide with protein id list
             for (String pepSeqKey : temp.keySet()) {
                 //for each sequence str
@@ -360,7 +344,6 @@ public class DBIndexStoreFiles implements DBIndexStore {
 
                 //make sure the 1st protein id is that of the first sequence
                 IndexedSeqInternal firstSeq = sequences.get(0);
-
 
                 IndexedSequence firstSequence = new IndexedSequence(0, firstSeq.mass, pepSeqKey, "", "");
                 firstSequence.setProteinIds(proteinIds);
@@ -376,11 +359,8 @@ public class DBIndexStoreFiles implements DBIndexStore {
 
         } //end for every file
 
-
         return ret;
     }
-
-    
 
     @Override
     public List<IndexedSequence> getSequences(List<MassRange> ranges) throws DBIndexStoreException {
@@ -401,7 +381,6 @@ public class DBIndexStoreFiles implements DBIndexStore {
         //merge mass ranges to reduce dups before query time
         ArrayList<Interval> intervals = new ArrayList<Interval>();
 
-
         for (MassRange range : ranges) {
             Interval ith = Interval.massRangeToInterval(range);
             intervals.add(ith);
@@ -409,19 +388,14 @@ public class DBIndexStoreFiles implements DBIndexStore {
 
         List<Interval> merged = MergeIntervals.mergeIntervals(intervals);
 
-
         //submit merged intervals
         for (Interval interval : merged) {
             ret.addAll(getSequencesMass(interval.getStart(), interval.getEnd()));
         }
 
-
 //        for (MassRange range : ranges) {
 //            ret.addAll(getSequences(range.getPrecMass(), range.getTolerance()));
 //        }
-
-
-
         return ret;
     }
 
@@ -501,12 +475,12 @@ public class DBIndexStoreFiles implements DBIndexStore {
     }
 
     /**
-     * TODO this method should be private and invoked only 
-     * internally in this class after initial indexing is done
-     * 
+     * TODO this method should be private and invoked only internally in this
+     * class after initial indexing is done
+     *
      * @param sparam saerch params
      * @throws DBIndexerException
-     * @throws IOException 
+     * @throws IOException
      */
     void merge(SearchParams sparam) throws DBIndexerException, IOException {
         //reset prot number
@@ -542,12 +516,8 @@ public class DBIndexStoreFiles implements DBIndexStore {
             protCache.addProtein(fasta.getSequestLikeAccession(), fasta.getSequence());
         }
 
-
-
         String[] flist = dbFile.list();
         String path = indexName + File.separator;
-
-
 
         for (String f : flist) {
             //System.out.println(path + f);
@@ -564,7 +534,6 @@ public class DBIndexStoreFiles implements DBIndexStore {
                 int startIndex = Integer.parseInt(arr[1]);
                 int offsetIndex = Integer.parseInt(arr[2]);
 
-
                 String seq = protCache.getPeptideSequence(pid, startIndex, offsetIndex);
                 IndexedPeptideModel pm = new IndexedPeptideModel(mass, arr[3], startIndex, offsetIndex);
 
@@ -577,22 +546,18 @@ public class DBIndexStoreFiles implements DBIndexStore {
                     //  pht.put(seq, tpm);
                 }
 
-
                 //System.out.println("======" + pid + " " +  startIndex + " " +  offsetIndex);
                 //System.out.println(seq);
             }
 
             //System.out.println("======" + pht.size());
-
             List<IndexedPeptideModel> list = new ArrayList<IndexedPeptideModel>(pht.values());
 
             //for(int i=0;i<10;i++)
             //    System.out.println(list.get(i).getMass() + " " + list.get(i).getProteinIds());
-
             Collections.sort(list);
             File oldFile = new File(path + f);
             oldFile.delete();
-
 
             BufferedWriter fileWriter = new BufferedWriter(new FileWriter(path + f), 1024 * 128);
             for (Iterator<IndexedPeptideModel> pitr = list.iterator(); pitr.hasNext();) {
@@ -609,8 +574,6 @@ public class DBIndexStoreFiles implements DBIndexStore {
 
             fileWriter.close();
 
-
-
             //System.out.println("======" + pht.size() + " " + list.size());
 
             /*
@@ -618,18 +581,11 @@ public class DBIndexStoreFiles implements DBIndexStore {
              String[] pid = list.get(i).getProteinIds().split(",");
              if(pid.length>1) System.out.println(list.get(i).getMass() + " " + list.get(i).getProteinIds());
              }*/
-
-
-
-
             //System.exit(0);
-
         }
 
 //System.out.println("aaaaaaaaaaaaaaaa" + protCache);
 //System.out.println("aaaaaaaaaaaaaaaa" + protCache.getProteinSequence(5));
-
-
     }
 
     /**
@@ -715,7 +671,6 @@ public class DBIndexStoreFiles implements DBIndexStore {
             logger.log(Level.SEVERE, null, ex);
         }
 
-
         try {
             //test gets
             System.out.println("Testing range gets 1");
@@ -742,11 +697,9 @@ public class DBIndexStoreFiles implements DBIndexStore {
             logger.log(Level.SEVERE, null, ex);
         }
 
-
         if (true) {
             return;
         }
-
 
         try {
             store = new DBIndexStoreFiles();

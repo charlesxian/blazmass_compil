@@ -13,19 +13,20 @@ import java.util.List;
  * @author rpark
  */
 public class PeptideResult implements Comparable {
-    
+
     private IndexedSequence indexedSeq;
     private int pepLength;
     private float peptideMass;
     private int ion;
     private boolean isDecoy;
     private int totalIon;
-    private float xCorr=-100f;
+    private float xCorr = -100f;
     private float zScore;
     private int matchedIon;
-    private boolean isModified;        
-    
+    private boolean isModified;
+
     public class MatchedIon {
+
         private String ionType;
         private float mz;
 
@@ -33,7 +34,7 @@ public class PeptideResult implements Comparable {
             this.ionType = ionType;
             this.mz = mz;
         }
-        
+
         public String getIonType() {
             return ionType;
         }
@@ -49,12 +50,11 @@ public class PeptideResult implements Comparable {
         public void setMz(float mz) {
             this.mz = mz;
         }
-        
-        
+
     }
-    
+
     private final List<MatchedIon> matchedIonList = new LinkedList<MatchedIon>();
-    
+
     public int getPepLength() {
         return pepLength;
     }
@@ -70,7 +70,7 @@ public class PeptideResult implements Comparable {
     public void setPeptideMass(float peptideMass) {
         this.peptideMass = peptideMass;
     }
-    
+
     public void addPeptideMass(double peptideMass) {
         this.peptideMass += peptideMass;
     }
@@ -106,7 +106,7 @@ public class PeptideResult implements Comparable {
     public void setxCorr(float xCorr) {
         this.xCorr = xCorr;
     }
- 
+
     public IndexedSequence getIndexedSeq() {
         return indexedSeq;
     }
@@ -116,17 +116,18 @@ public class PeptideResult implements Comparable {
     }
 
     public int compareTo(Object obj) {
-        
-        if(null == obj)
+
+        if (null == obj) {
             return 1;
-        
+        }
+
         PeptideResult pr = (PeptideResult) obj;
 
-        float diff = pr.getxCorr()-xCorr;
-        
-        if( diff == 0 ) {
+        float diff = pr.getxCorr() - xCorr;
+
+        if (diff == 0) {
             return 0;
-        } else if(diff < 0) {
+        } else if (diff < 0) {
             return -1;
 
         } else {
@@ -168,6 +169,4 @@ public class PeptideResult implements Comparable {
         return matchedIonList;
     }
 
-
-    
 }

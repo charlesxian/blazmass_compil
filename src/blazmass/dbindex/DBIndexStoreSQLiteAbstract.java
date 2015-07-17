@@ -12,10 +12,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.sqlite.SQLiteConfig;
 import org.sqlite.SQLiteJDBCLoader;
+
 /**
  *
  * SQLite store abstract class with common code
- * 
+ *
  * @author Adam
  */
 public abstract class DBIndexStoreSQLiteAbstract implements DBIndexStore {
@@ -37,7 +38,7 @@ public abstract class DBIndexStoreSQLiteAbstract implements DBIndexStore {
     private boolean inMemory = false;
     private boolean needBackup = false;
     private final String blazmass_sequences_pri_key = "id";
-    
+
     protected SearchParams sparam;
 
     static {
@@ -83,7 +84,6 @@ public abstract class DBIndexStoreSQLiteAbstract implements DBIndexStore {
             this.dbPath = this.dbPath + DB_NAME_SUFFIX;
         }
 
-
         File indexFile = new File(dbPath);
         if (indexFile.exists() && !indexFile.canRead()) {
             throw new DBIndexStoreException("Index file already exists and is not readable: " + databaseID + ", cannot initialize the indexer.");
@@ -103,7 +103,7 @@ public abstract class DBIndexStoreSQLiteAbstract implements DBIndexStore {
             final int indexFactor = sparam.getIndexFactor();
             final int cacheSize = 100000 / indexFactor;
             final int pageSize = 4096;
-            
+
             SQLiteConfig config = new SQLiteConfig();
             //optimize for multiple connections that can share data structures
             config.setSharedCache(true);
@@ -116,7 +116,6 @@ public abstract class DBIndexStoreSQLiteAbstract implements DBIndexStore {
             config.enableRecursiveTriggers(false);
             config.setLockingMode(SQLiteConfig.LockingMode.NORMAL);
             config.setSynchronous(SQLiteConfig.SynchronousMode.OFF); //TODO may be dangerous on some systems to have off
-
 
             //TODO handle case when we want in memory for search only, not for indexing
             if (inMemory) {
@@ -133,40 +132,39 @@ public abstract class DBIndexStoreSQLiteAbstract implements DBIndexStore {
 
             if (inMemory) {
                 //lower cache size
-                config.setCacheSize(10000 / sparam.getIndexFactor() );
+                config.setCacheSize(10000 / sparam.getIndexFactor());
                 //limit to 10GB
                 config.setMaxPageCount(10 * 1000 * 1000 * 1000 / pageSize);
                 con = DriverManager.getConnection("jdbc:sqlite::memory:", config.toProperties());
                 logger.log(Level.INFO, "Using in-memory database");
-                
+
                 if (needBackup == false) {
                     //already exists (search mode) so load it
                     logger.log(Level.INFO, "Loading the in-memory database");
                     con.prepareStatement("ATTACH DATABASE \"" + dbPath + "\" AS  inputDB").execute();
-                    
+
                     //copy all the tables
-                    
                     //create index and table
                     con.prepareStatement("CREATE TABLE IF NOT EXISTS blazmass_sequences "
-                        + "(precursor_mass_key INTEGER PRIMARY KEY, "
-                        + "data BINARY"
-                        + ");").execute();
-                    con.prepareStatement("CREATE INDEX IF NOT EXISTS precursor_mass_key_index_dsc ON " 
-                             + " blazmass_sequences (precursor_mass_key DESC);").execute();
-                             
+                            + "(precursor_mass_key INTEGER PRIMARY KEY, "
+                            + "data BINARY"
+                            + ");").execute();
+                    con.prepareStatement("CREATE INDEX IF NOT EXISTS precursor_mass_key_index_dsc ON "
+                            + " blazmass_sequences (precursor_mass_key DESC);").execute();
+
                     //copy data         
                     con.prepareStatement("INSERT INTO blazmass_sequences  SELECT * FROM inputDB.blazmass_sequences").execute();
                     //TODO create index?
                     logger.log(Level.INFO, "Done loading the in-memory database");
                 }
-                
+
             } else {
                 if (new File(dbPath).isDirectory()) {
                     throw new RuntimeException("Index should be a file, check if you are using the new version of indexer"
                             + " and delete the old index directory: " + dbPath);
                 }
                 con = DriverManager.getConnection("jdbc:sqlite:" + dbPath, config.toProperties());
-                
+
             }
             statement = con.createStatement();
             //reduce i/o operations, we have no OS crash recovery anyway
@@ -186,7 +184,6 @@ public abstract class DBIndexStoreSQLiteAbstract implements DBIndexStore {
 
             //increase cache size from 2k to 100k pages (100k * 4k bytes)
             statement.execute("PRAGMA cache_size = " + cacheSize);
-            
 
             createTables();
 
@@ -194,9 +191,9 @@ public abstract class DBIndexStoreSQLiteAbstract implements DBIndexStore {
             initStatements();
             try {
                 if (SQLiteJDBCLoader.isNativeMode() == false) {
-                  logger.log(Level.WARNING, String.format("sqlite-jdbc version %s loaded in %s mode",
-                        SQLiteJDBCLoader.getVersion(), SQLiteJDBCLoader.isNativeMode()
-                        ? "native" : "pure-java"));
+                    logger.log(Level.WARNING, String.format("sqlite-jdbc version %s loaded in %s mode",
+                            SQLiteJDBCLoader.getVersion(), SQLiteJDBCLoader.isNativeMode()
+                                    ? "native" : "pure-java"));
                 }
             } catch (Exception ex) {
                 logger.log(Level.SEVERE, "Can't check sqlite native mode", ex);
@@ -218,7 +215,6 @@ public abstract class DBIndexStoreSQLiteAbstract implements DBIndexStore {
         }
     }
 
-  
     @Override
     public void startAddSeq() throws DBIndexStoreException {
         if (!inited) {
@@ -236,13 +232,12 @@ public abstract class DBIndexStoreSQLiteAbstract implements DBIndexStore {
 
             //intialize primary key IDs we track
             this.curProtId = -1; //this.getLastProteinDefId(); //we do not support reindex
-            this.curSeqId = 0 ; //this.getLastSequenceId();
+            this.curSeqId = 0; //this.getLastSequenceId();
 
             //if (inMemory == true && this.curSeqId == 0) {
             //  logger.log(Level.INFO, "Will create backup of the in-memory db when done");
             //needBackup = true;
             //}
-
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Unable to start add sequence transaction, ", e);
             throw new DBIndexStoreException("Unable to start add sequence transaction, ", e);
@@ -269,7 +264,6 @@ public abstract class DBIndexStoreSQLiteAbstract implements DBIndexStore {
             throw new IllegalStateException("Not in transaction.");
         }
 
-
         //delete the temp index before commit
         deleteTempIndex();
 
@@ -279,22 +273,22 @@ public abstract class DBIndexStoreSQLiteAbstract implements DBIndexStore {
             commitCachedData();
             //logger.log(Level.INFO, "Commiting index start.");
             con.commit();
-           // logger.log(Level.INFO, "Commiting index end.");
+            // logger.log(Level.INFO, "Commiting index end.");
             con.setAutoCommit(true);
             inTransaction = false;
             //logger.log(Level.INFO, "Creating db index start.");
             createIndex();
-           // logger.log(Level.INFO, "Creating db index end.");
+            // logger.log(Level.INFO, "Creating db index end.");
 
             final long numSequences = this.getNumberSequences();
-           // logger.log(Level.INFO, "Number of sequences in " + this.dbPath + " index: " + numSequences);
+            // logger.log(Level.INFO, "Number of sequences in " + this.dbPath + " index: " + numSequences);
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error commiting transaction, ", e);
             throw new DBIndexStoreException("Error committing transaction", e);
         }
 
         if (needBackup) {
-           // logger.log(Level.INFO, "Creating backup to " + this.dbPath);
+            // logger.log(Level.INFO, "Creating backup to " + this.dbPath);
             try {
                 Statement st = this.con.createStatement();
                 st.executeUpdate("backup to " + this.dbPath);
@@ -303,7 +297,7 @@ public abstract class DBIndexStoreSQLiteAbstract implements DBIndexStore {
                 logger.log(Level.SEVERE, "Error creating backup, ", e);
                 throw new DBIndexStoreException("Error creating backup", e);
             }
-           // logger.log(Level.INFO, "Done creating backup to " + this.dbPath);
+            // logger.log(Level.INFO, "Done creating backup to " + this.dbPath);
         }
 
     }
@@ -320,7 +314,6 @@ public abstract class DBIndexStoreSQLiteAbstract implements DBIndexStore {
             logger.log(Level.SEVERE, "Error executing query to get number of sequences.", ex);
             throw new DBIndexStoreException("Error executing query to get number of sequences.", ex);
         }
-
 
     }
 
@@ -488,7 +481,6 @@ public abstract class DBIndexStoreSQLiteAbstract implements DBIndexStore {
             }
 
             closeConnection();
-
 
             //if (con != null) {
             //  con.close();
