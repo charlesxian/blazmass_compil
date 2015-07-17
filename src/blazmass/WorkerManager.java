@@ -241,7 +241,9 @@ public class WorkerManager {
 
                 //TODO better file name, location
                 String basePath = Util.getFileBaseName(ms2FilePath);
-                this.resultWriter = new FileResultWriter(basePath + Blazmass.SQT_EXT);
+                String sqtPath = basePath + params.getSqtSuffix() + "." + Blazmass.SQT_EXT;
+                this.resultWriter = new FileResultWriter(sqtPath);
+                System.out.println("Writing output SQT to: " + sqtPath);
 
             } catch (IOException ex) {
                 logger.log(Level.SEVERE, "Could not start create result file and start worker pool");
@@ -362,7 +364,7 @@ public class WorkerManager {
             public void run() {
 
                 String baseName = Util.getFileBaseName(ms2FilePath);
-                String logPath = baseName + Blazmass.LOG_EXT;
+                String logPath = baseName + "." + Blazmass.LOG_EXT;
                 FileWriter logWriter = null;
                 try {
                     logWriter = new FileWriter(logPath);
@@ -714,7 +716,6 @@ class MS2ScanProducer extends Thread {
         while (doRun && reader.hasNext()) {
             final MS2Scan scan = reader.next();
             theQueue.enqueue(scan);
-
             ++totalScans;
         }
 

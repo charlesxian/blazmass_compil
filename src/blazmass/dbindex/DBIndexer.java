@@ -452,7 +452,7 @@ public class DBIndexer {
         FileInputStream fis = null; //fasta reader
 
         //setup status writer
-        String statusFilePath = blazmass.Util.getFileBaseName(sparam.getDatabaseName()) + "log";
+        String statusFilePath = blazmass.Util.getFileBaseName(sparam.getDatabaseName()) + ".log";
         FileWriter statusWriter = null;
         String totalProteins = null;
         int indexedProteins = 0;

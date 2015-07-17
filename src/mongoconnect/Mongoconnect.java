@@ -155,7 +155,7 @@ public class Mongoconnect {
             or.add(new BasicDBObject("_id", new BasicDBObject("$gte", lowMass).append("$lte", highMass)));
         }
         DBObject query = new BasicDBObject("$or", or);
-        System.out.println(query);
+        //System.out.println(query);
 
         DBCursor cursor = massDBCollection.find(query).batchSize(3000);
         return cursor;

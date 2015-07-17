@@ -11,7 +11,6 @@ package blazmass.io;
 import java.io.*;
 import java.util.*;
 import blazmass.AssignMass;
-import blazmass.Constants;
 import blazmass.dbindex.DBIndexer;
 import blazmass.mod.DiffModification;
 import java.util.logging.Level;
@@ -30,9 +29,6 @@ public class SearchParamReader {
     //private boolean isModification;
     private Hashtable<String, String> ht = new Hashtable<String, String>();
     private final Logger logger = Logger.getLogger(SearchParamReader.class.getName());
-    private final char[] MOD_SYMBOL = {'*', '#', '@',};
-    //private TIntDoubleHashMap symbolMap = new TIntDoubleHashMap(10);
-    private double[] massShiftArr = new double[3];
     public static final String DEFAULT_PARAM_FILE_NAME = "blazmass.params";
 
     public static void main(String args[]) throws Exception {
@@ -41,38 +37,9 @@ public class SearchParamReader {
             System.out.println("Usage: java SearchParamReader path param_filename");
             return;
         }
-
         SearchParamReader p = new SearchParamReader(args[0], args[1]);
-	//else
-        //	p = new SearchParamReader(".", DEFAULT_PARAM_FILE_NAME);
-
         SearchParams param = p.getParam();
 
-	//System.out.println("===" + param.getFullIndexFileName());
-        //System.out.println("dbname===============" + param.getFullIndexFileName());
-//	System.out.println("dbname===============" + param.getIndexFileNameOnly());
-
-        /*
-         ParamReader p = new ParamReader(args[0], args[1], Integer.parseInt(args[2]));
-         Hashtable<String, String> h = p.getHashtable();
-
-         System.out.println(h.get("diff_search_options"));
-         System.out.println( p.isModification() );
-         List l = p.getResidueList();
-
-         for(int i=0;i<l.size();i++)
-         {
-         ModResidue residue = (ModResidue)l.get(i);
-
-         System.out.println(residue.getMassShift() + "\t" + residue.getResidue());
-         }
-
-         double[] d = p.getMassShiftArr();
-         for(int i=0;i<d.length;i++)
-         {
-         System.out.println(d[i]);
-         }
-         */
     }
 
     public SearchParamReader(String path, String fileName) throws IOException {
@@ -96,24 +63,21 @@ public class SearchParamReader {
             //StringBuffer sb = new StringBuffer();
             //br.skip(2000);
             while ((eachLine = br.readLine()) != null) {
-                //sb.append(eachLine);
-                //sb.append("\n");                
-
-                //System.out.println("1----------" + eachLine);
                 if (eachLine.startsWith("#"))
-                {
                     continue;
-                }
-
                 String[] strArr = eachLine.split("=");
-                if (strArr.length < 2) {
+                if (strArr.length < 2)
                     continue;
-                }
 
                 ht.put(strArr[0].trim(), strArr[1].split(";")[0].trim());
-
             }
-
+            String sqtSuffix = getParam("sqt_suffix").trim();
+            if (sqtSuffix == null) {
+                param.setSqtSuffix("");
+            } else {
+                param.setSqtSuffix(sqtSuffix);
+            }
+            
             param.setDatabaseName(trimValue(getParam("database_name")));
             param.setIndexDatabaseName(trimValue(getParam("index_database_name")));
 
@@ -621,10 +585,6 @@ public class SearchParamReader {
             if (null != br);
             br.close();
         }
-    }
-
-    public double[] getMassShiftArr() {
-        return massShiftArr;
     }
 
     public void pepProbeInit() {

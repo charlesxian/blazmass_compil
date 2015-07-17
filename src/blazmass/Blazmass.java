@@ -14,7 +14,6 @@ import java.util.*;
 import java.util.regex.Pattern;
 import blazmass.io.*;
 import blazmass.mod.DiffModification;
-import java.util.regex.Matcher;
 import blazmass.model.*;
 import com.mongodb.BasicDBList;
 import com.mongodb.DBCursor;
@@ -214,11 +213,11 @@ public class Blazmass {
 
     public void run(String path, File ms2File, SearchParams sParam, DBIndexer indexer) {
         int scanCount = 0;
-        String base = ms2File.getName().substring(0, ms2File.getName().length() - 3);
-        String sqtOut = base + SQT_EXT;
+        String base = ms2File.getName().substring(0, ms2File.getName().length() - 4);
+        String sqtOut = base + sParam.getSqtSuffix() + "." + SQT_EXT;
         String sqtPath = path + File.separator + sqtOut;
 
-        final String logOut = path + File.separator + base + LOG_EXT;
+        final String logOut = path + File.separator + base + "." + LOG_EXT;
         FileWriter logWriter = null;
         try {
             logWriter = new FileWriter(logOut);
@@ -239,6 +238,7 @@ public class Blazmass {
             }
 
             resultWriter = new FileResultWriter(sqtPath);
+            System.out.println("Writing output SQT to: " + sqtPath);
             resultWriter.write(header(sParam).toString());
             resultWriter.flush();
 
@@ -698,7 +698,6 @@ public class Blazmass {
      * @return numMatched number of matched peptides times two, for some reason
      */
     private int runSearch(DBIndexer indexer, SearchParams sParam, float[] scoreArray, int chargeState, float precursorMass, PeptideResult[] pArr) throws Exception {
-
         int numMatched = 0;
         int intMass;
         String sequence;
@@ -772,9 +771,9 @@ public class Blazmass {
         /////////////////////////
 
         if (sParam.isDiffSearch()) {
-            System.out.println("mod search");
+            //System.out.println("mod search");
             List<List<Double>> modGList = sParam.getModGroupList();
-            System.out.println("m list==========" + modGList);
+            //System.out.println("m list==========" + modGList);
             // modGList: [[15.9949], [79.9663], [15.9949, 15.9949], [15.9949, 79.9663], [79.9663, 79.9663]]
             for (List<Double> eachModGroup : modGList) {
                 float modPrecursorMass = precursorMass;
@@ -785,7 +784,7 @@ public class Blazmass {
                     modPrecursorMass -= d;
                     modSumCandidate += d;
                 }
-                System.out.println("mass=========" + modSumCandidate + " " + modPrecursorMass);
+                //System.out.println("mass=========" + modSumCandidate + " " + modPrecursorMass);
                 ppmTolerance = this.getPpm(modPrecursorMass, massTolerance);
 
                 if (sParam.isPrecursorHighResolution()) {
@@ -861,7 +860,7 @@ public class Blazmass {
                 }
             }
         }
-        //System.exit(1);
+        System.out.println(pArr[0].getIndexedSeq().toString() + "\tXcorr: " + pArr[0].getxCorr());
         return numMatched;
     }
 

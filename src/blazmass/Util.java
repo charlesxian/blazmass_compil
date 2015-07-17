@@ -34,6 +34,6 @@ public class Util {
             return path;
         }
         
-        return path.substring(0, dotI) + ".";
+        return path.substring(0, dotI);
     }
 }

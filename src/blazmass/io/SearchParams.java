@@ -22,8 +22,9 @@ public class SearchParams {
     private String program;
     private String parametersFile;
     private String parameters;
-    private float peptideMassTolerance;
+    private String sqtSuffix;
     
+    private float peptideMassTolerance;
     private float fragmentIonTolerance;
     private int fragmentIonToleranceInt;
     private float fragmentIonToleranceBinScale;
@@ -162,8 +163,14 @@ public class SearchParams {
         this.indexFactor = indexFactor;
     }
     
-    
-    
+    public String getSqtSuffix() {
+        return sqtSuffix;
+    }
+
+    public void setSqtSuffix(String sqtSuffix) {
+        this.sqtSuffix = sqtSuffix;
+    }
+        
     
     public void setMassTypeFragment(int massTypeFragment) {
         this.massTypeFragment = massTypeFragment;
