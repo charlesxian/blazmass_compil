@@ -169,7 +169,7 @@ public class MS2ScanReader implements Iterator<MS2Scan> {
                             break;
                         }
 
-                        String[] tokens = curLine.split(" ");
+                        String[] tokens = curLine.split("\\s+");
                         //if (tokens.length != 2) {  //it can have three columns
                         if (tokens.length < 2) {
                             throw new IOException("Unexpected number of tokens on mass line (need 2): " + curLine + " in scan number: " + numScans);

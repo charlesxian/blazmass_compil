@@ -21,6 +21,7 @@ import blazmass.dbindex.IndexedSequence;
 import blazmass.io.SearchParams;
 import java.net.UnknownHostException;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 //import java.util.logging.Level;
 //import java.util.logging.Logger;
 
@@ -129,11 +130,9 @@ public class Mongoconnect {
         }
     }
     /*
-     getSequencesIter
-
+    getSequencesIter: Does a range query. Reture an iterator that yields IndexedSequences containing a single peptide and its mass
      */
-
-    public static DBCursor getSequencesIter(List<MassRange> rList, SearchParams sParam) throws Exception {
+    public static MongoSeqIter getSequencesIter(List<MassRange> rList, SearchParams sParam) throws Exception {
 
         try {
             connectToMassDB(sParam);
@@ -142,11 +141,8 @@ public class Mongoconnect {
             return null;
         }
 
-        int intMass;
         int lowMass;
         int highMass;
-        String sequence;
-
         // Build long "or" query using all mass ranges
         BasicDBList or = new BasicDBList();
         for (MassRange mRange : rList) {
@@ -158,8 +154,8 @@ public class Mongoconnect {
         //System.out.println(query);
 
         DBCursor cursor = massDBCollection.find(query).batchSize(3000);
-        return cursor;
-
+        MongoSeqIter msi = new MongoSeqIter(cursor);
+        return msi;
     }
 
     /*

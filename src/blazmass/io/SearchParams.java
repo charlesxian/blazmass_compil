@@ -42,6 +42,8 @@ public class SearchParams {
     private String indexDatabaseName;
 
     public boolean onlyDiffMod = false;
+    public HashMap<Character, ArrayList<Float>> diffModMap = new HashMap<>();
+    public Set<Float> modMasses = new HashSet<>();
     private int maxNumDiffMod = 3;
     private boolean variableTolerance = false;
     private float variablePeptideMassTolerance;
@@ -94,7 +96,7 @@ public class SearchParams {
     private SearchParams() {
     }
 
-    private List<ModResidue> modList = new ArrayList<ModResidue>();
+    private List<ModResidue> modList = new ArrayList<>();
     //private Set<Float> modShiftSet = new HashSet<Float>();
     private List<List<Double>> modGroupList = new ArrayList<List<Double>>();
     private boolean precursorHighResolution = true;

@@ -1,8 +1,6 @@
 package blazmass;
 
 import blazmass.io.SearchParams;
-import blazmass.mod.DiffModification;
-import java.util.List;
 
 public class AssignMass {
 
@@ -603,7 +601,7 @@ public class AssignMass {
         return rarr;
     }
 
-    public static float[] getFragIonArrMod(String seq, int ion, int[] modIndexHash) {
+    public static float[] getFragIonArrMod(String seq, int ion, int[] modIndexHash, double[] diffModMass) {
 
         final int size = seq.length() - 1;
         float[] arr = new float[size];
@@ -619,7 +617,7 @@ public class AssignMass {
             if (modIndexHash[i] > 0) {
 
                 //System.out.println(modIndexHash + " " + "aaa" + " " + ch + " " + mass + " " + DiffModification.getDiffModMass(ch));
-                mass += DiffModification.getDiffModMass(ch);
+                mass += diffModMass[ch];
             }
 
             addMass += mass;
@@ -645,7 +643,7 @@ public class AssignMass {
         return arr;
     }
 
-    public static float[] getFragIonArrRevMod(String seq, int ion, int[] modIndexHash) {
+    public static float[] getFragIonArrRevMod(String seq, int ion, int[] modIndexHash, double[] diffModMass) {
 
         final int size = seq.length() - 1; //TODO BUG? should be seq.length()
         float[] rarr = new float[size];
@@ -661,7 +659,7 @@ public class AssignMass {
 
             if (modIndexHash[size - i] > 0) {
                 //   System.out.println(ch + "\t1");
-                rmass += DiffModification.getDiffModMass(ch);
+                rmass += diffModMass[ch];
             }
 
             raddMass += rmass;

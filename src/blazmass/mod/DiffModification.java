@@ -11,7 +11,7 @@ package blazmass.mod;
 public class DiffModification {
 
     public static final int SIZE = 256;
-    private static double[] diffMod = new double[SIZE];
+    public static double[] diffMod = new double[SIZE];
     private static boolean[] isDiffMod = new boolean[SIZE];
     //public static void diffModTrue(char ch) {
     //    isDiffMod[ch] = true;
@@ -24,6 +24,10 @@ public class DiffModification {
     public static void setDiffModMass(char ch, double mass) {
         diffMod[ch] = mass;
         isDiffMod[ch] = true;
+    }
+    
+    public static void clearDiffModMass() {
+        diffMod = new double[SIZE];
     }
 
     public static double getDiffModMass(char ch) {

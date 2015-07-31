@@ -12,10 +12,8 @@ import java.io.*;
 import java.util.*;
 import blazmass.AssignMass;
 import blazmass.dbindex.DBIndexer;
-import blazmass.mod.DiffModification;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.paukov.combinatorics.*;
 
 /**
  * @author Robin Park
@@ -27,8 +25,8 @@ public class SearchParamReader {
     private String fileName;
     private SearchParams param;
     //private boolean isModification;
-    private Hashtable<String, String> ht = new Hashtable<String, String>();
-    private final Logger logger = Logger.getLogger(SearchParamReader.class.getName());
+    private Hashtable<String, String> ht = new Hashtable<>();
+    private final Logger logger;
     public static final String DEFAULT_PARAM_FILE_NAME = "blazmass.params";
 
     public static void main(String args[]) throws Exception {
@@ -43,6 +41,7 @@ public class SearchParamReader {
     }
 
     public SearchParamReader(String path, String fileName) throws IOException {
+        this.logger = Logger.getLogger(SearchParamReader.class.getName());
         this.path = path;
         this.fileName = fileName;
         init();
@@ -73,7 +72,7 @@ public class SearchParamReader {
 
                 ht.put(strArr[0].trim(), strArr[1].split(";")[0].trim());
             }
-            String sqtSuffix = getParam("sqt_suffix").trim();
+            String sqtSuffix = trimValue(getParam("sqt_suffix"));
             if (sqtSuffix == null) {
                 param.setSqtSuffix("");
             } else {
@@ -541,44 +540,33 @@ public class SearchParamReader {
             System.out.println("onlyDiffMod: " + param.onlyDiffMod);
 
             if (null != getParam("diff_search_options") && !"".equals(getParam("diff_search_options"))) {
+                
                 String[] modArr = getParam("diff_search_options").trim().split(" ");
+                
+                HashMap<Character, ArrayList<Float>> diffModMap = new HashMap<>();
+                for (char AA: "ARNDBCEQZGHILKMFPSTWYV".toCharArray()) {
+                    diffModMap.put(AA, new ArrayList<Float>());
+                }
 
-                //Read each set of residue
-                //e.g. diff_search_options = 80.0 ST -18.0 ST 0.0 X
-                Set<Double> modShiftSet = new HashSet<Double>();
                 for (int i = 0; i < modArr.length; i += 2) {
-                    double massShift = Double.parseDouble(modArr[i]);
+                    float massShift = (float) Double.parseDouble(modArr[i]);
                     if (massShift != 0) {
                         param.setDiffSearch(true);
                         for (int j = 0; j < modArr[i + 1].length(); j++) {
-                            ModResidue residue = new ModResidue(modArr[i + 1].charAt(j), (float) massShift);
-                            param.addModResidue(residue);
-                            DiffModification.setDiffModMass(residue.getResidue(), massShift);
-                            //System.out.println("fsdafsda" + " " + residue.getResidue() + " " + massShift);
-                            //System.out.println("fsdafsda" + " " + DiffModification.getDiffModMass('T'));
-                            modShiftSet.add(massShift);
+                            diffModMap.get(modArr[i + 1].charAt(j)).add(massShift);
                         }
                     }
                 }
+                param.diffModMap = diffModMap;
+                System.out.println("diffmods to apply:" + diffModMap);
 
-                ICombinatoricsVector<Double> initialVector = Factory.createVector(modShiftSet);
-                for (int i = 1; i <= param.getMaxNumDiffMod(); i++) {
-                    Generator<Double> gen = Factory.createMultiCombinationGenerator(initialVector, i);
-                    for (ICombinatoricsVector<Double> combination : gen) {
-                        List<Double> ml = combination.getVector();
-                        List<Double> fl = new ArrayList<Double>();
-                        for (Iterator<Double> mitr = ml.iterator(); mitr.hasNext();) {
-                            // System.out.println("----" + mitr.next());
-                            fl.add(mitr.next());
-                        }
-                        param.addModGroupList(fl);
-                    }
+                Set<Float> modMasses = new HashSet<>();
+                for (Character key: diffModMap.keySet()) {
+                    modMasses.addAll(diffModMap.get(key));
                 }
-                // Print all possible size 2 combinations
-                Generator<Double> gen = Factory.createMultiCombinationGenerator(initialVector, 2);
-                for (ICombinatoricsVector<Double> combination : gen) {
-                    System.out.println(combination);
-                }
+                param.modMasses = modMasses;
+                System.out.println("list of diffmod masses:" + modMasses);
+                //System.exit(1);
             }
         } catch (IOException e) {
             System.out.println("Error reading param file " + e);

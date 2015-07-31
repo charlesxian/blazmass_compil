@@ -44,6 +44,7 @@ public class WorkerManager {
     private static WorkerManager instance = null;
     //params
     private SearchParams params = null;
+    public SearchParamReader paramReader = null;
     private boolean inited = false;
     private static final Logger logger = Logger.getLogger(WorkerManager.class.getName());
 
@@ -56,7 +57,6 @@ public class WorkerManager {
             logger.log(Level.WARNING, "Already inited");
             return;
         }
-        final SearchParamReader paramReader;
         try {
             paramReader = new SearchParamReader(paramsDir, paramsFile);
         } catch (IOException ex) {
@@ -82,7 +82,7 @@ public class WorkerManager {
         logger.log(Level.INFO, "Processing MS2: " + ms2File.getAbsolutePath());
 
         try {
-            WorkerPool workers = new WorkerPool(ms2File.getAbsolutePath(), params, numWorkers);
+            WorkerPool workers = new WorkerPool(ms2File.getAbsolutePath(), params, numWorkers, paramReader);
             workers.start();
             //workers are running and WorkerPool blocks til done
         } catch (WorkerManagerException ex) {
@@ -107,7 +107,7 @@ public class WorkerManager {
             logger.log(Level.INFO, "Processing MS2: " + ms2File.getAbsolutePath());
 
             try {
-                WorkerPool workers = new WorkerPool(ms2File.getAbsolutePath(), params, numWorkers);
+                WorkerPool workers = new WorkerPool(ms2File.getAbsolutePath(), params, numWorkers, paramReader);
                 workers.start();
 
                 //workers are running and WorkerPool blocks til done
@@ -225,14 +225,16 @@ public class WorkerManager {
         private MS2ScanReader scanReader;
         private MS2ScanQueue scanQueue; //shared
         private MS2ScanProducer scanProducer; //shared
+        private SearchParamReader paramReader; //so each thread can have its own params
         //output
         private ResultWriter resultWriter; //shared
         private static final Logger logger = Logger.getLogger(WorkerPool.class.getName());
 
-        WorkerPool(String ms2FilePath, SearchParams params, int numWorkers) throws WorkerManagerException {
+        WorkerPool(String ms2FilePath, SearchParams params, int numWorkers, SearchParamReader paramReader) throws WorkerManagerException {
             this.ms2FilePath = ms2FilePath;
             this.params = params;
             this.numWorkers = numWorkers;
+            this.paramReader = paramReader;
 
             try {
                 this.scanReader = new MS2ScanReader(ms2FilePath);
@@ -271,7 +273,9 @@ public class WorkerManager {
             //create and start threads
             for (int i = 0; i < numWorkers; ++i) {
                 String id = "Worker#" + (i + 1);
-                final Worker worker = new Worker(id, scanQueue, resultWriter, params);
+                SearchParams thisParams = paramReader.getSearchParams(); // so each thread has its own params
+                // necessary for the diffmod search so a single residue can have different diffmod masses
+                final Worker worker = new Worker(id, scanQueue, resultWriter, thisParams);
                 workers.add(worker);
                 worker.start();
             }

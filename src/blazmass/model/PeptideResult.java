@@ -115,6 +115,7 @@ public class PeptideResult implements Comparable {
         this.indexedSeq = indexedSeq;
     }
 
+    @Override
     public int compareTo(Object obj) {
 
         if (null == obj) {
