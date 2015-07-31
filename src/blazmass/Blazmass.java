@@ -18,6 +18,7 @@ import blazmass.model.*;
 import com.mongodb.BasicDBList;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import java.text.DecimalFormat;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import mongoconnect.MongoSeqIter;
@@ -1357,16 +1358,12 @@ public class Blazmass {
         for (int i = 0; i < size; i++) {
             char ch = pepSeq.charAt(i);
             modSeq.append(ch);
-
             if (modIndexHash[i] > 0) {
                 double modMass = diffModMass[ch];
-                modSeq.append("(").append(modMass).append(")");
+                modSeq.append("(").append(new DecimalFormat("0.0000").format(modMass)).append(")");
             }
         }
-
         newISeq.setIsModified(true);
-//        System.out.println("mod seq-----------" + modSeq.toString());
-
         newISeq.setModSequence(modSeq.toString());
 
         return calcEachIon(l, scoreArray, chargeState, newISeq, sParam);
