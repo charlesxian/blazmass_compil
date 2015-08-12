@@ -640,9 +640,16 @@ public class Blazmass {
             try {
 
                 if (sParam.isUsingMongoDB()) {
+                    List<String> parentLines;
                     //custom handling of 'L' lines for MongoDB here...
                     if (sParam.isUsingSeqDB()) {
-                        List<String> parentLines = mongoconnect.Mongoconnect.getParents(iseq.getSequence(), sParam);
+                        if (!iseq.isReverse){
+                            parentLines = mongoconnect.Mongoconnect.getParents(iseq.getSequence(), sParam, false);
+                        }
+                        else {
+                            String revSequence = new StringBuilder(iseq.getSequence()).reverse().toString();
+                            parentLines = mongoconnect.Mongoconnect.getParents(revSequence, sParam, true);
+                        }
                         if (parentLines == null) {
                             System.err.println("Error - found no parent proteins for peptide " + iseq.getSequence());
                             sb.append("L\t").append("\n");
@@ -686,7 +693,24 @@ public class Blazmass {
 
         //resultWriter.write(sb.toString());
     }
-
+    
+    /**
+     * Add a new peptide result to the list of peptide results
+     * @param pr new PeptideResult
+     * @param pArr list of PeptideResults
+     */
+    private void addResult(PeptideResult pr, PeptideResult[] pArr){
+        if (pr == null)
+            return;
+        PeptideResult prtmp = pArr[pArr.length - 1];
+        if (prtmp != null && (prtmp.getxCorr() < pr.getxCorr())) {
+            pArr[pArr.length - 1] = pr;
+            Arrays.sort(pArr);
+        }
+        
+        
+        
+    }
     /**
      * Search a single charge state for one scan (all isotopes)
      *
@@ -728,37 +752,21 @@ public class Blazmass {
                     IndexedSequence indSeq = msi.next();
                     pr = calcScore(indSeq, scoreArray, chargeState, sParam);
                     //System.out.println("!"+indSeq.getSequence() + "\t" + indSeq.getMass() + "\t" + pr.getxCorr());
-                    if (pr == null) {
-                        continue;
-                    }
-                    numMatched += 2;
-                    PeptideResult prtmp = pArr[pArr.length - 1];
-                    if (prtmp != null && (prtmp.getxCorr() < pr.getxCorr())) {
-                        pArr[pArr.length - 1] = pr;
-                        Arrays.sort(pArr);
+                    numMatched += 1;
+                    addResult(pr, pArr);
+                    if (sParam.doReversePeptides){
+                        String revSequence = new StringBuilder(indSeq.getSequence()).reverse().toString();
+                        IndexedSequence revSeq = new IndexedSequence(indSeq.getMass(), revSequence, revSequence.length(), "---", "---");
+                        revSeq.isReverse = true;
+                        pr = calcScore(revSeq, scoreArray, chargeState, sParam);
+                        //System.out.println("!"+revSeq.getSequence() + "\t" + indSeq.getMass() + "\t" + pr.getxCorr());
+                        numMatched += 1;
+                        addResult(pr, pArr);
                     }
                 }
             } else { //not using mongodb
-                List<IndexedSequence> pepList = null;
-                pepList = indexer.getSequences(rList);
-                if (pepList != null && pepList.size() > 0) {
-                    for (IndexedSequence iSeq : pepList) {
-
-                        pr = calcScore(iSeq, scoreArray, chargeState, sParam);
-                        //System.out.println("!!"+iSeq.getSequence() + "\t" + iSeq.getMass() + "\t" + pr.getxCorr());
-                        if (pr == null) {
-                            continue;
-                        }
-                        numMatched += 2;
-                        PeptideResult prtmp = pArr[pArr.length - 1];
-                        if (null != prtmp) {
-                            if (prtmp.getxCorr() < pr.getxCorr()) {
-                                pArr[pArr.length - 1] = pr;
-                                Arrays.sort(pArr);
-                            }
-                        }
-                    }
-                }
+                System.out.println("Too bad...");
+                System.exit(1);
             }
         }
         /////////////////////////

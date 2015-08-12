@@ -529,7 +529,18 @@ public class SearchParamReader {
             {
                 param.setEnzymeOffset(0);
             }
-
+            
+            // Reverse peptides?
+            // If true, the db does not contain reverse peptides and each
+            // peptide returned from the query should be reversed
+            String doReversePeptides = getParam("reverse_peptides");
+            if (doReversePeptides != null) {
+                param.doReversePeptides = Integer.parseInt(doReversePeptides) == 1;
+            } else {
+                param.doReversePeptides = false;
+            }
+            System.out.println("doReversePeptides: " + param.doReversePeptides);
+            
             // Only search for diffmods?
             String only_diff_search = getParam("only_diff_search");
             if (only_diff_search != null) {

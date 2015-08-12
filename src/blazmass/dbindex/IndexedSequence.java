@@ -17,6 +17,7 @@ public class IndexedSequence {
     private String resLeft;
     private String resRight;
     private String modSequence;
+    public boolean isReverse = false;
     /**
      * Offset is mostly an internal storage details however it can be useful to
      * the user, e.g. to generate a report view showing where the peptide occurs

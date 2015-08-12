@@ -279,7 +279,7 @@ public class Mongoconnect {
     
      Returns a list of parent proteins, each formatted in SQT L line format.
      */
-    public static List<String> getParents(String peptideSequence, SearchParams sParam) throws Exception {
+    public static List<String> getParents(String peptideSequence, SearchParams sParam, boolean isReversePeptide) throws Exception {
 
         List<String> parentProteinsOfPeptide = new ArrayList<>();
 
@@ -295,7 +295,7 @@ public class Mongoconnect {
                 return parentProteinsOfPeptide; // return list with a single empty string (if not using SeqDB)
             }
 
-            return getParentsFromColl(peptideSequence, sParam);
+            return getParentsFromColl(peptideSequence, sParam, isReversePeptide);
         } else {
             parentProteinsOfPeptide.add("");
             return parentProteinsOfPeptide; // return list with a single empty string (if not using SeqDB)
@@ -312,8 +312,8 @@ public class Mongoconnect {
     
      Returns a list of parent proteins, each formatted in SQT L line format.
      */
-    private static List<String> getParentsFromColl(String peptideSequence, SearchParams sParam) throws Exception {
-
+    private static List<String> getParentsFromColl(String peptideSequence, SearchParams sParam, boolean isReversePeptide) throws Exception {
+        
         List<String> parentProteinsOfPeptide = new ArrayList<>();
 
         try {
@@ -330,7 +330,7 @@ public class Mongoconnect {
                 } else {
                     for (Iterator<Object> it = parentProteins.iterator(); it.hasNext();) {
                         DBObject parent = (DBObject) it.next();
-                        parentProteinsOfPeptide.add(parseParentObjectSimple(peptideSequence, parent, sParam));
+                        parentProteinsOfPeptide.add(parseParentObjectSimple(peptideSequence, parent, sParam, isReversePeptide));
                     }
                 }
             }
@@ -351,38 +351,27 @@ public class Mongoconnect {
     
      Processes parent object and formats output in SQT L line format.
      Calls parseParentObjectDetailed if using ProtDB.
+    
+    if isReversePeptide, prepend "Reverse_" on the protID no matter what
      */
-    private static String parseParentObjectSimple(String peptideSequence, DBObject parent, SearchParams sParam) throws Exception {
+    private static String parseParentObjectSimple(String peptideSequence, DBObject parent, SearchParams sParam, boolean isReversePeptide) throws Exception {
         // example parent object:
         // { "_id" : "DYMAAGLYDRAEDMFSQLINEEDFR", "p" : [ { "i" : 20915500, "r" : "VSA", "l" : "LGR", "o" : 115 }, { "i" : 21556668, "r" : "VSA", "l" : "LGR", "o" : 115 } ] }
         try {
-
-            String myParent = "";
+            String myParent;
             int parentID = (int) parent.get("i");
             String parentIDString;
 
-            if (sParam.isUsingProtDB()) {
-
+            if (sParam.isUsingProtDB())
                 parentIDString = parseParentObjectDetailed(parentID, sParam);
-
-                if (parentIDString == null) {
-                    // if parent protein ID is not found in ProtDB...
-                    if (parent.containsField("d")) {
-                        if ((boolean) parent.get("d") == true) {
-                            myParent = "Reverse_";
-                        }
-                    }
-                    parentIDString = String.valueOf(parentID);
-                }
-            } else {
-                if (parent.containsField("d")) {
-                    if ((boolean) parent.get("d") == true) {
-                        myParent = "Reverse_";
-                    }
-                }
+            else
                 parentIDString = String.valueOf(parentID);
-            }
-
+            
+            if ((parent.containsField("d") && (boolean) parent.get("d") == true) || isReversePeptide)
+                myParent = "Reverse_";
+            else
+                myParent = "";
+            
             myParent += parentIDString + "\t0\t"
                     + (String) parent.get("l") + "."
                     + peptideSequence + "." + (String) parent.get("r");
@@ -391,6 +380,7 @@ public class Mongoconnect {
 
         } catch (Exception e) {
             System.out.println("SeqDB parseParentObjectSimple error");
+            e.printStackTrace();
             return null;
         }
     }

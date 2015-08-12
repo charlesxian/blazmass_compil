@@ -92,6 +92,7 @@ public class SearchParams {
     private boolean highResolution = false;
     private int maxChargeState = 6;
     float[] weightArr = new float[12];
+    public boolean doReversePeptides;
 
     private SearchParams() {
     }
