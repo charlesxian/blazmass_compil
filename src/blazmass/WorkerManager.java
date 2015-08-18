@@ -17,8 +17,10 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 /**
  * Manages blazmass worker threads
@@ -366,7 +368,7 @@ public class WorkerManager {
 
             @Override
             public void run() {
-
+                /*
                 String baseName = Util.getFileBaseName(ms2FilePath);
                 String logPath = baseName + "." + Blazmass.LOG_EXT;
                 FileWriter logWriter = null;
@@ -375,7 +377,7 @@ public class WorkerManager {
                 } catch (IOException ex) {
                     logger.log(Level.SEVERE, "Cannot initialize the log writer: " + logPath, ex);
                 }
-
+                */
                 final int totalScans = scanProducer.getNumScansIdx();
                 String totalScansStr = null;
                 if (totalScans == -1) {
@@ -389,7 +391,7 @@ public class WorkerManager {
                         System.out.println(getStats());
 
                         //update log file
-                        updateLogFile(logWriter, logPath, totalScansStr);
+                        //updateLogFile(logWriter, logPath, totalScansStr);
 
                         Thread.sleep(MONITOR_STATS_INTERVAL);
                     } catch (InterruptedException ex) {
@@ -400,17 +402,17 @@ public class WorkerManager {
                 //done, write final progress
                 System.out.println(getStats());
                 //update log file
-                updateLogFile(logWriter, logPath, totalScansStr);
+                //updateLogFile(logWriter, logPath, totalScansStr);
 
                 logger.log(Level.INFO, "Monitor done");
-
+                /*
                 if (logWriter != null) {
                     try {
                         logWriter.close();
                     } catch (IOException ex) {
                         logger.log(Level.SEVERE, "Error closing log file", ex);
                     }
-                }
+                }*/
 
             }
         }
@@ -450,6 +452,9 @@ public class WorkerManager {
         private long totalTime;
         private HighResMassProcessor hprocessor;
 
+        private static final Logger fileLogger = Logger.getLogger("ms2scanreader_filelogger");
+        FileHandler fh;
+        
         Worker(final String id, MS2ScanQueue scanQueue, final ResultWriter resultWriter, final SearchParams params) throws WorkerManagerException {
             this.id = id;
             this.scanQueue = scanQueue;
@@ -472,6 +477,21 @@ public class WorkerManager {
                     throw new WorkerManagerException("Could not initialize the indexer and init the worker thread", ex);
                 }
             }
+            
+            String logPath = "scan.LOG";
+            try {
+                fh = new FileHandler(logPath);
+                fileLogger.addHandler(fh);
+                SimpleFormatter formatter = new SimpleFormatter();  
+                fh.setFormatter(formatter);
+                fileLogger.info("Starting...");
+            } catch (IOException ex) {
+                Logger.getLogger(WorkerManager.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (SecurityException ex) {
+                Logger.getLogger(WorkerManager.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+        
         }
 
         void setStop() {
@@ -491,11 +511,12 @@ public class WorkerManager {
             while (shouldRun) {
 
                 final MS2Scan scan = scanQueue.dequeue();
+                
                 if (scan == null) {
                     logger.log(Level.FINE, "no more scans");
                     break;
                 }
-                
+                fileLogger.info(scan.getIsScan1() + "");
                 try {
 
                     if (params.isHighResolution()) {
@@ -604,16 +625,6 @@ class MS2ScanQueue {
         this.isDone = true;
         notify();
     }
-    
-    public void init() {
-        String logPath = "scan.LOG";
-        try {
-            scanLogWriter = new FileWriter(logPath);
-        } catch (IOException ex) {
-            logger.log(Level.SEVERE, "Cannot initialize the log writer: " + logPath, ex);
-            System.out.println("Cannot initialize the log writer: " + logPath);
-        }
-    }
 
     /**
      * blocks until either new spectra arrive or there is no more spectra to
@@ -660,15 +671,6 @@ class MS2ScanQueue {
         final MS2Scan scan = queue.poll();
         notifyAll();
         ++dequedScans;
-        if (scanLogWriter == null){
-            init();
-        }
-        try {
-            scanLogWriter.append(scan.getIsScan1() + "\n");
-            scanLogWriter.flush();
-        } catch (IOException ex) {
-            Logger.getLogger(MS2ScanQueue.class.getName()).log(Level.SEVERE, null, ex);
-        }
         return scan;
 
     }

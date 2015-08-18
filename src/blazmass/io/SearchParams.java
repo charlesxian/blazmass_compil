@@ -17,7 +17,7 @@ import blazmass.dbindex.DBIndexer.IndexType;
 import blazmass.dbindex.Util;
 
 public class SearchParams {
-
+    
     private String program;
     private String parametersFile;
     private String parameters;

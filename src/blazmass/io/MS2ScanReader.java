@@ -4,10 +4,14 @@ import blazmass.dbindex.Util;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 /**
  *
@@ -30,6 +34,8 @@ public class MS2ScanReader implements Iterator<MS2Scan> {
     private boolean EOF = false;
     private volatile boolean checkedNext;
     private static final Logger logger = Logger.getLogger(MS2ScanReader.class.getName());
+    
+    
     private static final Object lock = new Object(); //ensure single reader on a resource at a time
     private String curLine;  //current line for peeking
     private static final String SCAN_INDEX_EXT = ".index";
@@ -42,7 +48,8 @@ public class MS2ScanReader implements Iterator<MS2Scan> {
         this.curCacheI = -1;
         this.EOF = false;
         reader = new BufferedReader(new FileReader(filePath));
-
+        
+        
         synchronized (lock) {
             updateCache();
         }
@@ -237,7 +244,7 @@ public class MS2ScanReader implements Iterator<MS2Scan> {
             --curCacheSize;
 
             updateCache();
-
+            
             return scan;
         }
     }
