@@ -744,30 +744,28 @@ public class Blazmass {
             rList.add(new MassRange(precursorMass, ppmTolerance));
         }
         //System.out.println(rList);
-        if (!sParam.onlyDiffMod) {
-            System.out.println("Working on no mod: " + precursorMass);
-            if (sParam.isUsingMongoDB()) {
-                MongoSeqIter msi = mongoconnect.Mongoconnect.getSequencesIter(rList, sParam);
-                while (msi.hasNext()) {
-                    IndexedSequence indSeq = msi.next();
-                    pr = calcScore(indSeq, scoreArray, chargeState, sParam);
-                    //System.out.println("!"+indSeq.getSequence() + "\t" + indSeq.getMass() + "\t" + pr.getxCorr());
+        System.out.println("Working on no mod: " + precursorMass);
+        if (sParam.isUsingMongoDB()) {
+            MongoSeqIter msi = mongoconnect.Mongoconnect.getSequencesIter(rList, sParam);
+            while (msi.hasNext()) {
+                IndexedSequence indSeq = msi.next();
+                pr = calcScore(indSeq, scoreArray, chargeState, sParam);
+                //System.out.println("!"+indSeq.getSequence() + "\t" + indSeq.getMass() + "\t" + pr.getxCorr());
+                numMatched += 1;
+                addResult(pr, pArr);
+                if (sParam.doReversePeptides){
+                    String revSequence = new StringBuilder(indSeq.getSequence()).reverse().toString();
+                    IndexedSequence revSeq = new IndexedSequence(indSeq.getMass(), revSequence, revSequence.length(), "---", "---");
+                    revSeq.isReverse = true;
+                    pr = calcScore(revSeq, scoreArray, chargeState, sParam);
+                    //System.out.println("!"+revSeq.getSequence() + "\t" + indSeq.getMass() + "\t" + pr.getxCorr());
                     numMatched += 1;
                     addResult(pr, pArr);
-                    if (sParam.doReversePeptides){
-                        String revSequence = new StringBuilder(indSeq.getSequence()).reverse().toString();
-                        IndexedSequence revSeq = new IndexedSequence(indSeq.getMass(), revSequence, revSequence.length(), "---", "---");
-                        revSeq.isReverse = true;
-                        pr = calcScore(revSeq, scoreArray, chargeState, sParam);
-                        //System.out.println("!"+revSeq.getSequence() + "\t" + indSeq.getMass() + "\t" + pr.getxCorr());
-                        numMatched += 1;
-                        addResult(pr, pArr);
-                    }
                 }
-            } else { //not using mongodb
-                System.out.println("Too bad...");
-                System.exit(1);
             }
+        } else { //not using mongodb
+            System.out.println("Too bad...");
+            System.exit(1);
         }
         /////////////////////////
         // 4. modification search!!!

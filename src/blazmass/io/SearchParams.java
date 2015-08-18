@@ -43,7 +43,11 @@ public class SearchParams {
 
     public boolean onlyDiffMod = false;
     public HashMap<Character, ArrayList<Float>> diffModMap = new HashMap<>();
+    public HashMap<Character, ArrayList<Float>> diffModMap_N = new HashMap<>();
+    public HashMap<Character, ArrayList<Float>> diffModMap_C = new HashMap<>();
     public Set<Float> modMasses = new HashSet<>();
+    public Set<Float> modMasses_N = new HashSet<>();
+    public Set<Float> modMasses_C = new HashSet<>();
     private int maxNumDiffMod = 3;
     private boolean variableTolerance = false;
     private float variablePeptideMassTolerance;
@@ -93,6 +97,7 @@ public class SearchParams {
     private int maxChargeState = 6;
     float[] weightArr = new float[12];
     public boolean doReversePeptides;
+    
 
     private SearchParams() {
     }

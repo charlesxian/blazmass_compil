@@ -174,7 +174,10 @@ public class IndexedSequence {
 
     @Override
     public String toString() {
-        return "IndexedSequence{" + "id=" + id + ", mass=" + mass + ", sequence=" + sequence + ", resLeft=" + resLeft + ", resRight=" + resRight + ", modSequence=" + modSequence + ", sequenceOffset=" + sequenceOffset + ", sequenceLen=" + sequenceLen + ", isModified=" + isModified + ",ProteinDescriptionArray={  " + proteinDescArray + "}" + '}';
+        return "IndexedSequence{" + "id=" + id + ", mass=" + mass + ", sequence=" + sequence + ", resLeft=" + resLeft + 
+                ", resRight=" + resRight + ", modSequence=" + modSequence + ", sequenceOffset=" + sequenceOffset + 
+                ", sequenceLen=" + sequenceLen + ", isModified=" + isModified + ",ProteinDescriptionArray={  " + proteinDescArray + "}" + 
+                ", isReverse=" + isReverse + '}';
     }
 
     @Override

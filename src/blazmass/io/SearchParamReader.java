@@ -52,26 +52,28 @@ public class SearchParamReader {
         if (!new File(path).exists()) {
             throw new IOException("Could not locate params file at path: " + path);
         }
+        // Read in all params from params file. `getParam` is reading from `ht`
         BufferedReader br = null;
         try {
             br = new BufferedReader(new FileReader(path));
             String eachLine;
-
-            //Hashtable<String> ht = new Hashtable<String>();
             param = SearchParams.getInstance();
-            //StringBuffer sb = new StringBuffer();
-            //br.skip(2000);
             while ((eachLine = br.readLine()) != null) {
-                if (eachLine.startsWith("#")) {
+                if (eachLine.startsWith("#"))
                     continue;
-                }
                 String[] strArr = eachLine.split("=");
-                if (strArr.length < 2) {
+                if (strArr.length < 2)
                     continue;
-                }
-
                 ht.put(strArr[0].trim(), strArr[1].split(";")[0].trim());
             }
+        } catch (IOException e) {
+            System.out.println("Error reading param file " + e);
+            throw new IOException(e.toString());
+        } finally {
+            if (br != null)
+                br.close();
+        }
+        try {
             String sqtSuffix = trimValue(getParam("sqt_suffix"));
             if (sqtSuffix == null) {
                 param.setSqtSuffix("");
@@ -541,53 +543,121 @@ public class SearchParamReader {
             }
             System.out.println("doReversePeptides: " + param.doReversePeptides);
             
-            // Only search for diffmods?
-            String only_diff_search = getParam("only_diff_search");
-            if (only_diff_search != null) {
-                param.onlyDiffMod = Integer.parseInt(only_diff_search) == 1;
+            // Search for diffmods? If 1, do diffmod search. If 0, ignores diff_search_options, diff_search_N, diff_search_C
+            String diff_search = getParam("diff_search");
+            if (diff_search != null) {
+                param.setDiffSearch(Integer.parseInt(diff_search) == 1);
             } else {
-                param.onlyDiffMod = false;
+                param.setDiffSearch(true);
             }
-            System.out.println("onlyDiffMod: " + param.onlyDiffMod);
+            System.out.println("Doing diff search: " + param.isDiffSearch());
 
-            if (null != getParam("diff_search_options") && !"".equals(getParam("diff_search_options"))) {
-                
-                String[] modArr = getParam("diff_search_options").trim().split(" ");
-                
-                HashMap<Character, ArrayList<Float>> diffModMap = new HashMap<>();
-                for (char AA: "ARNDBCEQZGHILKMFPSTWYV".toCharArray()) {
-                    diffModMap.put(AA, new ArrayList<Float>());
-                }
+            
+            if (param.isDiffSearch()) {
 
-                for (int i = 0; i < modArr.length; i += 2) {
-                    float massShift = (float) Double.parseDouble(modArr[i]);
-                    if (massShift != 0) {
-                        param.setDiffSearch(true);
-                        for (int j = 0; j < modArr[i + 1].length(); j++) {
-                            diffModMap.get(modArr[i + 1].charAt(j)).add(massShift);
-                        }
+                String diff_search_options = getParam("diff_search_options");
+                String diff_search_Nterm = getParam("diff_search_Nterm");
+                String diff_search_Cterm = getParam("diff_search_Cterm");
+                
+                // Validate diff_search_options
+                if (diff_search_options != null && diff_search_options != "")
+                    validateDiffSearchOptions(diff_search_options.trim().split(" "));
+                if (diff_search_Nterm != null && diff_search_Nterm != "")
+                    validateDiffSearchOptions(diff_search_Nterm.trim().split(" "));
+                if (diff_search_Cterm != null && diff_search_Cterm != "")
+                    validateDiffSearchOptions(diff_search_Cterm.trim().split(" "));
+    
+                // Parse
+                if (diff_search_options != null && diff_search_options != "") {
+                    String[] modArr = diff_search_options.trim().split(" ");
+                    HashMap<Character, ArrayList<Float>> diffModMap = new HashMap<>();
+                    for (char AA: "ARNDBCEQZGHILKMFPSTWYV".toCharArray())
+                        diffModMap.put(AA, new ArrayList<Float>());
+
+                    for (int i = 0; i < modArr.length; i += 2) {
+                        float massShift = (float) Double.parseDouble(modArr[i]);
+                        if (massShift != 0) 
+                            for (int j = 0; j < modArr[i + 1].length(); j++)
+                                diffModMap.get(modArr[i + 1].charAt(j)).add(massShift);
                     }
+                    param.diffModMap = diffModMap;
+                    System.out.println("diffmods to apply:" + diffModMap);
+                    Set<Float> modMasses = new HashSet<>();
+                    for (Character key: diffModMap.keySet())
+                        modMasses.addAll(diffModMap.get(key));
+                    param.modMasses = modMasses;
+                    System.out.println("list of diffmod masses:" + modMasses);
                 }
-                param.diffModMap = diffModMap;
-                System.out.println("diffmods to apply:" + diffModMap);
+                
+                if (diff_search_Nterm != null && diff_search_Nterm != "") {
+                    String[] modArr_N = diff_search_Nterm.trim().split(" ");
+                    HashMap<Character, ArrayList<Float>> diffModMap_N = new HashMap<>();
+                    for (char AA: "ARNDBCEQZGHILKMFPSTWYV".toCharArray())
+                        diffModMap_N.put(AA, new ArrayList<Float>());
 
-                Set<Float> modMasses = new HashSet<>();
-                for (Character key: diffModMap.keySet()) {
-                    modMasses.addAll(diffModMap.get(key));
+                    for (int i = 0; i < modArr_N.length; i += 2) {
+                        float massShift = (float) Double.parseDouble(modArr_N[i]);
+                        if (massShift != 0) 
+                            for (int j = 0; j < modArr_N[i + 1].length(); j++)
+                                diffModMap_N.get(modArr_N[i + 1].charAt(j)).add(massShift);
+                    }
+                    param.diffModMap_N = diffModMap_N;
+                    System.out.println("N-term diffmods to apply:" + diffModMap_N);
+                    Set<Float> modMasses_N = new HashSet<>();
+                    for (Character key: diffModMap_N.keySet())
+                        modMasses_N.addAll(diffModMap_N.get(key));
+                    param.modMasses_N = modMasses_N;
+                    System.out.println("list of diffmod masses N-term:" + modMasses_N);
                 }
-                param.modMasses = modMasses;
-                System.out.println("list of diffmod masses:" + modMasses);
-                //System.exit(1);
+                
+                if (diff_search_Cterm != null && diff_search_Cterm != "") {
+                    String[] modArr_C = diff_search_Cterm.trim().split(" ");
+                    HashMap<Character, ArrayList<Float>> diffModMap_C = new HashMap<>();
+                    for (char AA: "ARNDBCEQZGHILKMFPSTWYV".toCharArray())
+                        diffModMap_C.put(AA, new ArrayList<Float>());
+
+                    for (int i = 0; i < modArr_C.length; i += 2) {
+                        float massShift = (float) Double.parseDouble(modArr_C[i]);
+                        if (massShift != 0) 
+                            for (int j = 0; j < modArr_C[i + 1].length(); j++)
+                                diffModMap_C.get(modArr_C[i + 1].charAt(j)).add(massShift);
+                    }
+                    param.diffModMap_C = diffModMap_C;
+                    System.out.println("C-term diffmods to apply:" + diffModMap_C);
+                    Set<Float> modMasses_C = new HashSet<>();
+                    for (Character key: diffModMap_C.keySet())
+                        modMasses_C.addAll(diffModMap_C.get(key));
+                    param.modMasses_N = modMasses_C;
+                    System.out.println("list of diffmod masses C-term:" + modMasses_C);
+                }
             }
-        } catch (IOException e) {
-            System.out.println("Error reading param file " + e);
-            throw new IOException(e.toString());
-        } finally {
-            if (null != br);
-            br.close();
         }
+        catch (Exception e) {
+            System.out.println("Error reading param file " + e);
+            e.printStackTrace();
+            throw new IOException();
+        } 
     }
 
+    private void validateDiffSearchOptions(String[] modArr) throws IOException{
+        String AAs = "ARNDBCEQZGHILKMFPSTWYV";
+        
+        if (modArr.length % 2 !=  0)
+            throw new IOException("invalid diff_search_options. Unever number of elements");
+
+        for (int i = 0; i < modArr.length; i += 2) {
+            try {
+                float massShift = (float) Double.parseDouble(modArr[i]);
+            } catch (NumberFormatException e){
+                e.printStackTrace();
+                throw new IOException();
+            }
+            for (int j = 0; j < modArr[i + 1].length(); j++)
+                if (!AAs.contains(modArr[i + 1].charAt(j) + ""))
+                    throw new IOException("invalid diff_search_options. Invalid amino acid: " + modArr[i + 1].charAt(j));
+        }
+    }
+    
     public void pepProbeInit() {
     }
 

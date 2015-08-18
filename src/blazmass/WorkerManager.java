@@ -495,6 +495,7 @@ public class WorkerManager {
                     logger.log(Level.FINE, "no more scans");
                     break;
                 }
+                System.out.println("Working on scan: " + scan.getIsScan1());
                 try {
 
                     if (params.isHighResolution()) {

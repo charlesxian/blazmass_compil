@@ -375,7 +375,11 @@ public class Mongoconnect {
             myParent += parentIDString + "\t0\t"
                     + (String) parent.get("l") + "."
                     + peptideSequence + "." + (String) parent.get("r");
-
+            
+            // For future information. DTASelect seems perfectly happy to accept the peptide string
+            // without the left and right 3 residues, like below:
+            // myParent += parentIDString + "\t0\t" + peptideSequence;
+            
             return myParent;
 
         } catch (Exception e) {
