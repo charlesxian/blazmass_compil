@@ -495,7 +495,7 @@ public class WorkerManager {
                     logger.log(Level.FINE, "no more scans");
                     break;
                 }
-                System.out.println("Working on scan: " + scan.getIsScan1());
+                
                 try {
 
                     if (params.isHighResolution()) {
@@ -598,10 +598,21 @@ class MS2ScanQueue {
     private static final int MAX_SCANS = 1000;
     private static final Logger logger = Logger.getLogger(MS2ScanQueue.class.getName());
     private int dequedScans = 0;
-
+    private FileWriter scanLogWriter = null;
+    
     synchronized void setIsDone() {
         this.isDone = true;
         notify();
+    }
+    
+    public void init() {
+        String logPath = "scan.LOG";
+        try {
+            scanLogWriter = new FileWriter(logPath);
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, "Cannot initialize the log writer: " + logPath, ex);
+            System.out.println("Cannot initialize the log writer: " + logPath);
+        }
     }
 
     /**
@@ -649,6 +660,15 @@ class MS2ScanQueue {
         final MS2Scan scan = queue.poll();
         notifyAll();
         ++dequedScans;
+        if (scanLogWriter == null){
+            init();
+        }
+        try {
+            scanLogWriter.append(scan.getIsScan1() + "\n");
+            scanLogWriter.flush();
+        } catch (IOException ex) {
+            Logger.getLogger(MS2ScanQueue.class.getName()).log(Level.SEVERE, null, ex);
+        }
         return scan;
 
     }
