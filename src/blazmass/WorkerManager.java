@@ -13,6 +13,7 @@ import blazmass.io.SearchParams;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -232,6 +233,9 @@ public class WorkerManager {
         private ResultWriter resultWriter; //shared
         private static final Logger logger = Logger.getLogger(WorkerPool.class.getName());
 
+        private static final Logger fileLogger = Logger.getLogger("WorkerPool_filelogger");
+        FileHandler fh;
+        
         WorkerPool(String ms2FilePath, SearchParams params, int numWorkers, SearchParamReader paramReader) throws WorkerManagerException {
             this.ms2FilePath = ms2FilePath;
             this.params = params;
@@ -253,8 +257,32 @@ public class WorkerManager {
                 logger.log(Level.SEVERE, "Could not start create result file and start worker pool");
                 throw new WorkerManagerException("Could not start create result file and start worker pool", ex);
             }
+            
+            String logPath = getFileBaseName(Paths.get(ms2FilePath).getFileName().toString()) + ".LOG";
+            try {
+                fh = new FileHandler(logPath);
+                fileLogger.addHandler(fh);
+                SimpleFormatter formatter = new SimpleFormatter();  
+                fh.setFormatter(formatter);
+            } catch (IOException ex) {
+                Logger.getLogger(WorkerManager.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (SecurityException ex) {
+                Logger.getLogger(WorkerManager.class.getName()).log(Level.SEVERE, null, ex);
+            }
+                        
         }
-
+        /**
+        * Get base name without extension part
+        *
+        * @param path
+        * @return
+        */
+       public static String getFileBaseName(String path) {
+           int dotI = path.lastIndexOf(".");
+           if (dotI == -1)
+               return path;
+           return path.substring(0, dotI);
+       }
         /**
          * Start all the threads and let them terminate if there is no more work
          *
@@ -277,7 +305,7 @@ public class WorkerManager {
                 String id = "Worker#" + (i + 1);
                 SearchParams thisParams = paramReader.getSearchParams(); // so each thread has its own params
                 // necessary for the diffmod search so a single residue can have different diffmod masses
-                final Worker worker = new Worker(id, scanQueue, resultWriter, thisParams);
+                final Worker worker = new Worker(id, scanQueue, resultWriter, thisParams, fileLogger);
                 workers.add(worker);
                 worker.start();
             }
@@ -451,15 +479,14 @@ public class WorkerManager {
         private long endTime;
         private long totalTime;
         private HighResMassProcessor hprocessor;
-
-        private static final Logger fileLogger = Logger.getLogger("ms2scanreader_filelogger");
-        FileHandler fh;
+        private final Logger fileLogger;
         
-        Worker(final String id, MS2ScanQueue scanQueue, final ResultWriter resultWriter, final SearchParams params) throws WorkerManagerException {
+        Worker(final String id, MS2ScanQueue scanQueue, final ResultWriter resultWriter, final SearchParams params, Logger fileLogger) throws WorkerManagerException {
             this.id = id;
             this.scanQueue = scanQueue;
             this.resultWriter = resultWriter;
             this.params = params;
+            this.fileLogger = fileLogger;
 
             this.shouldRun = true;
             this.isRunning = false;
@@ -477,21 +504,6 @@ public class WorkerManager {
                     throw new WorkerManagerException("Could not initialize the indexer and init the worker thread", ex);
                 }
             }
-            
-            String logPath = "scan.LOG";
-            try {
-                fh = new FileHandler(logPath);
-                fileLogger.addHandler(fh);
-                SimpleFormatter formatter = new SimpleFormatter();  
-                fh.setFormatter(formatter);
-                fileLogger.info("Starting...");
-            } catch (IOException ex) {
-                Logger.getLogger(WorkerManager.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (SecurityException ex) {
-                Logger.getLogger(WorkerManager.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            
-        
         }
 
         void setStop() {
