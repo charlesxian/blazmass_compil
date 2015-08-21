@@ -154,7 +154,7 @@ public class Mongoconnect {
         //System.out.println(query);
 
         DBCursor cursor = massDBCollection.find(query).batchSize(3000);
-        MongoSeqIter msi = new MongoSeqIter(cursor);
+        MongoSeqIter msi = new MongoSeqIter(cursor, sParam);
         return msi;
     }
 

@@ -2,6 +2,7 @@
 package mongoconnect;
 
 import blazmass.dbindex.IndexedSequence;
+import blazmass.io.SearchParams;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
@@ -23,11 +24,13 @@ public class MongoSeqIter {
     public int count = 0;
     private IndexedSequence indSeq = null;
     private IndexedSequence nextSeq = null;
+    private final SearchParams sParam;
     
     
     // constructor
-    public MongoSeqIter(DBCursor cursor) {
+    public MongoSeqIter(DBCursor cursor, SearchParams sParam) {
         this.cursor = cursor;
+        this.sParam = sParam;
         count = 0;
     }
 

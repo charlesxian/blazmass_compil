@@ -239,6 +239,14 @@ public class IndexedSequence {
         this.resLeft = resLeft;
     }
 
+    public boolean getIsReverse() {
+        return isReverse;
+    }
+
+    public void setIsReverse(boolean isReverse) {
+        this.isReverse = isReverse;
+    }
+    
     public String getResRight() {
         return resRight;
     }
@@ -319,6 +327,8 @@ public class IndexedSequence {
 
         IndexedSequence iseq = new IndexedSequence(id, mass, sequenceOffset, sequenceLen, sequence, resLeft, resRight);
         iseq.setProteinIds(proteinIds);
+        iseq.setIsReverse(isReverse);
+        iseq.setIsModified(isModified);
         return iseq;
     }
 
