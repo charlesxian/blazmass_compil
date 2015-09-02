@@ -694,23 +694,41 @@ public class Blazmass {
         //resultWriter.write(sb.toString());
     }
     
-    /**
+   /**
      * Add a new peptide result to the list of peptide results
+     *
      * @param pr new PeptideResult
      * @param pArr list of PeptideResults
      */
-    private void addResult(PeptideResult pr, PeptideResult[] pArr){
-        if (pr == null)
+    private void addResult(PeptideResult pr, PeptideResult[] pArr) {
+        addResult(pr, pArr, false);
+    }
+
+    private void addResult(PeptideResult pr, PeptideResult[] pArr, boolean verbose) {
+        if (pr == null) {
             return;
+        }
+
         PeptideResult prtmp = pArr[pArr.length - 1];
-        if (prtmp != null && (prtmp.getxCorr() < pr.getxCorr())) {
+        if (prtmp != null) {
+            if (prtmp.getxCorr() < pr.getxCorr()) {
+                pArr[pArr.length - 1] = pr;
+                Arrays.sort(pArr);
+            }
+        } else {
             pArr[pArr.length - 1] = pr;
             Arrays.sort(pArr);
         }
-        
-        
-        
+
+        if (verbose) {
+            System.out.println("---");
+            for (PeptideResult p : pArr) {
+                System.out.println(p.getxCorr());
+            }
+            System.out.println("---");
+        }
     }
+
     /**
      * Search a single charge state for one scan (all isotopes)
      *

@@ -359,7 +359,7 @@ public class Mongoconnect {
         // { "_id" : "DYMAAGLYDRAEDMFSQLINEEDFR", "p" : [ { "i" : 20915500, "r" : "VSA", "l" : "LGR", "o" : 115 }, { "i" : 21556668, "r" : "VSA", "l" : "LGR", "o" : 115 } ] }
         try {
             String myParent;
-            int parentID = (int) parent.get("i");
+            int parentID = ((Number) parent.get("i")).intValue();
             String parentIDString;
 
             if (sParam.isUsingProtDB())

@@ -120,6 +120,8 @@ public class SearchParamReader {
             String protDBParam = getParam("use_ProtDB").trim();
             if (mongoParam == null || Integer.parseInt(mongoParam) == 0) {
                 param.setUsingMongoDB(false);
+                System.out.println("Must use mongodb");
+                System.exit(1);
             } else {
                 param.setUsingMongoDB(true);
                 String massDBServer = getParam("MassDB_server").trim();
@@ -560,15 +562,15 @@ public class SearchParamReader {
                 String diff_search_Cterm = getParam("diff_search_Cterm");
                 
                 // Validate diff_search_options
-                if (diff_search_options != null && diff_search_options != "")
+                if (diff_search_options != null && !"".equals(diff_search_options))
                     validateDiffSearchOptions(diff_search_options.trim().split(" "));
-                if (diff_search_Nterm != null && diff_search_Nterm != "")
+                if (diff_search_Nterm != null && !"".equals(diff_search_Nterm))
                     validateDiffSearchOptions(diff_search_Nterm.trim().split(" "));
-                if (diff_search_Cterm != null && diff_search_Cterm != "")
+                if (diff_search_Cterm != null && !"".equals(diff_search_Cterm))
                     validateDiffSearchOptions(diff_search_Cterm.trim().split(" "));
     
                 // Parse
-                if (diff_search_options != null && diff_search_options != "") {
+                if (diff_search_options != null && !"".equals(diff_search_options)) {
                     String[] modArr = diff_search_options.trim().split(" ");
                     HashMap<Character, ArrayList<Float>> diffModMap = new HashMap<>();
                     for (char AA: "ARNDBCEQZGHILKMFPSTWYV".toCharArray())
@@ -589,7 +591,7 @@ public class SearchParamReader {
                     System.out.println("list of diffmod masses:" + modMasses);
                 }
                 
-                if (diff_search_Nterm != null && diff_search_Nterm != "") {
+                if (diff_search_Nterm != null && !"".equals(diff_search_Nterm)) {
                     String[] modArr_N = diff_search_Nterm.trim().split(" ");
                     HashMap<Character, ArrayList<Float>> diffModMap_N = new HashMap<>();
                     for (char AA: "ARNDBCEQZGHILKMFPSTWYV".toCharArray())
@@ -610,7 +612,7 @@ public class SearchParamReader {
                     System.out.println("list of diffmod masses N-term:" + modMasses_N);
                 }
                 
-                if (diff_search_Cterm != null && diff_search_Cterm != "") {
+                if (diff_search_Cterm != null && !"".equals(diff_search_Cterm)) {
                     String[] modArr_C = diff_search_Cterm.trim().split(" ");
                     HashMap<Character, ArrayList<Float>> diffModMap_C = new HashMap<>();
                     for (char AA: "ARNDBCEQZGHILKMFPSTWYV".toCharArray())
@@ -627,7 +629,7 @@ public class SearchParamReader {
                     Set<Float> modMasses_C = new HashSet<>();
                     for (Character key: diffModMap_C.keySet())
                         modMasses_C.addAll(diffModMap_C.get(key));
-                    param.modMasses_N = modMasses_C;
+                    param.modMasses_C = modMasses_C;
                     System.out.println("list of diffmod masses C-term:" + modMasses_C);
                 }
             }
@@ -643,7 +645,7 @@ public class SearchParamReader {
         String AAs = "ARNDBCEQZGHILKMFPSTWYV";
         
         if (modArr.length % 2 !=  0)
-            throw new IOException("invalid diff_search_options. Unever number of elements");
+            throw new IOException("invalid diff_search_options. Uneven number of elements");
 
         for (int i = 0; i < modArr.length; i += 2) {
             try {

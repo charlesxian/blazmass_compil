@@ -53,7 +53,7 @@ public class MongoSeqIter {
                 throw new NoSuchElementException("No more");
             }
             //System.out.println("obj-" + obj);
-            intMass = (int) obj.get("_id"); // gets intMass from current document
+            intMass = ((Number) obj.get("_id")).intValue(); // may have this stored as a Double or Int....
             peptideSeq = ((List<String>) obj.get("s")).listIterator();
             sequence = peptideSeq.next();
             indSeq = new IndexedSequence((float) intMass / 1000, sequence, sequence.length(), "---", "---");
