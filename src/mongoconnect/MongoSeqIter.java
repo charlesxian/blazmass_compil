@@ -6,9 +6,12 @@ import blazmass.io.SearchParams;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCursor;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
+import org.bson.Document;
 
 /**
  * Custom iterator class that returns single peptides at a time as an IndexedSequence from a mongo DBCursor
@@ -19,18 +22,15 @@ public class MongoSeqIter {
     private int intMass;
     private String sequence;
     private ListIterator<String> peptideSeq;
-    private DBCursor cursor;
-    private DBObject obj; //sequence mongo object {'_id"- mass, 's'- list of sequences}
+    private final MongoCursor<Document> cursor;
+    private Document obj; //sequence mongo object {'_id"- mass, 's'- list of sequences}
     public int count = 0;
     private IndexedSequence indSeq = null;
     private IndexedSequence nextSeq = null;
-    private final SearchParams sParam;
-    
     
     // constructor
-    public MongoSeqIter(DBCursor cursor, SearchParams sParam) {
-        this.cursor = cursor;
-        this.sParam = sParam;
+    public MongoSeqIter(FindIterable<Document> cursor) {
+        this.cursor = cursor.iterator();
         count = 0;
     }
 
@@ -75,7 +75,5 @@ public class MongoSeqIter {
         } else{
             return true;
         }
-        
     }
-
 }

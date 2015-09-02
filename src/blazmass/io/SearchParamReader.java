@@ -124,12 +124,9 @@ public class SearchParamReader {
                 System.exit(1);
             } else {
                 param.setUsingMongoDB(true);
-                String massDBServer = getParam("MassDB_server").trim();
-                int massDBPort = Integer.parseInt(getParam("MassDB_port").trim());
                 String massDBname = getParam("MassDB_dbname").trim();
                 String massDBCollection = getParam("MassDB_collection").trim();
-                param.setMassDBServer(massDBServer);
-                param.setMassDBPort(massDBPort);
+                param.setMassDBURI(getParam("MassDB_URI").trim());
                 param.setMassDBName(massDBname);
                 param.setMassDBCollection(massDBCollection);
                 param.setDatabaseName(massDBname + "." + massDBCollection + " [MongoDB]");
@@ -137,26 +134,18 @@ public class SearchParamReader {
                 if (seqDBParam != null && Integer.parseInt(seqDBParam) == 1) {
                     //use SeqDB
                     param.setUsingSeqDB(true);
-                    String seqDBServer = getParam("SeqDB_server");
-                    int seqDBPort = Integer.parseInt(getParam("SeqDB_port"));
                     String seqDBName = getParam("SeqDB_dbname");
                     String seqDBCollection = getParam("SeqDB_collection");
-                    param.setSeqDBServer(seqDBServer);
-                    param.setSeqDBPort(seqDBPort);
+                    param.setSeqDBURI(getParam("SeqDB_URI").trim());
                     param.setSeqDBName(seqDBName);
                     param.setSeqDBCollection(seqDBCollection);
 
                     if (protDBParam != null && Integer.parseInt(protDBParam) == 1) {
                         //use ProtDB
                         param.setUsingProtDB(true);
-                        String protDBServer = getParam("ProtDB_server");
-                        int protDBPort = Integer.parseInt(getParam("ProtDB_port"));
-                        String protDBName = getParam("ProtDB_dbname");
-                        String protDBCollection = getParam("ProtDB_collection");
-                        param.setProtDBServer(protDBServer);
-                        param.setProtDBPort(protDBPort);
-                        param.setProtDBName(protDBName);
-                        param.setProtDBCollection(protDBCollection);
+                        param.setProtDBName(getParam("ProtDB_dbname"));
+                        param.setProtDBCollection(getParam("ProtDB_collection"));
+                        param.setProtDBURI(getParam("ProtDB_URI").trim());
                     } else {
                         param.setUsingProtDB(false);
                         System.out.println("Not using ProtDB MongoDB database -- SQT output will be incomplete");

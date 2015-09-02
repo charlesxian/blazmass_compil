@@ -97,6 +97,9 @@ public class SearchParams {
     private int maxChargeState = 6;
     float[] weightArr = new float[12];
     public boolean doReversePeptides;
+    private String massDBURI;
+    private String seqDBURI;
+    private String protDBURI;
     
 
     private SearchParams() {
@@ -113,8 +116,6 @@ public class SearchParams {
     // MongoDB params
     private boolean usingMongoDB = false;
 
-    private String massDBServer;
-    private int massDBPort;
     private String massDBName;
     private String massDBCollection;
 
@@ -839,15 +840,6 @@ public class SearchParams {
         return usingMongoDB;
     }
 
-    // MassDB MongoDB getters
-    public String getMassDBServer() {
-        return massDBServer;
-    }
-
-    public int getMassDBPort() {
-        return massDBPort;
-    }
-
     public String getMassDBName() {
         return massDBName;
     }
@@ -903,15 +895,6 @@ public class SearchParams {
         this.usingMongoDB = useMongoDB;
     }
 
-    // MassDB MongoDB setters
-    public void setMassDBServer(String massDBServer) {
-        this.massDBServer = massDBServer;
-    }
-
-    public void setMassDBPort(int massDBPort) {
-        this.massDBPort = massDBPort;
-    }
-
     public void setMassDBName(String massDBName) {
         this.massDBName = massDBName;
     }
@@ -962,4 +945,26 @@ public class SearchParams {
         this.protDBCollection = protDBCollectionName;
     }
 
+    void setMassDBURI(String massDBURI) {
+        this.massDBURI = massDBURI;
+    }
+
+    void setSeqDBURI(String seqDBURI) {
+        this.seqDBURI = seqDBURI;
+    }
+    
+    void setProtDBURI(String protDBURI) {
+        this.protDBURI = protDBURI;
+    }
+    public String getMassDBURI() {
+        return this.massDBURI;
+    }
+
+    public String getSeqDBURI() {
+        return this.seqDBURI;
+    }
+    
+    public String getProtDBURI() {
+        return this.protDBURI;
+    }
 }

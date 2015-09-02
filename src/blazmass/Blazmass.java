@@ -276,6 +276,7 @@ public class Blazmass {
                     logger.log(Level.SEVERE, null, ex);
                 }
             }
+            mongoconnect.Mongoconnect.disconnect();
         }
     }
 
@@ -745,8 +746,6 @@ public class Blazmass {
      */
     private int runSearch(DBIndexer indexer, SearchParams sParam, float[] scoreArray, int chargeState, float precursorMass, PeptideResult[] pArr) throws Exception {
         int numMatched = 0;
-        int intMass;
-        String sequence;
         PeptideResult pr;
         float massTolerance = sParam.getRelativePeptideMassTolerance();
         float ppmTolerance = this.getPpm(precursorMass, massTolerance);

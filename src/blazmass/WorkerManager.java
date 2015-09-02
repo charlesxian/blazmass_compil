@@ -549,10 +549,9 @@ public class WorkerManager {
                     continue;
                 }
             }
-
             resultWriter.flush();
             isRunning = false;
-
+            mongoconnect.Mongoconnect.disconnect();
         }
 
         public boolean isShouldRun() {

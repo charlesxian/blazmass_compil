@@ -6,12 +6,13 @@
 package mongoconnect;
 
 import com.mongodb.MongoClient;
-import com.mongodb.DB;
+import com.mongodb.client.MongoDatabase;
 import com.mongodb.DBCollection;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBList;
 import com.mongodb.DBObject;
 import com.mongodb.DBCursor;
+import static com.mongodb.client.model.Filters.*;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -19,9 +20,14 @@ import blazmass.dbindex.MassRange;
 import blazmass.dbindex.IndexedSequence;
 //import blazmass.io.SearchParamReader;
 import blazmass.io.SearchParams;
+import com.mongodb.MongoClientURI;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
 import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import org.bson.Document;
+import org.bson.conversions.Bson;
 //import java.util.logging.Level;
 //import java.util.logging.Logger;
 
@@ -38,16 +44,25 @@ public class Mongoconnect {
     private static MongoClient massDBMongoClient = null;
     private static MongoClient seqDBMongoClient = null;
     private static MongoClient protDBMongoClient = null;
-    private static DB massDB = null;
-    private static DB seqDB = null;
-    private static DB protDB = null;
-    private static DBCollection massDBCollection = null;
-    private static DBCollection seqDBCollection = null;
-    private static DBCollection protDBCollection = null;
+    private static MongoDatabase massDB = null;
+    private static MongoDatabase seqDB = null;
+    private static MongoDatabase protDB = null;
+    private static MongoCollection<Document> massDBCollection = null;
+    private static MongoCollection<Document> seqDBCollection = null;
+    private static MongoCollection<Document> protDBCollection = null;
 
     public Mongoconnect() {
     }
 
+    public static void disconnect(){
+        if (massDBMongoClient != null)
+            massDBMongoClient.close();
+        if (seqDBMongoClient != null)
+           seqDBMongoClient.close();
+        if (protDBMongoClient != null)
+            protDBMongoClient.close();
+        System.out.println("Closed mongo connection");
+    }
     /*
      connectToMassDB
     
@@ -57,20 +72,19 @@ public class Mongoconnect {
      Sets variables massDBMongoClient, massDB, massDBCollection for use 
      throughout the class.  Should only make one of each object per thread.
      */
-    private static void connectToMassDB(SearchParams sParam) throws Exception {
-
-        try {
-
-            if (massDBMongoClient == null) {
-
-                massDBMongoClient = new MongoClient(sParam.getMassDBServer(), sParam.getMassDBPort());
-                System.out.println("-------------Making new connection to MongoDB/MassDB at " + sParam.getMassDBServer());
-                massDB = massDBMongoClient.getDB(sParam.getMassDBName());
+    private static void connectToMassDB(SearchParams sParam) {
+        if (massDBMongoClient == null) {
+            try {
+                massDBMongoClient = new MongoClient(new MongoClientURI(sParam.getMassDBURI()));
+                System.out.println("------Making new connection to MongoDB/MassDB at " + massDBMongoClient);
+                massDB = massDBMongoClient.getDatabase(sParam.getMassDBName());
                 massDBCollection = massDB.getCollection(sParam.getMassDBCollection());
+                System.out.println(massDBCollection);
+            } catch (Exception e) {
+                System.out.println("connectToMassDB error");
+                e.printStackTrace();
+                System.exit(1);
             }
-
-        } catch (Exception e) {
-            System.out.println("connectToMassDB error");
         }
     }
 
@@ -85,20 +99,19 @@ public class Mongoconnect {
      throughout the class.  Should only make one of each connection object, 
      to be reused many times.
      */
-    private static void connectToSeqDB(SearchParams sParam) throws Exception {
-
-        try {
-
-            if (seqDBMongoClient == null) {
-
-                seqDBMongoClient = new MongoClient(sParam.getSeqDBServer(), sParam.getSeqDBPort());
-                System.out.println("-------------Making new connection to MongoDB/SeqDB at " + sParam.getSeqDBServer());
-                seqDB = seqDBMongoClient.getDB(sParam.getSeqDBName());
+    private static void connectToSeqDB(SearchParams sParam) {
+        if (seqDBMongoClient == null) {
+            try {
+                seqDBMongoClient = new MongoClient(new MongoClientURI(sParam.getSeqDBURI()));
+                System.out.println("------Making new connection to MongoDB/SeqDB at " + seqDBMongoClient);
+                seqDB = seqDBMongoClient.getDatabase(sParam.getSeqDBName());
                 seqDBCollection = seqDB.getCollection(sParam.getSeqDBCollection());
+                System.out.println(seqDBCollection);
+            } catch (Exception e) {
+                System.out.println("connectToSeqDB error");
+                e.printStackTrace();
+                System.exit(1);
             }
-
-        } catch (Exception e) {
-            System.out.println("connectToSeqDB error");
         }
     }
 
@@ -113,48 +126,42 @@ public class Mongoconnect {
      throughout the class.  Should only make one of each connection object, 
      to be reused many times.
      */
-    private static void connectToProtDB(SearchParams sParam) throws Exception {
-
-        try {
-
-            if (protDBMongoClient == null) {
-
-                protDBMongoClient = new MongoClient(sParam.getProtDBServer(), sParam.getProtDBPort());
-                System.out.println("-------------Making new connection to MongoDB/ProtDB at " + sParam.getProtDBServer());
-                protDB = protDBMongoClient.getDB(sParam.getProtDBName());
+    private static void connectToProtDB(SearchParams sParam) {
+        if (protDBMongoClient == null) {
+            try {
+                protDBMongoClient = new MongoClient(new MongoClientURI(sParam.getProtDBURI()));
+                System.out.println("------Making new connection to MongoDB/ProtDB at " + protDBMongoClient);
+                protDB = protDBMongoClient.getDatabase(sParam.getProtDBName());
                 protDBCollection = protDB.getCollection(sParam.getProtDBCollection());
+                System.out.println(protDBCollection);
+            } catch (Exception e) {
+                System.out.println("connectToProtDB error");
+                e.printStackTrace();
+                System.exit(1);
             }
-
-        } catch (Exception e) {
-            System.out.println("connectToProtDB error");
         }
     }
+    
     /*
     getSequencesIter: Does a range query. Reture an iterator that yields IndexedSequences containing a single peptide and its mass
      */
     public static MongoSeqIter getSequencesIter(List<MassRange> rList, SearchParams sParam) throws Exception {
-
-        try {
-            connectToMassDB(sParam);
-        } catch (Exception e) {
-            System.out.println("MassDB connection error");
-            return null;
-        }
+        
+        connectToMassDB(sParam);
 
         int lowMass;
         int highMass;
         // Build long "or" query using all mass ranges
-        BasicDBList or = new BasicDBList();
+        List<Bson> orList = new ArrayList();
         for (MassRange mRange : rList) {
             lowMass = Math.round((mRange.getPrecMass() - mRange.getTolerance()) * 1000);
             highMass = Math.round((mRange.getPrecMass() + mRange.getTolerance()) * 1000);
-            or.add(new BasicDBObject("_id", new BasicDBObject("$gte", lowMass).append("$lte", highMass)));
+            Bson x = and(gte("_id", lowMass), lte("_id", highMass));
+            orList.add(x);
         }
-        DBObject query = new BasicDBObject("$or", or);
-        //System.out.println(query);
-
-        DBCursor cursor = massDBCollection.find(query).batchSize(3000);
-        MongoSeqIter msi = new MongoSeqIter(cursor, sParam);
+        Bson query = or(orList);
+        FindIterable<Document> cursor = massDBCollection.find(query).batchSize(3000);
+        MongoSeqIter msi = new MongoSeqIter(cursor);
         return msi;
     }
 
@@ -169,7 +176,7 @@ public class Mongoconnect {
      Returns an ArrayList of IndexedSequence objects - same as 
      DBIndexer.getSequences()
      */
-    public static List<IndexedSequence> getSequences(List<MassRange> rList, SearchParams sParam) throws Exception {
+    /*public static List<IndexedSequence> getSequences(List<MassRange> rList, SearchParams sParam) throws Exception {
 
         try {
             connectToMassDB(sParam);
@@ -218,7 +225,7 @@ public class Mongoconnect {
             return null;
         }
     }
-
+*/
     /*
      makeIndexedSequence
     
@@ -249,7 +256,7 @@ public class Mongoconnect {
     
      Returns an a MongoDB MassDB query cursor object as output.
      */
-    private static DBCursor getMassDBCursor(MassRange mRange) throws Exception {
+    /*private static DBCursor getMassDBCursor(MassRange mRange) throws Exception {
 
         try {
 
@@ -269,7 +276,7 @@ public class Mongoconnect {
             System.out.println("MassDB Query / Cursor retrieval error");
             return null;
         }
-    }
+    }*/
 
     /*
      getParents
@@ -317,28 +324,26 @@ public class Mongoconnect {
         List<String> parentProteinsOfPeptide = new ArrayList<>();
 
         try {
-            BasicDBObject query = new BasicDBObject("_id", peptideSequence);
-            DBObject peptideDocument = seqDBCollection.findOne(query);
+            Document peptideDocument = seqDBCollection.find(eq("_id", peptideSequence)).first();
 
             if (peptideDocument == null) {
                 parentProteinsOfPeptide.add(""); // return list with a single empty string (if no parent proteins found)
             } else {
-                BasicDBList parentProteins = (BasicDBList) peptideDocument.get("p");
+                ArrayList<Document> parentProteins = (ArrayList<Document>) peptideDocument.get("p");
 
                 if (parentProteins.isEmpty()) { // this shouldn't happen.  Shouldn't be peptides in SeqDB without parent proteins...
                     parentProteinsOfPeptide.add(""); // return list with a single empty string (if no parent proteins found)
                 } else {
-                    for (Iterator<Object> it = parentProteins.iterator(); it.hasNext();) {
-                        DBObject parent = (DBObject) it.next();
+                    for (Iterator<Document> it = parentProteins.iterator(); it.hasNext();) {
+                        Document parent = it.next();
                         parentProteinsOfPeptide.add(parseParentObjectSimple(peptideSequence, parent, sParam, isReversePeptide));
                     }
                 }
             }
-
             return parentProteinsOfPeptide;
-
         } catch (Exception e) {
             System.out.println("SeqDB Query retrieval error");
+            e.printStackTrace();
             return null;
         }
     }
@@ -354,7 +359,7 @@ public class Mongoconnect {
     
     if isReversePeptide, prepend "Reverse_" on the protID no matter what
      */
-    private static String parseParentObjectSimple(String peptideSequence, DBObject parent, SearchParams sParam, boolean isReversePeptide) throws Exception {
+    private static String parseParentObjectSimple(String peptideSequence, Document parent, SearchParams sParam, boolean isReversePeptide) throws Exception {
         // example parent object:
         // { "_id" : "DYMAAGLYDRAEDMFSQLINEEDFR", "p" : [ { "i" : 20915500, "r" : "VSA", "l" : "LGR", "o" : 115 }, { "i" : 21556668, "r" : "VSA", "l" : "LGR", "o" : 115 } ] }
         try {
@@ -367,7 +372,7 @@ public class Mongoconnect {
             else
                 parentIDString = String.valueOf(parentID);
             
-            if ((parent.containsField("d") && (boolean) parent.get("d") == true) || isReversePeptide)
+            if ((parent.containsKey("d") && (boolean) parent.get("d") == true) || isReversePeptide)
                 myParent = "Reverse_";
             else
                 myParent = "";
@@ -402,10 +407,8 @@ public class Mongoconnect {
      */
     private static String parseParentObjectDetailed(int parentID, SearchParams sParam) throws Exception {
         try {
-
-            BasicDBObject query = new BasicDBObject("_id", parentID);
             String proteinDefline;
-            DBObject proteinDocument = protDBCollection.findOne(query);
+            Document proteinDocument = protDBCollection.find(eq("_id", parentID)).first();
 
             if (proteinDocument == null) {
                 // if there is no result from the ProtDB query...
@@ -421,7 +424,6 @@ public class Mongoconnect {
                     return proteinDefline;
                 }
             }
-
         } catch (Exception e) {
             System.out.println("SeqDB parseParentObjectDetailed error");
             return null;
