@@ -50,7 +50,7 @@ public class MongoSeqIter {
                 obj = cursor.next();
             } catch (NoSuchElementException e) {
                 cursor.close();
-                throw new NoSuchElementException("No more");
+                throw new NoSuchElementException();
             }
             //System.out.println("obj-" + obj);
             intMass = ((Number) obj.get("_id")).intValue(); // may have this stored as a Double or Int....

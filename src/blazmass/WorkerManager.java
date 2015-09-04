@@ -92,6 +92,7 @@ public class WorkerManager {
             logger.log(Level.SEVERE, null, ex);
         }
         logger.log(Level.INFO, "Done processing MS2: " + ms2File.getAbsolutePath());
+        mongoconnect.Mongoconnect.disconnect();
     }
 
     public void runDir(File dataDir) {
@@ -119,6 +120,7 @@ public class WorkerManager {
             }
 
             logger.log(Level.INFO, "Done processing MS2: " + ms2File.getAbsolutePath());
+            mongoconnect.Mongoconnect.disconnect();
         }
     }
 
@@ -551,7 +553,7 @@ public class WorkerManager {
             }
             resultWriter.flush();
             isRunning = false;
-            mongoconnect.Mongoconnect.disconnect();
+            //mongoconnect.Mongoconnect.disconnect();
         }
 
         public boolean isShouldRun() {

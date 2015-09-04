@@ -33,7 +33,7 @@ import util.MathUtil;
 public class Blazmass {
 
     private static final String program = "Blazmass";
-    private static final String version = "0.984";
+    private static final String version = "0.991";
 
     //extensions
     public static final String SQT_EXT = "sqt";
@@ -276,7 +276,7 @@ public class Blazmass {
                     logger.log(Level.SEVERE, null, ex);
                 }
             }
-            mongoconnect.Mongoconnect.disconnect();
+            //mongoconnect.Mongoconnect.disconnect();
         }
     }
 
@@ -771,6 +771,8 @@ public class Blazmass {
                 numMatched += 1;
                 addResult(pr, pArr);
                 if (sParam.doReversePeptides){
+                    System.out.println("Not implemented in diffmods");
+                    System.exit(1);
                     String revSequence = new StringBuilder(indSeq.getSequence()).reverse().toString();
                     IndexedSequence revSeq = new IndexedSequence(indSeq.getMass(), revSequence, revSequence.length(), "---", "---");
                     revSeq.isReverse = true;
@@ -780,6 +782,7 @@ public class Blazmass {
                     addResult(pr, pArr);
                 }
             }
+            System.out.println("Number of peptides scored: " + msi.count);
         } else { //not using mongodb
             System.out.println("Too bad...");
             System.exit(1);
@@ -844,7 +847,7 @@ public class Blazmass {
                                 pr.addPeptideMass(eachModMass);
                                 //System.out.println(pr.getIndexedSeq());
 
-                                numMatched += 2;
+                                numMatched += 1;
                                 PeptideResult prtmp = pArr[pArr.length - 1];
                                 if (prtmp.getxCorr() < pr.getxCorr()) {
                                     pArr[pArr.length - 1] = pr;
@@ -858,6 +861,8 @@ public class Blazmass {
                         }
                     }
                 }
+                System.out.println("Number of peptides scored: " + msi.count);
+                System.out.println("Number of scores calced: " + numMatched);
             }
         }
         // N-term and C-term searches
