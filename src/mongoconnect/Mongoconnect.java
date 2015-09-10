@@ -20,7 +20,10 @@ import blazmass.dbindex.MassRange;
 import blazmass.dbindex.IndexedSequence;
 //import blazmass.io.SearchParamReader;
 import blazmass.io.SearchParams;
+import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
+import com.mongodb.MongoException;
+import com.mongodb.ServerAddress;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import java.net.UnknownHostException;
@@ -75,12 +78,22 @@ public class Mongoconnect {
     private static void connectToMassDB(SearchParams sParam) {
         if (massDBMongoClient == null) {
             try {
-                massDBMongoClient = new MongoClient(new MongoClientURI(sParam.getMassDBURI()));
+                MongoClientOptions.Builder options = MongoClientOptions.builder()
+                                                .connectTimeout(3000)
+                                                .serverSelectionTimeout(3000)
+                                                .socketTimeout(3000)
+                                                .maxWaitTime(3000);
+                MongoClientURI mongoURI = new MongoClientURI(sParam.getMassDBURI(), options);
+                massDBMongoClient = new MongoClient(mongoURI);
                 System.out.println("------Making new connection to MongoDB/MassDB at " + massDBMongoClient);
                 massDB = massDBMongoClient.getDatabase(sParam.getMassDBName());
                 massDBCollection = massDB.getCollection(sParam.getMassDBCollection());
                 System.out.println(massDBCollection);
-            } catch (Exception e) {
+                if (massDBCollection.count() == 0 ){
+                    System.out.println("Massdb is empty!");
+                    System.exit(1); 
+                }
+            } catch (MongoException e) {
                 System.out.println("connectToMassDB error");
                 e.printStackTrace();
                 System.exit(1);
@@ -134,7 +147,7 @@ public class Mongoconnect {
                 protDB = protDBMongoClient.getDatabase(sParam.getProtDBName());
                 protDBCollection = protDB.getCollection(sParam.getProtDBCollection());
                 System.out.println(protDBCollection);
-            } catch (Exception e) {
+            } catch (MongoException e) {
                 System.out.println("connectToProtDB error");
                 e.printStackTrace();
                 System.exit(1);
@@ -145,7 +158,7 @@ public class Mongoconnect {
     /*
     getSequencesIter: Does a range query. Reture an iterator that yields IndexedSequences containing a single peptide and its mass
      */
-    public static MongoSeqIter getSequencesIter(List<MassRange> rList, SearchParams sParam) throws Exception {
+    public static MongoSeqIter getSequencesIter(List<MassRange> rList, SearchParams sParam) {
         
         connectToMassDB(sParam);
 

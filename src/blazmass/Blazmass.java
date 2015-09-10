@@ -18,6 +18,7 @@ import blazmass.model.*;
 import com.mongodb.BasicDBList;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import com.mongodb.MongoException;
 import java.text.DecimalFormat;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -33,7 +34,7 @@ import util.MathUtil;
 public class Blazmass {
 
     private static final String program = "Blazmass";
-    private static final String version = "0.991";
+    private static final String version = "0.992";
 
     //extensions
     public static final String SQT_EXT = "sqt";
@@ -442,9 +443,7 @@ public class Blazmass {
      * @throws IOException exception thrown when search failed TODO should be
      * replaced by custom exception!
      */
-    void runScan(MS2Scan scan, SearchParams sParam, DBIndexer indexer, ResultWriter resultWriter) throws IOException {
-
-        try {
+    void runScan(MS2Scan scan, SearchParams sParam, DBIndexer indexer, ResultWriter resultWriter) throws Exception {
 
             scan1 = scan.getIsScan1();
             scan2 = scan.getIsScan2();
@@ -590,13 +589,6 @@ public class Blazmass {
                     //resultWriter.flush(); do not flush after every scan, it may block and slow down threads, take advantage of file buffer
                 }
             } //end for each charge state
-
-            //TODO more specific error handling here and other places
-            //throw specific checked exceptions, such as BlazmassSearchException
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error reading ms2 data and searching, scan: " + scan.toString(), e);
-            //throw (new RuntimeException(e));
-        }
     }
 
     // Open database and perform search

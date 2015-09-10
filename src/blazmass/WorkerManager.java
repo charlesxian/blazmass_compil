@@ -9,6 +9,7 @@ import blazmass.io.MS2ScanReader;
 import blazmass.io.ResultWriter;
 import blazmass.io.SearchParamReader;
 import blazmass.io.SearchParams;
+import com.mongodb.MongoException;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -90,6 +91,7 @@ public class WorkerManager {
             //workers are running and WorkerPool blocks til done
         } catch (WorkerManagerException ex) {
             logger.log(Level.SEVERE, null, ex);
+            System.exit(1);
         }
         logger.log(Level.INFO, "Done processing MS2: " + ms2File.getAbsolutePath());
         mongoconnect.Mongoconnect.disconnect();
@@ -117,6 +119,10 @@ public class WorkerManager {
                 //workers are running and WorkerPool blocks til done
             } catch (WorkerManagerException ex) {
                 logger.log(Level.SEVERE, null, ex);
+                System.out.println("!!!!!!!!!!!!!worker manager exception");
+            } catch (Exception ex){
+                System.out.println("!!!!!!!!!!!!!!exception");
+                ex.printStackTrace();
             }
 
             logger.log(Level.INFO, "Done processing MS2: " + ms2File.getAbsolutePath());
@@ -477,6 +483,7 @@ public class WorkerManager {
         //stats
         private int spectraProcessed = 0;
         private int spectraErrors = 0;
+        private int spectraAttempted = 0;
         private long startTime;
         private long endTime;
         private long totalTime;
@@ -531,6 +538,7 @@ public class WorkerManager {
                     break;
                 }
                 fileLogger.info(scan.getIsScan1() + "");
+                spectraAttempted++;
                 try {
 
                     if (params.isHighResolution()) {
@@ -544,16 +552,25 @@ public class WorkerManager {
                     this.endTime = System.currentTimeMillis();
                     this.totalTime = endTime - startTime;
 
+                } catch (MongoException ex) {
+                    ex.printStackTrace();
+                    System.out.println("Mongo failed. Exiting");
+                    System.exit(1);
                 } catch (Exception ex) {
+                    ex.printStackTrace();
                     ++spectraErrors;
                     logger.log(Level.SEVERE, "Unexpected exception while running worker on scan: " + scan.toString(), ex);
                     logger.log(Level.INFO, "Skipping the scan and tryng to continue");
-                    continue;
+                    logger.log(Level.INFO, "Number of errors: " + spectraErrors + "/" + spectraAttempted);
                 }
             }
             resultWriter.flush();
             isRunning = false;
-            //mongoconnect.Mongoconnect.disconnect();
+            
+            if ((spectraErrors / spectraAttempted) > 0.05 ){
+                System.out.println("Too many scans failed. Completed Unsuccesfully");
+                System.exit(1);
+            }
         }
 
         public boolean isShouldRun() {
