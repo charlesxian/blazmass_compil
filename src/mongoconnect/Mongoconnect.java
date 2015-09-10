@@ -53,6 +53,12 @@ public class Mongoconnect {
     private static MongoCollection<Document> massDBCollection = null;
     private static MongoCollection<Document> seqDBCollection = null;
     private static MongoCollection<Document> protDBCollection = null;
+    private static final MongoClientOptions.Builder options = MongoClientOptions.builder()
+                                    .connectTimeout(5000) //default is 0 (no timeout)
+                                    .socketTimeout(30000) //default is 0 (no timeout)
+                                    .serverSelectionTimeout(30000); //default 
+    
+    //private static final MongoClientOptions.Builder options = null;
 
     public Mongoconnect() {
     }
@@ -78,13 +84,7 @@ public class Mongoconnect {
     private static void connectToMassDB(SearchParams sParam) {
         if (massDBMongoClient == null) {
             try {
-                MongoClientOptions.Builder options = MongoClientOptions.builder()
-                                                .connectTimeout(3000)
-                                                .serverSelectionTimeout(3000)
-                                                .socketTimeout(3000)
-                                                .maxWaitTime(3000);
-                MongoClientURI mongoURI = new MongoClientURI(sParam.getMassDBURI(), options);
-                massDBMongoClient = new MongoClient(mongoURI);
+                massDBMongoClient = new MongoClient(new MongoClientURI(sParam.getMassDBURI(), options));
                 System.out.println("------Making new connection to MongoDB/MassDB at " + massDBMongoClient);
                 massDB = massDBMongoClient.getDatabase(sParam.getMassDBName());
                 massDBCollection = massDB.getCollection(sParam.getMassDBCollection());
@@ -115,12 +115,12 @@ public class Mongoconnect {
     private static void connectToSeqDB(SearchParams sParam) {
         if (seqDBMongoClient == null) {
             try {
-                seqDBMongoClient = new MongoClient(new MongoClientURI(sParam.getSeqDBURI()));
+                seqDBMongoClient = new MongoClient(new MongoClientURI(sParam.getSeqDBURI(), options));
                 System.out.println("------Making new connection to MongoDB/SeqDB at " + seqDBMongoClient);
                 seqDB = seqDBMongoClient.getDatabase(sParam.getSeqDBName());
                 seqDBCollection = seqDB.getCollection(sParam.getSeqDBCollection());
                 System.out.println(seqDBCollection);
-            } catch (Exception e) {
+            } catch (MongoException e) {
                 System.out.println("connectToSeqDB error");
                 e.printStackTrace();
                 System.exit(1);
@@ -142,7 +142,7 @@ public class Mongoconnect {
     private static void connectToProtDB(SearchParams sParam) {
         if (protDBMongoClient == null) {
             try {
-                protDBMongoClient = new MongoClient(new MongoClientURI(sParam.getProtDBURI()));
+                protDBMongoClient = new MongoClient(new MongoClientURI(sParam.getProtDBURI(), options));
                 System.out.println("------Making new connection to MongoDB/ProtDB at " + protDBMongoClient);
                 protDB = protDBMongoClient.getDatabase(sParam.getProtDBName());
                 protDBCollection = protDB.getCollection(sParam.getProtDBCollection());

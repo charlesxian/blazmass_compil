@@ -34,7 +34,7 @@ import util.MathUtil;
 public class Blazmass {
 
     private static final String program = "Blazmass";
-    private static final String version = "0.992";
+    private static final String version = "0.993";
 
     //extensions
     public static final String SQT_EXT = "sqt";

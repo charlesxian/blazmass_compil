@@ -16,8 +16,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -87,12 +90,16 @@ public class WorkerManager {
 
         try {
             WorkerPool workers = new WorkerPool(ms2File.getAbsolutePath(), params, numWorkers, paramReader);
-            workers.start();
-            //workers are running and WorkerPool blocks til done
+            workers.start(); //workers are running and WorkerPool blocks til done
+            
+            // Here: workers are done
+            System.out.println("checking workers");
+            workers.checkWorkerPoolError();
         } catch (WorkerManagerException ex) {
             logger.log(Level.SEVERE, null, ex);
             System.exit(1);
         }
+        
         logger.log(Level.INFO, "Done processing MS2: " + ms2File.getAbsolutePath());
         mongoconnect.Mongoconnect.disconnect();
     }
@@ -374,6 +381,25 @@ public class WorkerManager {
             }
             return sb.toString();
         }
+        
+        public void checkWorkerPoolError(){
+            int spectraAttempted = 0;
+            int spectraErrors = 0;
+            int spectraProcessed = 0;
+            for (Worker worker : workers) {
+                Map<String, Integer> stats = worker.getErrorStatus();
+                spectraAttempted += stats.get("spectraAttempted");
+                spectraErrors += stats.get("spectraErrors");
+                spectraProcessed += stats.get("spectraProcessed");
+            }
+            System.out.println("spectraAttempted: " + spectraAttempted);
+            System.out.println("spectraErrors: " + spectraErrors);
+            System.out.println("spectraProcessed: " + spectraProcessed);
+            if (( (float) spectraErrors / spectraAttempted) > 0.05 ){
+                System.out.println("Too many scans failed. Completed Unsuccesfully");
+                System.exit(1);
+            }
+        }
 
         /**
          *
@@ -490,6 +516,14 @@ public class WorkerManager {
         private HighResMassProcessor hprocessor;
         private final Logger fileLogger;
         
+        Map<String, Integer> getErrorStatus() {
+            Map<String, Integer> map = new HashMap<>();
+            map.put("spectraAttempted", spectraAttempted);
+            map.put("spectraErrors", spectraErrors);
+            map.put("spectraProcessed", spectraProcessed);
+            return map;
+        }
+        
         Worker(final String id, MS2ScanQueue scanQueue, final ResultWriter resultWriter, final SearchParams params, Logger fileLogger) throws WorkerManagerException {
             this.id = id;
             this.scanQueue = scanQueue;
@@ -566,11 +600,6 @@ public class WorkerManager {
             }
             resultWriter.flush();
             isRunning = false;
-            
-            if ((spectraErrors / spectraAttempted) > 0.05 ){
-                System.out.println("Too many scans failed. Completed Unsuccesfully");
-                System.exit(1);
-            }
         }
 
         public boolean isShouldRun() {
