@@ -55,7 +55,7 @@ public class Mongoconnect {
     private static MongoCollection<Document> protDBCollection = null;
     private static final MongoClientOptions.Builder options = MongoClientOptions.builder()
                                     .connectTimeout(5000) //default is 0 (no timeout)
-                                    .socketTimeout(30000) //default is 0 (no timeout)
+                                    .socketTimeout(60000) //default is 0 (no timeout)
                                     .serverSelectionTimeout(30000); //default 
     
     //private static final MongoClientOptions.Builder options = null;
