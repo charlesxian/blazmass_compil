@@ -68,6 +68,7 @@ public class WorkerManager {
             paramReader = new SearchParamReader(paramsDir, paramsFile);
         } catch (IOException ex) {
             logger.log(Level.SEVERE, "Cannot read params and init worker manager", ex);
+            System.exit(1);
             return;
         }
         params = paramReader.getSearchParams();

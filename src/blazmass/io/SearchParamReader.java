@@ -304,205 +304,24 @@ public class SearchParamReader {
             amassPar.setnTerm(f);
             //amassFrag.setnTerm(f);
 
-            f = Float.parseFloat(getParam("add_G_Glycine"));
-            if (param.getN15Enrichment() > 0) {
-                amassPar.addMass('G', f * param.getN15Enrichment());
-            } else {
-                amassPar.addMass('G', f);
+            String add_static_mod = getParam("add_static_mod");
+            String[] staticModArr = add_static_mod.trim().split(" ");
+            if (add_static_mod != null && !"".equals(add_static_mod)) {
+                validateDiffSearchOptions(staticModArr);
+                for (int i = 0; i < staticModArr.length; i += 2) {
+                    String AA = staticModArr[i+1];
+                    assert AA.length() == 1;
+                    f = Float.parseFloat(staticModArr[i]);
+                    if (AA.equals("C") && param.getN15Enrichment() > 0) {
+                        f = f + param.getN15Enrichment() * (f - 57.02146f);
+                    }else if (param.getN15Enrichment() > 0) {
+                        f = f * param.getN15Enrichment();
+                    }
+                    amassPar.addMass((int) AA.charAt(0), f);
+                }
             }
-
-            f = Float.parseFloat(getParam("add_A_Alanine"));
-            if (param.getN15Enrichment() > 0) {
-                amassPar.addMass('A', f * param.getN15Enrichment());
-            } else {
-                amassPar.addMass('A', f);
-            }
-
-            f = Float.parseFloat(getParam("add_S_Serine"));
-            if (param.getN15Enrichment() > 0) {
-                amassPar.addMass('S', f * param.getN15Enrichment());
-            } else {
-                amassPar.addMass('S', f);
-            }
-
-            f = Float.parseFloat(getParam("add_P_Proline"));
-            if (param.getN15Enrichment() > 0) {
-                amassPar.addMass('P', f * param.getN15Enrichment());
-            } else {
-                amassPar.addMass('P', f);
-            }
-            //amassFrag.addMass('P', f );
-
-            f = Float.parseFloat(getParam("add_V_Valine"));
-            if (param.getN15Enrichment() > 0) {
-                amassPar.addMass('V', f * param.getN15Enrichment());
-            } else {
-                amassPar.addMass('V', f);
-            }
-            //amassFrag.addMass('V', f );
-
-            f = Float.parseFloat(getParam("add_T_Threonine"));
-            if (param.getN15Enrichment() > 0) {
-                amassPar.addMass('T', f * param.getN15Enrichment());
-            } else {
-                amassPar.addMass('T', f);
-            }
-            //amassFrag.addMass('T', f );
-
-            //System.out.println("====" + AssignMass.getMass('C') + " " + param.getN15Enrichment());
-            //System.out.println("====>>" + f);        
-            f = Float.parseFloat(getParam("add_C_Cysteine"));
-            if (param.getN15Enrichment() > 0) {
-                f = f + param.getN15Enrichment() * (f - 57.02146f);
-            }
-            //amassPar.addMass('C', f*param.getN15Enrichment());
-
-            amassPar.addMass('C', f);
-
-            /*
-             if (f > 56.9f) {                
-             System.out.println("===" + param.getN15Enrichment() + " " +  f); 
-             f = f + param.getN15Enrichment() * (f - 57.02146f);
-                
-             System.out.println("===" + param.getN15Enrichment() + " " +  f); 
-             }*/
-            //amassFrag.addMass('C', f );
-            f = Float.parseFloat(getParam("add_L_Leucine"));
-            if (param.getN15Enrichment() > 0) {
-                amassPar.addMass('L', f * param.getN15Enrichment());
-            } else {
-                amassPar.addMass('L', f);
-            }
-            //amassFrag.addMass('L', f );
-
-            f = Float.parseFloat(getParam("add_I_Isoleucine"));
-            if (param.getN15Enrichment() > 0) {
-                amassPar.addMass('I', f * param.getN15Enrichment());
-            } else {
-                amassPar.addMass('I', f);
-            }
-            //amassFrag.addMass('I', f );
-
-            f = Float.parseFloat(getParam("add_X_LorI"));
-            if (param.getN15Enrichment() > 0) {
-                amassPar.addMass('X', f * param.getN15Enrichment());
-            } else {
-                amassPar.addMass('X', f);
-            }
-            //amassFrag.addMass('X', f );
-
-            f = Float.parseFloat(getParam("add_N_Asparagine"));
-            if (param.getN15Enrichment() > 0) {
-                amassPar.addMass('N', f * param.getN15Enrichment());
-            } else {
-                amassPar.addMass('N', f);
-            }
-            //amassFrag.addMass('N', f );
-
-            f = Float.parseFloat(getParam("add_O_Ornithine"));
-            if (param.getN15Enrichment() > 0) {
-                amassPar.addMass('O', f * param.getN15Enrichment());
-            } else {
-                amassPar.addMass('O', f);
-            }
-            //amassFrag.addMass('O', f );
-
-            f = Float.parseFloat(getParam("add_B_avg_NandD"));
-            if (param.getN15Enrichment() > 0) {
-                amassPar.addMass('B', f * param.getN15Enrichment());
-            } else {
-                amassPar.addMass('B', f);
-            }
-            //amassFrag.addMass('B', f );
-
-            f = Float.parseFloat(getParam("add_D_Aspartic_Acid"));
-            if (param.getN15Enrichment() > 0) {
-                amassPar.addMass('D', f * param.getN15Enrichment());
-            } else {
-                amassPar.addMass('D', f);
-            }
-            //amassFrag.addMass('D', f );
-
-            f = Float.parseFloat(getParam("add_Q_Glutamine"));
-            if (param.getN15Enrichment() > 0) {
-                amassPar.addMass('Q', f * param.getN15Enrichment());
-            } else {
-                amassPar.addMass('Q', f);
-            }
-            //amassFrag.addMass('Q', f );
-
-            f = Float.parseFloat(getParam("add_K_Lysine"));
-            if (param.getN15Enrichment() > 0) {
-                amassPar.addMass('K', f * param.getN15Enrichment());
-            } else {
-                amassPar.addMass('K', f);
-            }
-            //amassFrag.addMass('K', f );
-
-            f = Float.parseFloat(getParam("add_Z_avg_QandE"));
-            if (param.getN15Enrichment() > 0) {
-                amassPar.addMass('Z', f * param.getN15Enrichment());
-            } else {
-                amassPar.addMass('Z', f);
-            }
-            //amassFrag.addMass('Z', f );
-
-            f = Float.parseFloat(getParam("add_E_Glutamic_Acid"));
-            if (param.getN15Enrichment() > 0) {
-                amassPar.addMass('E', f * param.getN15Enrichment());
-            } else {
-                amassPar.addMass('E', f);
-            }
-            //amassFrag.addMass('E', f );
-
-            f = Float.parseFloat(getParam("add_M_Methionine"));
-            if (param.getN15Enrichment() > 0) {
-                amassPar.addMass('M', f * param.getN15Enrichment());
-            } else {
-                amassPar.addMass('M', f);
-            }
-            //amassFrag.addMass('M', f );
-
-            f = Float.parseFloat(getParam("add_H_Histidine"));
-            if (param.getN15Enrichment() > 0) {
-                amassPar.addMass('H', f * param.getN15Enrichment());
-            } else {
-                amassPar.addMass('H', f);
-            }
-            //amassFrag.addMass('H', f );
-
-            f = Float.parseFloat(getParam("add_F_Phenyalanine"));
-            if (param.getN15Enrichment() > 0) {
-                amassPar.addMass('F', f * param.getN15Enrichment());
-            } else {
-                amassPar.addMass('F', f);
-            }
-            //amassFrag.addMass('F', f );
-
-            f = Float.parseFloat(getParam("add_R_Arginine"));
-            if (param.getN15Enrichment() > 0) {
-                amassPar.addMass('R', f * param.getN15Enrichment());
-            } else {
-                amassPar.addMass('R', f);
-            }
-            //amassFrag.addMass('R', f );
-
-            f = Float.parseFloat(getParam("add_Y_Tyrosine"));
-            if (param.getN15Enrichment() > 0) {
-                amassPar.addMass('Y', f * param.getN15Enrichment());
-            } else {
-                amassPar.addMass('Y', f);
-            }
-            //amassFrag.addMass('Y', f );
-
-            f = Float.parseFloat(getParam("add_W_Tryptophan"));
-            if (param.getN15Enrichment() > 0) {
-                amassPar.addMass('W', f * param.getN15Enrichment());
-            } else {
-                amassPar.addMass('W', f);
-            }
-            //amassFrag.addMass('W', f );
-
+            //System.out.println(amassPar.getMass((int) 'C'));
+            
             param.setPdAAMassParent(amassPar.getPdAAMass());
             param.setPdAAMassFragment(amassFrag.getPdAAMass());
 
