@@ -34,7 +34,7 @@ import util.MathUtil;
 public class Blazmass {
 
     private static final String program = "Blazmass";
-    private static final String version = "0.995";
+    private static final String version = "0.997";
 
     //extensions
     public static final String SQT_EXT = "sqt";
@@ -578,7 +578,7 @@ public class Blazmass {
 
                     // ***************  Run search for each charge state ****************
                     System.out.println("Scan: " + scan1 + "\tCharge: " + chargeState);
-                    int numMatched = runSearch(indexer, sParam, scoreArray, chargeState, precursorMass, pArr);
+                    int numMatched = runSearch(indexer, sParam, scoreArray, chargeState, precursorMass, scoreHistogram, pArr);
 
                     if (numMatched > 0) {
                         correlation(numMatched, scoreHistogram, pArr);
@@ -736,7 +736,7 @@ public class Blazmass {
      * replaced by custom exception!
      * @return numMatched number of matched peptides times two, for some reason
      */
-    private int runSearch(DBIndexer indexer, SearchParams sParam, float[] scoreArray, int chargeState, float precursorMass, PeptideResult[] pArr) throws Exception {
+    private int runSearch(DBIndexer indexer, SearchParams sParam, float[] scoreArray, int chargeState, float precursorMass, int[] scoreHistogram, PeptideResult[] pArr) throws Exception {
         int numMatched = 0;
         PeptideResult pr;
         float massTolerance = sParam.getRelativePeptideMassTolerance();
@@ -758,9 +758,9 @@ public class Blazmass {
             MongoSeqIter msi = mongoconnect.Mongoconnect.getSequencesIter(rList, sParam);
             while (msi.hasNext()) {
                 IndexedSequence indSeq = msi.next();
-                pr = calcScore(indSeq, scoreArray, chargeState, sParam);
+                pr = calcScore(indSeq, scoreArray, chargeState, scoreHistogram, sParam);
                 //System.out.println("!"+indSeq.getSequence() + "\t" + indSeq.getMass() + "\t" + pr.getxCorr());
-                numMatched += 1;
+                numMatched += 2;
                 addResult(pr, pArr);
                 if (sParam.doReversePeptides){
                     System.out.println("Not implemented in diffmods");
@@ -768,9 +768,9 @@ public class Blazmass {
                     String revSequence = new StringBuilder(indSeq.getSequence()).reverse().toString();
                     IndexedSequence revSeq = new IndexedSequence(indSeq.getMass(), revSequence, revSequence.length(), "---", "---");
                     revSeq.isReverse = true;
-                    pr = calcScore(revSeq, scoreArray, chargeState, sParam);
+                    pr = calcScore(revSeq, scoreArray, chargeState, scoreHistogram, sParam);
                     //System.out.println("!"+revSeq.getSequence() + "\t" + indSeq.getMass() + "\t" + pr.getxCorr());
-                    numMatched += 1;
+                    numMatched += 2;
                     addResult(pr, pArr);
                 }
             }
@@ -833,13 +833,13 @@ public class Blazmass {
                             char ch = seq.charAt(j);
                             if (eachResidue == ch) {
                                 modIndexHash[j] = 1;
-                                pr = calcModScore(iSeq, scoreArray, chargeState, modIndexHash, diffModMass, sParam);
+                                pr = calcModScore(iSeq, scoreArray, chargeState, modIndexHash, diffModMass, scoreHistogram, sParam);
                                 modIndexHash[j] = 0;
                                 pr.setIsModified(true);
                                 pr.addPeptideMass(eachModMass);
                                 //System.out.println(pr.getIndexedSeq());
 
-                                numMatched += 1;
+                                numMatched += 2;
                                 PeptideResult prtmp = pArr[pArr.length - 1];
                                 if (prtmp.getxCorr() < pr.getxCorr()) {
                                     pArr[pArr.length - 1] = pr;
@@ -1136,7 +1136,7 @@ public class Blazmass {
         }
     }
 
-    private PeptideResult calcScore(IndexedSequence iSeq, float[] scoreArray, int chargeState, SearchParams sParam) {
+    private PeptideResult calcScore(IndexedSequence iSeq, float[] scoreArray, int chargeState, int[] scoreHistogram, SearchParams sParam) {
 
         //logger.info("=======>>" + iSeq.getSequence());
         String pepSeq = iSeq.getSequence();
@@ -1178,7 +1178,7 @@ public class Blazmass {
             l.add(fmodel);
         }
         //return null;
-        return calcEachIon(l, scoreArray, chargeState, iSeq, sParam);
+        return calcEachIon(l, scoreArray, chargeState, iSeq, scoreHistogram, sParam);
     }
 
     private PeptideResult calcScoreHigh(IndexedSequence iSeq, float[] signalArr, float[] backgroundArr, int chargeState, SearchParams sParam, List<Float> masses, Set<Integer> theoNonZeroInd) {
@@ -1331,7 +1331,7 @@ public class Blazmass {
         return calcEachIonHigh(theorArr, signalArr, backgroundArr, chargeState, iSeq, sParam, masses, theoNonZeroInd);
     }
 
-    private PeptideResult calcModScore(IndexedSequence iSeq, float[] scoreArray, int chargeState, int[] modIndexHash, double[] diffModMass, SearchParams sParam) {
+    private PeptideResult calcModScore(IndexedSequence iSeq, float[] scoreArray, int chargeState, int[] modIndexHash, double[] diffModMass, int[] scoreHistogram, SearchParams sParam) {
 
         String pepSeq = iSeq.getSequence();
         IndexedSequence newISeq = iSeq.getCopy();
@@ -1386,7 +1386,7 @@ public class Blazmass {
         newISeq.setIsModified(true);
         newISeq.setModSequence(modSeq.toString());
 
-        return calcEachIon(l, scoreArray, chargeState, newISeq, sParam);
+        return calcEachIon(l, scoreArray, chargeState, newISeq, scoreHistogram, sParam);
     }
 
     private PeptideResult calcModScoreHigh(IndexedSequence iSeq,
@@ -1623,7 +1623,7 @@ public class Blazmass {
         return pepResult;
     }
 
-    private PeptideResult calcEachIon(List<FragIonModel> l, float[] scoreArray, int chargeState, IndexedSequence iSeq, SearchParams sParam) {
+    private PeptideResult calcEachIon(List<FragIonModel> l, float[] scoreArray, int chargeState, IndexedSequence iSeq, int[] scoreHistogram, SearchParams sParam) {
 
         int[] iCorrel = new int[scoreArray.length];
         final PeptideResult pepResult = new PeptideResult();
@@ -1886,7 +1886,8 @@ public class Blazmass {
         dXCorr_Mean += dTmpXCorr;
         //dXCorr_Square_Sum += (dTmpXCorr * dTmpXCorr + dTmpXCorrReverse * dTmpXCorrReverse);
         dXCorr_Square_Sum += dTmpXCorr * dTmpXCorr; // + dTmpXCorrReverse * dTmpXCorrReverse);
-
+        int k = (int) (dTmpXCorr * 10.0 + 50.0);
+        scoreHistogram[k]++;
         // boolean bFoundDiff = false;
         boolean isDecoy = false;
 
