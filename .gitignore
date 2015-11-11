@@ -1,0 +1,15 @@
+# exclude dsstore and CVS stuff
+.DS_Store
+.cvsignore
+CVS/
+
+# exclude build directory
+dist/
+
+# exclude lib directory
+lib/
+
+# exclude build directory
+build/*
+
+test/
