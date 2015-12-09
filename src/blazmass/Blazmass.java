@@ -34,7 +34,7 @@ import util.MathUtil;
 public class Blazmass {
 
     private static final String program = "Blazmass";
-    private static final String version = "0.997";
+    private static final String version = "0.998";
 
     //extensions
     public static final String SQT_EXT = "sqt";
@@ -743,8 +743,10 @@ public class Blazmass {
         float ppmTolerance = this.getPpm(precursorMass, massTolerance);
 
         List<MassRange> rList = new ArrayList<>();
-
-        int isotopeNum = chargeState * 2 + 1; //robin move it to config file later
+        
+        // If getIsotopes() is 1, it should search isotopic peaks
+        // If 0, it will only search the monoisotopic peak
+        int isotopeNum = sParam.getIsotopes() * chargeState + 1;
         if (sParam.isPrecursorHighResolution()) {
             for (int i = 0; i < isotopeNum; i++) {
                 rList.add(new MassRange(precursorMass - i * AssignMass.DIFFMASSC12C13, ppmTolerance));
