@@ -10,10 +10,13 @@ import blazmass.io.ResultWriter;
 import blazmass.io.SearchParamReader;
 import blazmass.io.SearchParams;
 import com.mongodb.MongoException;
+import java.io.BufferedWriter;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,6 +29,10 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+import org.apache.commons.io.FileUtils;
+
+import org.apache.commons.io.FilenameUtils;
+
 
 /**
  * Manages blazmass worker threads
@@ -93,10 +100,17 @@ public class WorkerManager {
             WorkerPool workers = new WorkerPool(ms2File.getAbsolutePath(), params, numWorkers, paramReader);
             workers.start(); //workers are running and WorkerPool blocks til done
             
-            // Here: workers are done
-            System.out.println("checking workers");
-            workers.checkWorkerPoolError();
+            // Here: workers are done (one file)
+            // System.out.println("checking workers");
+            // workers.checkWorkerPoolError();
+
+            // Join result file
+            workers.joinSQTFiles();
+            
         } catch (WorkerManagerException ex) {
+            logger.log(Level.SEVERE, null, ex);
+            System.exit(1);
+        } catch (IOException ex) {
             logger.log(Level.SEVERE, null, ex);
             System.exit(1);
         }
@@ -132,7 +146,7 @@ public class WorkerManager {
                 System.out.println("!!!!!!!!!!!!!!exception");
                 ex.printStackTrace();
             }
-
+            // Here workerpool is done (runDir)
             logger.log(Level.INFO, "Done processing MS2: " + ms2File.getAbsolutePath());
             mongoconnect.Mongoconnect.disconnect();
         }
@@ -236,7 +250,7 @@ public class WorkerManager {
      */
     private static class WorkerPool {
 
-        private final List<Worker> workers = new ArrayList<Worker>();
+        private final List<Worker> workers = new ArrayList<>();
         private int numWorkers;
         //input
         private SearchParams params; //shared
@@ -245,14 +259,18 @@ public class WorkerManager {
         private MS2ScanQueue scanQueue; //shared
         private MS2ScanProducer scanProducer; //shared
         private SearchParamReader paramReader; //so each thread can have its own params
-        //output
-        private ResultWriter resultWriter; //shared
+        //output FileResultWriter has some sort of bug and causes malformed sqt files sometimes, randomly]
+        // so, each worker now writes to its own file
+        private List<BufferedWriter> sqtWriters = new ArrayList<>();
+        public final List<String> sqtPaths;
+        private FileWriter finalSQTWriter = null;
         private static final Logger logger = Logger.getLogger(WorkerPool.class.getName());
-
         private static final Logger fileLogger = Logger.getLogger("WorkerPool_filelogger");
+        public final String finalSQTPath;
         FileHandler fh;
         
         WorkerPool(String ms2FilePath, SearchParams params, int numWorkers, SearchParamReader paramReader) throws WorkerManagerException {
+            this.sqtPaths = new ArrayList<>();
             this.ms2FilePath = ms2FilePath;
             this.params = params;
             this.numWorkers = numWorkers;
@@ -262,19 +280,30 @@ public class WorkerManager {
                 this.scanReader = new MS2ScanReader(ms2FilePath);
                 this.scanQueue = new MS2ScanQueue();
                 scanProducer = new MS2ScanProducer(scanReader, scanQueue);
+                
+                String fullPath = FilenameUtils.getFullPath(ms2FilePath);
+                String basePath = FilenameUtils.getBaseName(ms2FilePath);
+                finalSQTPath = FilenameUtils.concat(fullPath, basePath + "." + Blazmass.SQT_EXT);
+                
+                // Initialize final sqt file. 0 out file
+                // this won't be written to until the workers are done
+                finalSQTWriter = new FileWriter(finalSQTPath);
+                
+                // Initialize sqtWriters, one for each worker
+                for (int i = 0; i < numWorkers; ++i) {
+                    String workerSqtPath = finalSQTPath + "_" + String.valueOf(i);
+                    sqtPaths.add(workerSqtPath);
+                    sqtWriters.add(new BufferedWriter(new FileWriter(workerSqtPath)));
+                }
 
-                //TODO better file name, location
-                String basePath = Util.getFileBaseName(ms2FilePath);
-                String sqtPath = basePath + params.getSqtSuffix() + "." + Blazmass.SQT_EXT;
-                this.resultWriter = new FileResultWriter(sqtPath);
-                System.out.println("Writing output SQT to: " + sqtPath);
+                System.out.println("Writing output SQT to: " + finalSQTPath);
 
             } catch (IOException ex) {
                 logger.log(Level.SEVERE, "Could not start create result file and start worker pool");
                 throw new WorkerManagerException("Could not start create result file and start worker pool", ex);
             }
             
-            String logPath = getFileBaseName(Paths.get(ms2FilePath).getFileName().toString()) + ".LOG";
+            String logPath = FilenameUtils.getBaseName(Paths.get(ms2FilePath).getFileName().toString()) + ".LOG";
             try {
                 fh = new FileHandler(logPath);
                 fileLogger.addHandler(fh);
@@ -287,30 +316,13 @@ public class WorkerManager {
             }
                         
         }
-        /**
-        * Get base name without extension part
-        *
-        * @param path
-        * @return
-        */
-       public static String getFileBaseName(String path) {
-           int dotI = path.lastIndexOf(".");
-           if (dotI == -1)
-               return path;
-           return path.substring(0, dotI);
-       }
+
         /**
          * Start all the threads and let them terminate if there is no more work
          *
          * @throws WorkerManagerException
          */
-        void start() throws WorkerManagerException {
-
-            //write header
-            //write header just once, create temp blazmass for that...
-            final Blazmass bmass = new Blazmass();
-            resultWriter.write(bmass.header(params).toString());
-            resultWriter.flush();
+        void start() throws WorkerManagerException, IOException {
 
             //start scan producer
             logger.log(Level.INFO, "Starting scan producer");
@@ -321,7 +333,7 @@ public class WorkerManager {
                 String id = "Worker#" + (i + 1);
                 SearchParams thisParams = paramReader.getSearchParams(); // so each thread has its own params
                 // necessary for the diffmod search so a single residue can have different diffmod masses
-                final Worker worker = new Worker(id, scanQueue, resultWriter, thisParams, fileLogger);
+                final Worker worker = new Worker(id, scanQueue, sqtWriters.get(i), thisParams, fileLogger);
                 workers.add(worker);
                 worker.start();
             }
@@ -335,15 +347,19 @@ public class WorkerManager {
             final Monitor monitor = new Monitor();
             monitor.start();
             try {
+                // monitor join() blocks until all worker threads are "done"
                 monitor.join();
             } catch (InterruptedException ex) {
                 logger.log(Level.SEVERE, "Cannot join monitor", ex);
             }
 
             logger.log(Level.INFO, "Monitor Completed");
-
-            resultWriter.close();
-
+            
+            // Flush result writers
+            for (BufferedWriter sqtWriter : sqtWriters){
+                sqtWriter.flush();
+                sqtWriter.close();
+            }
         }
 
         /**
@@ -400,6 +416,26 @@ public class WorkerManager {
                 System.out.println("Too many scans failed. Completed Unsuccesfully");
                 System.exit(1);
             }
+        }
+        
+        public void joinSQTFiles() throws IOException{
+            
+            //write header just once, create temp blazmass for that...
+            final Blazmass bmass = new Blazmass();
+            finalSQTWriter.write(bmass.header(params).toString());
+            finalSQTWriter.close();
+            
+            File finalSQTFile = new File(finalSQTPath);
+            for (String sqtPath : sqtPaths){
+                String fileStr = FileUtils.readFileToString(new File(sqtPath));
+                FileUtils.write(finalSQTFile, fileStr, true);
+            }
+            // If this finishes without throwing an error, delete the worker temp files
+            for (String sqtPath : sqtPaths){
+                File f = new File(sqtPath);
+                f.delete();
+            }          
+            
         }
 
         /**
@@ -500,7 +536,7 @@ public class WorkerManager {
         private DBIndexer indexer; //not shared, every needs own instance with own connections
         private MS2ScanQueue scanQueue;
         //output
-        private ResultWriter resultWriter; //shared
+        private BufferedWriter resultWriter;
         private static final Logger logger = Logger.getLogger(Worker.class.getName());
         //state
         private volatile boolean shouldRun;
@@ -525,7 +561,7 @@ public class WorkerManager {
             return map;
         }
         
-        Worker(final String id, MS2ScanQueue scanQueue, final ResultWriter resultWriter, final SearchParams params, Logger fileLogger) throws WorkerManagerException {
+        Worker(final String id, MS2ScanQueue scanQueue, final BufferedWriter resultWriter, final SearchParams params, Logger fileLogger) throws WorkerManagerException {
             this.id = id;
             this.scanQueue = scanQueue;
             this.resultWriter = resultWriter;
@@ -599,7 +635,6 @@ public class WorkerManager {
                     logger.log(Level.INFO, "Number of errors: " + spectraErrors + "/" + spectraAttempted);
                 }
             }
-            resultWriter.flush();
             isRunning = false;
         }
 

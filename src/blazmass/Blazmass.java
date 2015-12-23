@@ -34,7 +34,7 @@ import util.MathUtil;
 public class Blazmass {
 
     private static final String program = "Blazmass";
-    private static final String version = "0.998";
+    private static final String version = "0.999";
 
     //extensions
     public static final String SQT_EXT = "sqt";
@@ -228,7 +228,7 @@ public class Blazmass {
             logger.log(Level.SEVERE, "Could not initialize log writer for file: " + logOut, ex);
         }
 
-        ResultWriter resultWriter = null;
+        BufferedWriter resultWriter = null;
         try {
             final MS2ScanReader ms2Reader = new MS2ScanReader(ms2File.getAbsolutePath());
             final int totalScans = ms2Reader.getNumScansIdx();
@@ -240,7 +240,7 @@ public class Blazmass {
                 totalScansStr = Integer.toString(totalScans);
             }
 
-            resultWriter = new FileResultWriter(sqtPath);
+            resultWriter = new BufferedWriter(new FileWriter(new File(sqtPath)));
             System.out.println("Writing output SQT to: " + sqtPath);
             resultWriter.write(header(sParam).toString());
             resultWriter.flush();
@@ -268,7 +268,11 @@ public class Blazmass {
             logger.log(Level.SEVERE, "Unexpected error, could not run search for ms2 file " + ms2File.getAbsolutePath(), e);
         } finally {
             if (resultWriter != null) {
-                resultWriter.close();
+                try {
+                    resultWriter.close();
+                } catch (IOException ex) {
+                    Logger.getLogger(Blazmass.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
             if (logWriter != null) {
                 try {
@@ -281,7 +285,7 @@ public class Blazmass {
         }
     }
 
-    void runScanHigh(MS2Scan scan, SearchParams sParam, DBIndexer indexer, ResultWriter resultWriter) throws IOException {
+    void runScanHigh(MS2Scan scan, SearchParams sParam, DBIndexer indexer, BufferedWriter resultWriter) throws IOException {
         //high resolution
 
         try {
@@ -422,6 +426,8 @@ public class Blazmass {
                 //     correlation(numMatched, scoreHistogram, pArr);
                 //System.out.println("=========" + outputResult(indexer, hostname, dTotalIntensity, sParam, numMatched, chargeState, precursorMass, pArr).toString());
                 resultWriter.write(outputResult(indexer, hostname, dTotalIntensity, sParam, numMatched, chargeState, precursorMass, pArr).toString());
+                
+                resultWriter.flush();
 
             } //end for each charge state
 
@@ -443,7 +449,7 @@ public class Blazmass {
      * @throws IOException exception thrown when search failed TODO should be
      * replaced by custom exception!
      */
-    void runScan(MS2Scan scan, SearchParams sParam, DBIndexer indexer, ResultWriter resultWriter) throws Exception {
+    void runScan(MS2Scan scan, SearchParams sParam, DBIndexer indexer, BufferedWriter resultWriter) throws Exception {
 
             scan1 = scan.getIsScan1();
             scan2 = scan.getIsScan2();
@@ -511,7 +517,6 @@ public class Blazmass {
                 if (massesSize < sParam.getMinFragPeakNum()) {
                     continue;
                 }
-
                 int highestIon = 0;
                 for (int mi = 0; mi < massesSize; ++mi) {
 
@@ -528,7 +533,7 @@ public class Blazmass {
 
                     highestIon = AssignMass.getBinnedValue(mass, 0);
 
-                    //   System.out.println("=================\t" + mass + "\t" + " " + highestIon); 
+                    //System.out.println("=================\t" + mass + "\t" + " " + highestIon); 
                     intensity = (float) Math.sqrt(intensity);
 
                     if (highestIon < precursorMassBin
@@ -586,7 +591,8 @@ public class Blazmass {
 
                     //System.out.println("=========" + outputResult(indexer, hostname, dTotalIntensity, sParam, numMatched, chargeState, precursorMass, pArr).toString());
                     resultWriter.write(outputResult(indexer, hostname, dTotalIntensity, sParam, numMatched, chargeState, precursorMass, pArr).toString());
-                    //resultWriter.flush(); do not flush after every scan, it may block and slow down threads, take advantage of file buffer
+                    resultWriter.flush(); //do not flush after every scan, it may block and slow down threads, take advantage of file buffer
+                    
                 }
             } //end for each charge state
     }
@@ -1143,7 +1149,7 @@ public class Blazmass {
         //logger.info("=======>>" + iSeq.getSequence());
         String pepSeq = iSeq.getSequence();
 
-        List<FragIonModel> l = new ArrayList<FragIonModel>();
+        List<FragIonModel> l = new ArrayList<>();
         for (int each : sParam.getIonToUse()) {
 
             FragIonModel fmodel = null;
@@ -1152,8 +1158,6 @@ public class Blazmass {
                 /*a*/ case 0:
                     fragArr = AssignMass.getFragIonArr(pepSeq, each);
                     fmodel = new FragIonModel(each, "a", sParam.getIonSeries()[each], fragArr, true);
-                    //System.out.println(Arrays.toString(fragArr));
-
                     break;
                 /*b*/ case 1:
                     fragArr = AssignMass.getFragIonArr(pepSeq, each);
@@ -1915,7 +1919,6 @@ public class Blazmass {
         }
 
         pepResult.setxCorr(dTmpXCorr);
-
         return pepResult;
 
     }
@@ -1996,6 +1999,7 @@ public class Blazmass {
 
         int numWindows = 10;
         float[] tempArr = new float[scoreArray.length];
+
         //int iWindowSize = Math.round(highestIon / numWindows);
         int winSize = MathUtil.round(highestIon / numWindows);
         for (int i = 0; i < numWindows; i++) {

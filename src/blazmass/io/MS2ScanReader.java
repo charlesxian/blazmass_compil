@@ -110,7 +110,7 @@ public class MS2ScanReader implements Iterator<MS2Scan> {
                 if (curLine.length() == 0) {
                     continue;
                 }
-
+                //System.out.println(curLine);
                 final char firstChar = curLine.charAt(0);
                 if (firstChar == 'H' || firstChar == 'I' || firstChar == 'D') {
                     curLine = reader.readLine();
@@ -202,6 +202,7 @@ public class MS2ScanReader implements Iterator<MS2Scan> {
                     }
 
                 } //end reading masses
+                
             } //and while for each line
 
             //logger.log(Level.INFO, "Read into cache scans: " + curCacheSize);
