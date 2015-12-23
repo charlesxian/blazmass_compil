@@ -97,14 +97,7 @@ public class SearchParams {
     private int maxChargeState = 6;
     float[] weightArr = new float[12];
     public boolean doReversePeptides;
-    private String massDBURI;
-    private String seqDBURI;
-    private String protDBURI;
-    
-
-    private SearchParams() {
-    }
-
+ 
     private List<ModResidue> modList = new ArrayList<>();
     //private Set<Float> modShiftSet = new HashSet<Float>();
     private List<List<Double>> modGroupList = new ArrayList<List<Double>>();
@@ -115,7 +108,7 @@ public class SearchParams {
 
     // MongoDB params
     private boolean usingMongoDB = false;
-
+    private String mongoDBURI;
     private String massDBName;
     private String massDBCollection;
 
@@ -131,6 +124,10 @@ public class SearchParams {
     private String protDBName;
     private String protDBCollection;
 
+       
+    private SearchParams() {
+    }
+    
     public static SearchParams getInstance() {
         if (sparams == null) {
             sparams = new SearchParams();
@@ -945,26 +942,12 @@ public class SearchParams {
         this.protDBCollection = protDBCollectionName;
     }
 
-    void setMassDBURI(String massDBURI) {
-        this.massDBURI = massDBURI;
+    public String getMongoDBURI() {
+        return this.mongoDBURI;
     }
 
-    void setSeqDBURI(String seqDBURI) {
-        this.seqDBURI = seqDBURI;
-    }
-    
-    void setProtDBURI(String protDBURI) {
-        this.protDBURI = protDBURI;
-    }
-    public String getMassDBURI() {
-        return this.massDBURI;
+    void setMongoDBURI(String trim) {
+        this.mongoDBURI = trim;
     }
 
-    public String getSeqDBURI() {
-        return this.seqDBURI;
-    }
-    
-    public String getProtDBURI() {
-        return this.protDBURI;
-    }
 }

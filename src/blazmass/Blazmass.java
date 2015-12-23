@@ -23,6 +23,7 @@ import java.text.DecimalFormat;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import mongoconnect.MongoSeqIter;
+import mongoconnect.MongoConnect;
 import org.paukov.combinatorics.*;
 import util.MathUtil;
 
@@ -34,7 +35,7 @@ import util.MathUtil;
 public class Blazmass {
 
     private static final String program = "Blazmass";
-    private static final String version = "0.999";
+    private static final String version = "0.9991";
 
     //extensions
     public static final String SQT_EXT = "sqt";
@@ -229,6 +230,7 @@ public class Blazmass {
         }
 
         BufferedWriter resultWriter = null;
+        MongoConnect mongoConnection = new mongoconnect.MongoConnect(sParam);
         try {
             final MS2ScanReader ms2Reader = new MS2ScanReader(ms2File.getAbsolutePath());
             final int totalScans = ms2Reader.getNumScansIdx();
@@ -250,9 +252,9 @@ public class Blazmass {
                 final MS2Scan scan = ms2Reader.next();
 
                 if (sParam.isHighResolution()) {
-                    runScanHigh(scan, sParam, indexer, resultWriter);
+                    runScanHigh(scan, sParam, indexer, resultWriter, mongoConnection);
                 } else {
-                    runScan(scan, sParam, indexer, resultWriter);
+                    runScan(scan, sParam, indexer, resultWriter, mongoConnection);
                 }
 
                 if (logWriter != null) {
@@ -281,11 +283,11 @@ public class Blazmass {
                     logger.log(Level.SEVERE, null, ex);
                 }
             }
-            //mongoconnect.Mongoconnect.disconnect();
+            mongoConnection.disconnect();
         }
     }
 
-    void runScanHigh(MS2Scan scan, SearchParams sParam, DBIndexer indexer, BufferedWriter resultWriter) throws IOException {
+    void runScanHigh(MS2Scan scan, SearchParams sParam, DBIndexer indexer, BufferedWriter resultWriter, MongoConnect mongoConnection) throws IOException {
         //high resolution
 
         try {
@@ -425,7 +427,7 @@ public class Blazmass {
                 // if(numMatched>0)
                 //     correlation(numMatched, scoreHistogram, pArr);
                 //System.out.println("=========" + outputResult(indexer, hostname, dTotalIntensity, sParam, numMatched, chargeState, precursorMass, pArr).toString());
-                resultWriter.write(outputResult(indexer, hostname, dTotalIntensity, sParam, numMatched, chargeState, precursorMass, pArr).toString());
+                resultWriter.write(outputResult(indexer, hostname, dTotalIntensity, sParam, numMatched, chargeState, precursorMass, pArr, mongoConnection).toString());
                 
                 resultWriter.flush();
 
@@ -449,7 +451,7 @@ public class Blazmass {
      * @throws IOException exception thrown when search failed TODO should be
      * replaced by custom exception!
      */
-    void runScan(MS2Scan scan, SearchParams sParam, DBIndexer indexer, BufferedWriter resultWriter) throws Exception {
+    void runScan(MS2Scan scan, SearchParams sParam, DBIndexer indexer, BufferedWriter resultWriter, MongoConnect mongoConnection) throws Exception {
 
             scan1 = scan.getIsScan1();
             scan2 = scan.getIsScan2();
@@ -583,14 +585,14 @@ public class Blazmass {
 
                     // ***************  Run search for each charge state ****************
                     System.out.println("Scan: " + scan1 + "\tCharge: " + chargeState);
-                    int numMatched = runSearch(indexer, sParam, scoreArray, chargeState, precursorMass, scoreHistogram, pArr);
+                    int numMatched = runSearch(indexer, sParam, scoreArray, chargeState, precursorMass, scoreHistogram, pArr, mongoConnection);
 
                     if (numMatched > 0) {
                         correlation(numMatched, scoreHistogram, pArr);
                     }
 
                     //System.out.println("=========" + outputResult(indexer, hostname, dTotalIntensity, sParam, numMatched, chargeState, precursorMass, pArr).toString());
-                    resultWriter.write(outputResult(indexer, hostname, dTotalIntensity, sParam, numMatched, chargeState, precursorMass, pArr).toString());
+                    resultWriter.write(outputResult(indexer, hostname, dTotalIntensity, sParam, numMatched, chargeState, precursorMass, pArr, mongoConnection).toString());
                     resultWriter.flush(); //do not flush after every scan, it may block and slow down threads, take advantage of file buffer
                     
                 }
@@ -603,7 +605,8 @@ public class Blazmass {
             SearchParams sParam,
             int liNumMatchedPeptides, int chargeState,
             double precursorMass,
-            PeptideResult[] pArr) {
+            PeptideResult[] pArr,
+            MongoConnect mongoConnection) {
 
         //clock_t cEndTime = clock();
         float searchTime = 0;
@@ -643,11 +646,11 @@ public class Blazmass {
                     //custom handling of 'L' lines for MongoDB here...
                     if (sParam.isUsingSeqDB()) {
                         if (!iseq.isReverse){
-                            parentLines = mongoconnect.Mongoconnect.getParents(iseq.getSequence(), sParam, false);
+                            parentLines = mongoConnection.getParents(iseq.getSequence(), sParam, false);
                         }
                         else {
                             String revSequence = new StringBuilder(iseq.getSequence()).reverse().toString();
-                            parentLines = mongoconnect.Mongoconnect.getParents(revSequence, sParam, true);
+                            parentLines = mongoConnection.getParents(revSequence, sParam, true);
                         }
                         if (parentLines == null) {
                             System.err.println("Error - found no parent proteins for peptide " + iseq.getSequence());
@@ -742,12 +745,12 @@ public class Blazmass {
      * replaced by custom exception!
      * @return numMatched number of matched peptides times two, for some reason
      */
-    private int runSearch(DBIndexer indexer, SearchParams sParam, float[] scoreArray, int chargeState, float precursorMass, int[] scoreHistogram, PeptideResult[] pArr) throws Exception {
+    private int runSearch(DBIndexer indexer, SearchParams sParam, float[] scoreArray, int chargeState, float precursorMass, 
+            int[] scoreHistogram, PeptideResult[] pArr, MongoConnect mongoConnection) throws Exception {
         int numMatched = 0;
         PeptideResult pr;
         float massTolerance = sParam.getRelativePeptideMassTolerance();
         float ppmTolerance = this.getPpm(precursorMass, massTolerance);
-
         List<MassRange> rList = new ArrayList<>();
         
         // If getIsotopes() is 1, it should search isotopic peaks
@@ -763,7 +766,7 @@ public class Blazmass {
         //System.out.println(rList);
         System.out.println("Working on no mod: " + precursorMass);
         if (sParam.isUsingMongoDB()) {
-            MongoSeqIter msi = mongoconnect.Mongoconnect.getSequencesIter(rList, sParam);
+            MongoSeqIter msi = mongoConnection.getSequencesIter(rList, sParam);
             while (msi.hasNext()) {
                 IndexedSequence indSeq = msi.next();
                 pr = calcScore(indSeq, scoreArray, chargeState, scoreHistogram, sParam);
@@ -827,7 +830,7 @@ public class Blazmass {
 
                 //System.out.println(precursorMass);
                 //System.out.println(rList);
-                MongoSeqIter msi = mongoconnect.Mongoconnect.getSequencesIter(rList, sParam);
+                MongoSeqIter msi = mongoConnection.getSequencesIter(rList, sParam);
                 while (msi.hasNext()) {
                     IndexedSequence iSeq = msi.next();
                     String seq = iSeq.getSequence();

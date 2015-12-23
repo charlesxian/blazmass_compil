@@ -29,6 +29,7 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+import mongoconnect.MongoConnect;
 import org.apache.commons.io.FileUtils;
 
 import org.apache.commons.io.FilenameUtils;
@@ -116,7 +117,6 @@ public class WorkerManager {
         }
         
         logger.log(Level.INFO, "Done processing MS2: " + ms2File.getAbsolutePath());
-        mongoconnect.Mongoconnect.disconnect();
     }
 
     public void runDir(File dataDir) {
@@ -148,7 +148,6 @@ public class WorkerManager {
             }
             // Here workerpool is done (runDir)
             logger.log(Level.INFO, "Done processing MS2: " + ms2File.getAbsolutePath());
-            mongoconnect.Mongoconnect.disconnect();
         }
     }
 
@@ -268,6 +267,7 @@ public class WorkerManager {
         private static final Logger fileLogger = Logger.getLogger("WorkerPool_filelogger");
         public final String finalSQTPath;
         FileHandler fh;
+        private final MongoConnect mongoConnection;
         
         WorkerPool(String ms2FilePath, SearchParams params, int numWorkers, SearchParamReader paramReader) throws WorkerManagerException {
             this.sqtPaths = new ArrayList<>();
@@ -275,6 +275,8 @@ public class WorkerManager {
             this.params = params;
             this.numWorkers = numWorkers;
             this.paramReader = paramReader;
+            // one mongoconnection for the entire pool, shared across workers
+            this.mongoConnection = new mongoconnect.MongoConnect(params);
 
             try {
                 this.scanReader = new MS2ScanReader(ms2FilePath);
@@ -333,7 +335,7 @@ public class WorkerManager {
                 String id = "Worker#" + (i + 1);
                 SearchParams thisParams = paramReader.getSearchParams(); // so each thread has its own params
                 // necessary for the diffmod search so a single residue can have different diffmod masses
-                final Worker worker = new Worker(id, scanQueue, sqtWriters.get(i), thisParams, fileLogger);
+                final Worker worker = new Worker(id, scanQueue, sqtWriters.get(i), thisParams, fileLogger, mongoConnection);
                 workers.add(worker);
                 worker.start();
             }
@@ -354,7 +356,7 @@ public class WorkerManager {
             }
 
             logger.log(Level.INFO, "Monitor Completed");
-            
+            mongoConnection.disconnect();
             // Flush result writers
             for (BufferedWriter sqtWriter : sqtWriters){
                 sqtWriter.flush();
@@ -552,6 +554,7 @@ public class WorkerManager {
         private long totalTime;
         private HighResMassProcessor hprocessor;
         private final Logger fileLogger;
+        private final MongoConnect mongoConnection;
         
         Map<String, Integer> getErrorStatus() {
             Map<String, Integer> map = new HashMap<>();
@@ -561,12 +564,14 @@ public class WorkerManager {
             return map;
         }
         
-        Worker(final String id, MS2ScanQueue scanQueue, final BufferedWriter resultWriter, final SearchParams params, Logger fileLogger) throws WorkerManagerException {
+        Worker(final String id, MS2ScanQueue scanQueue, final BufferedWriter resultWriter, 
+                final SearchParams params, Logger fileLogger, MongoConnect mongoConnection) throws WorkerManagerException {
             this.id = id;
             this.scanQueue = scanQueue;
             this.resultWriter = resultWriter;
             this.params = params;
             this.fileLogger = fileLogger;
+            this.mongoConnection = mongoConnection;
 
             this.shouldRun = true;
             this.isRunning = false;
@@ -613,9 +618,9 @@ public class WorkerManager {
                 try {
 
                     if (params.isHighResolution()) {
-                        bmass.runScanHigh(scan, params, indexer, resultWriter);
+                        bmass.runScanHigh(scan, params, indexer, resultWriter, mongoConnection);
                     } else {
-                        bmass.runScan(scan, params, indexer, resultWriter);
+                        bmass.runScan(scan, params, indexer, resultWriter, mongoConnection);
                     }
                     ++spectraProcessed;
 

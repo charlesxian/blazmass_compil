@@ -126,7 +126,7 @@ public class SearchParamReader {
                 param.setUsingMongoDB(true);
                 String massDBname = getParam("MassDB_dbname").trim();
                 String massDBCollection = getParam("MassDB_collection").trim();
-                param.setMassDBURI(getParam("MassDB_URI").trim());
+                param.setMongoDBURI(getParam("mongoDB_URI").trim());
                 param.setMassDBName(massDBname);
                 param.setMassDBCollection(massDBCollection);
                 param.setDatabaseName(massDBname + "." + massDBCollection + " [MongoDB]");
@@ -136,7 +136,6 @@ public class SearchParamReader {
                     param.setUsingSeqDB(true);
                     String seqDBName = getParam("SeqDB_dbname");
                     String seqDBCollection = getParam("SeqDB_collection");
-                    param.setSeqDBURI(getParam("SeqDB_URI").trim());
                     param.setSeqDBName(seqDBName);
                     param.setSeqDBCollection(seqDBCollection);
 
@@ -145,7 +144,6 @@ public class SearchParamReader {
                         param.setUsingProtDB(true);
                         param.setProtDBName(getParam("ProtDB_dbname"));
                         param.setProtDBCollection(getParam("ProtDB_collection"));
-                        param.setProtDBURI(getParam("ProtDB_URI").trim());
                     } else {
                         param.setUsingProtDB(false);
                         System.out.println("Not using ProtDB MongoDB database -- SQT output will be incomplete");
