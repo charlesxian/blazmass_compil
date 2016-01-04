@@ -1,0 +1,105 @@
+[BLAZMASS]
+version = 0.9991
+
+######
+# Parameters to change
+######
+ppm_peptide_mass_tolerance = 10.0
+ppm_fragment_ion_tolerance = 50.0
+
+# Diff search options
+# Format: mass residues mass residues. Example: 15.9949 M 79.966331 STY
+diff_search_options = 15.9949 M
+
+# added to C-terminus (peptide mass & all Y-ions)
+add_C_terminus = 0
+
+# added to N-terminus (B-ions)
+add_N_terminus = 0
+
+# Format: mass residue mass residue. Example: 57.02146 C
+add_static_mod = 57.02146 C
+
+# number of peptide results to show
+num_output_lines = 10
+
+# 0=search only monoisotopic peak, 1=search isotopes
+# If the raw file was converted with RawConverter (Yates lab) with monoisotopic peak prediction enabled, set to 0.
+# Otherwise, it will search the parent ion and chargeState + 1 masses also
+isotopes = 1
+
+# Use MongoDB database for peptide database (MassDB), 0=no, 1=yes
+# Don't change this, because it is required
+use_mongodb = 1 
+
+# example URI: mongodb://wl-cmadmin:27018 or "mongodb://imsb0501:27018,imsb0515:27018,imsb0601:27018,imsb0615:27018"
+mongoDB_URI = mongodb://localhost:27017
+
+# MassDB is required
+MassDB_dbname = MassDB_test
+MassDB_collection = MassDB_test
+
+# Used for looking up parent protein information for identified peptides (Protein ID numbers only). optional
+# Used to fill in L lines in SQT output file
+use_SeqDB = 1
+SeqDB_dbname = SeqDB_test
+SeqDB_collection = SeqDB_test
+
+# Used for looking up parent protein information for identified proteins. optional
+# Used to fill in additional information for L lines in SQT output file
+use_ProtDB = 0
+ProtDB_dbname = ProtDB_test
+ProtDB_collection = ProtDB_test
+
+
+#######
+# Parameters which aren't used? Or I don't know what they do?
+# Probably best to not change any of this
+#######
+
+split_scan_size = 2000
+database_name = foo
+num_description_lines = 3              ; full protein descriptions to show for top N peptides
+create_output_files = 1                ; 0=no, 1=yes
+ion_series = 0 1 1 1.0 1.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0
+show_fragment_ions = 0                 ; 0=no, 1=yes
+print_duplicate_references = 1         ; 0=no, 1=yes
+enzyme_name = trypsin
+enzyme_residues = KR
+enzyme_cut = c
+miscleavage = 2
+use_index = 1   ; 0= search with no index, 1=search using index
+index_type = 1   ; 1= faster for small and medium db, 2= for large db
+index_inmemory = 0 ;=0 for normal file, =1 for loading existing index in memory
+enzyme_nocut_residues = P
+xcorr_mode = 0                         ; 0 regular Xcorr(default), 1 - EE, 2 - ET, 3 - TT
+# partial sequence info ... overrides entries in .dta files
+#   up to 10 partial sequences ... each must appear in peptides
+#      analyzed in the forward or reverse directions
+partial_sequence =
+
+# protein mass & mass tolerance value i.e. 80000 10%
+# or protein min & max value i.e. 72000 88000  (0 for both = unused)
+protein_mass_filter = 0 0
+
+# For sequence_header_filter, enter up to five (5) strings where any one must
+# be in the header of a sequence entry for that entry to be searched.
+# Strings are space separated and '~' substitutes for a space within a string.
+# Example:  sequence_header_filter = human homo~sapien trypsin
+sequence_header_filter =
+
+# diffmods were changed by GSS, only one possible per amino acid. This options is ignored.
+max_num_differential_AA_per_mod = 2    ; max # of modified AA per diff. mod in a peptide
+nucleotide_reading_frame = 0           ; 0=proteinDB, 1-6, 7=forward three, 8=reverse three, 9=all six
+mass_type_parent = 1                   ; 0=average masses, 1=monoisotopic masses
+remove_precursor_peak = 0              ; 0=no, 1=yes
+mass_type_fragment = 1                 ; 0=average masses, 1=monoisotopic masses
+# This for sure doesn't do anything
+ion_cutoff_percentage = 0.0            ; prelim. score cutoff % as a decimal number i.e. 0.30 for 30%
+match_peak_count = 0                   ; number of auto-detected peaks to try matching (max 5)
+match_peak_allowed_error = 1           ; number of allowed errors in matching auto-detected peaks
+match_peak_tolerance = 1.0             ; mass tolerance for matching auto-detected peaks
+max_num_internal_cleavage_sites = 3    ; maximum value is 5; for enzyme search
+# Do not change this
+ppm_fragment_ion_tolerance_high = 0
+
