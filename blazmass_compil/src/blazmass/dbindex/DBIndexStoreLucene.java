@@ -42,7 +42,7 @@ import org.apache.lucene.search.Scorer;
  * @author Adam
  */
 public class DBIndexStoreLucene implements DBIndexStore {
-    
+
     private ProteinCache protCache;
     private final Document document = new Document();
 
@@ -104,9 +104,7 @@ public class DBIndexStoreLucene implements DBIndexStore {
             //TODO disable auto commit
             indexWriter = new IndexWriter(dir, config);
 
-
 //	document.add(new Field(FIELD_PATH, path, Field.Store.YES, Field.Index.UN_TOKENIZED));
-
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Error setting up index", e);
             throw new DBIndexStoreException("Error setting up index", e);
@@ -125,7 +123,7 @@ public class DBIndexStoreLucene implements DBIndexStore {
             logger.log(Level.SEVERE, "Cannot initialize reader for indexDir: " + indexDir, ex);
             throw new DBIndexStoreException("Cannot initialize reader for indexDir: " + indexDir, ex);
         }
-        
+
     }
 
     @Override
@@ -201,7 +199,6 @@ public class DBIndexStoreLucene implements DBIndexStore {
 
         //Date end = new Date();
         //System.out.println("Time: " + (end.getTime() - start.getTime()) + "ms");
-
         return resultsCollector.getSequences();
     }
 
@@ -221,17 +218,16 @@ public class DBIndexStoreLucene implements DBIndexStore {
 
         Query query = NumericRangeQuery.newFloatRange(searchField, massLow, massHigh, true, true);
 
-
         return runQuery(query);
     }
 
     @Override
     public List<IndexedSequence> getSequences(List<MassRange> ranges) throws DBIndexStoreException {
-        
+
         if (indexSearcher == null) {
             throw new DBIndexStoreException("Cannot search, searcher not initialized on the index, are you running in indexing mode?");
         }
-        
+
         org.apache.lucene.search.BooleanQuery composite = new org.apache.lucene.search.BooleanQuery();
 
         for (MassRange range : ranges) {
@@ -279,7 +275,6 @@ public class DBIndexStoreLucene implements DBIndexStore {
         }
 
         return ret;
-
 
     }
 
@@ -379,7 +374,6 @@ public class DBIndexStoreLucene implements DBIndexStore {
             logger.log(Level.SEVERE, null, ex);
         }
 
-
         try {
             //test gets
             System.out.println("Testing range gets 1");
@@ -406,11 +400,9 @@ public class DBIndexStoreLucene implements DBIndexStore {
             logger.log(Level.SEVERE, null, ex);
         }
 
-
         if (true) {
             return;
         }
-
 
         try {
             store = new DBIndexStoreLucene();
@@ -471,12 +463,10 @@ public class DBIndexStoreLucene implements DBIndexStore {
             final Document doc = reader.document(i);
 
             //System.out.println("DOC: " + doc.toString());
-
             List<IndexableField> fields = doc.getFields();
             if (fields.isEmpty()) {
                 return;
             }
-
 
             IndexableField mass = doc.getField(FIELDS.MASS.toString());
             float massF = mass.numericValue().floatValue();
@@ -502,7 +492,6 @@ public class DBIndexStoreLucene implements DBIndexStore {
                 temp.put(peptideSequence, sequences);
             }
             sequences.add(tempSequence);
-
 
         }
 

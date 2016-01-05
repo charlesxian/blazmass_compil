@@ -19,31 +19,29 @@ import java.util.logging.Logger;
  *
  * @author Harshil
  */
+public class FastaDefReader {
 
-public class FastaDefReader 
-{
     private static BufferedReader br;
-    private static int sizeofDefs = 40; 
-    public  ProteinCache protCache;
-    
+    private static int sizeofDefs = 40;
+    public ProteinCache protCache;
+
     private List defs = new ArrayList();
 
-    public void setDefs(String fileName) 
-    {
-          protCache = ProteinCache.getInstance();
+    public void setDefs(String fileName) {
+        protCache = ProteinCache.getInstance();
         try {
             File f = new File(fileName);
             br = new BufferedReader(new FileReader(f));
             String line;
-            int i=0;
+            int i = 0;
             line = br.readLine();
-           
+
             while (line != null) {
-                
+
                 if (line.startsWith(">")) {
 //                    System.out.println(line);
                     defs.add(line.substring(1, sizeofDefs + 1));
-                    protCache.addProtein( (String) defs.get(i));
+                    protCache.addProtein((String) defs.get(i));
                     i++;
                 }
                 line = br.readLine();
@@ -56,52 +54,39 @@ public class FastaDefReader
             Logger.getLogger(FastaDefReader.class.getName()).log(Level.SEVERE, null, ex);
         }
 
+    }
+
+    public List getDefs() {
+        return defs;
 
     }
-    
-    
-    
-    public List getDefs()
-    {
-                return defs;
 
-    }
-    
-    public void setProteinCache()
-    {
+    public void setProteinCache() {
 //        ProteinCache protCache = ProteinCache.getInstance();
 //        protCache.addProtein();
-        
+
     }
-    public ProteinCache getproteinCache()
-    {
+
+    public ProteinCache getproteinCache() {
         return protCache;
     }
 
-    
-    
-    
-    
-    
-    public static void main(String args[]) throws FileNotFoundException, IOException
-    {
-         File f= new File("C:\\Users\\Harshil\\Documents\\NetBeansProjects\\blaz_data\\small.fasta");
-         br = new BufferedReader(new FileReader(f));
-         String line;
-         line=br.readLine();
-         ArrayList defs= new ArrayList();
-         while(line!=null)
-         {
-             if(line.startsWith(">"))
-             {
-                 System.out.println(line);
-                 defs.add(line.substring(1, sizeofDefs+1));
-                 
-             }
-             line= br.readLine();
-         }
-         br.close();
-         System.out.println(defs);
-         System.out.println(defs.get(1).toString().length());
+    public static void main(String args[]) throws FileNotFoundException, IOException {
+        File f = new File("C:\\Users\\Harshil\\Documents\\NetBeansProjects\\blaz_data\\small.fasta");
+        br = new BufferedReader(new FileReader(f));
+        String line;
+        line = br.readLine();
+        ArrayList defs = new ArrayList();
+        while (line != null) {
+            if (line.startsWith(">")) {
+                System.out.println(line);
+                defs.add(line.substring(1, sizeofDefs + 1));
+
+            }
+            line = br.readLine();
+        }
+        br.close();
+        System.out.println(defs);
+        System.out.println(defs.get(1).toString().length());
     }
 }

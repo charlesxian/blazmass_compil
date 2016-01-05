@@ -11,12 +11,9 @@ package blazmass.io;
 import java.io.*;
 import java.util.*;
 import blazmass.AssignMass;
-import blazmass.Constants;
 import blazmass.dbindex.DBIndexer;
-import blazmass.mod.DiffModification;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.paukov.combinatorics.*;
 
 /**
  * @author Robin Park
@@ -28,56 +25,23 @@ public class SearchParamReader {
     private String fileName;
     private SearchParams param;
     //private boolean isModification;
-    private Hashtable<String, String> ht = new Hashtable<String, String>();    
-    private final Logger logger = Logger.getLogger(SearchParamReader.class.getName());
-    private final char[] MOD_SYMBOL = {'*', '#', '@',};
-    //private TIntDoubleHashMap symbolMap = new TIntDoubleHashMap(10);
-    private double[] massShiftArr = new double[3];
+    private Hashtable<String, String> ht = new Hashtable<>();
+    private final Logger logger;
     public static final String DEFAULT_PARAM_FILE_NAME = "blazmass.params";
 
     public static void main(String args[]) throws Exception {
 
-	
-	if(args.length<2) {
+        if (args.length < 2) {
             System.out.println("Usage: java SearchParamReader path param_filename");
             return;
         }
-            
         SearchParamReader p = new SearchParamReader(args[0], args[1]);
-	//else
-	//	p = new SearchParamReader(".", DEFAULT_PARAM_FILE_NAME);
+        SearchParams param = p.getParam();
 
-
-	SearchParams param = p.getParam();
-
-	//System.out.println("===" + param.getFullIndexFileName());
-	//System.out.println("dbname===============" + param.getFullIndexFileName());
-//	System.out.println("dbname===============" + param.getIndexFileNameOnly());
-
-        /*
-         ParamReader p = new ParamReader(args[0], args[1], Integer.parseInt(args[2]));
-         Hashtable<String, String> h = p.getHashtable();
-
-         System.out.println(h.get("diff_search_options"));
-         System.out.println( p.isModification() );
-         List l = p.getResidueList();
-
-         for(int i=0;i<l.size();i++)
-         {
-         ModResidue residue = (ModResidue)l.get(i);
-
-         System.out.println(residue.getMassShift() + "\t" + residue.getResidue());
-         }
-
-         double[] d = p.getMassShiftArr();
-         for(int i=0;i<d.length;i++)
-         {
-         System.out.println(d[i]);
-         }
-         */
     }
 
     public SearchParamReader(String path, String fileName) throws IOException {
+        this.logger = Logger.getLogger(SearchParamReader.class.getName());
         this.path = path;
         this.fileName = fileName;
         init();
@@ -85,171 +49,113 @@ public class SearchParamReader {
 
     public void init() throws IOException {
         path = path + File.separator + fileName;
-        if (! new File(path).exists()) {
+        if (!new File(path).exists()) {
             throw new IOException("Could not locate params file at path: " + path);
         }
+        // Read in all params from params file. `getParam` is reading from `ht`
         BufferedReader br = null;
         try {
             br = new BufferedReader(new FileReader(path));
             String eachLine;
-
-            //Hashtable<String> ht = new Hashtable<String>();
-
             param = SearchParams.getInstance();
-            //StringBuffer sb = new StringBuffer();
-            //br.skip(2000);
             while ((eachLine = br.readLine()) != null) {
-                //sb.append(eachLine);
-                //sb.append("\n");                
-
-                //System.out.println("1----------" + eachLine);
-
-                if (eachLine.startsWith("#")) // ||
-                //(strArr = eachLine.split("=")).length < 2)
-                {
+                if (eachLine.startsWith("#"))
                     continue;
-                }
-
-                //System.out.println("-----------" + eachLine);
-/*
-                if (eachLine.startsWith("[BLAZMASS_ENZYME_INFO]") || eachLine.startsWith("[SEQUEST_ENZYME_INFO]")) {
-                    int enzymeNumber = trimValueAsInt(getParam("enzyme_number"));
-
-                    int currentEnz;
-                    while ((eachLine = br.readLine()) != null) {
-                        String[] arr = eachLine.split("\\.");
-                        if (arr.length < 2) {
-                            continue;
-                        }
-
-                        currentEnz = Integer.parseInt(arr[0]);
-                        //dTempMass: where is it used?
-
-                        if (currentEnz == enzymeNumber) {
-
-                            String[] tarr = eachLine.split("\\s+");
-                            //szEnzymeName = tarr[1].trim();
-                            param.setEnzymeOffset(trimValueAsInt(tarr[2]));
-                            param.setEnzymeBreakAA(tarr[3].trim());
-                            param.setEnzymeNoBreakAA(tarr[4].trim());
-                        }
-
-
-                    }
-
-                    if (enzymeNumber == 0) {
-                        param.setUseEnzyme(false);
-                    } else {
-                        param.setUseEnzyme(true);
-                    }
-
-        
-                }*/
-
-
-                if (null == eachLine) {
-                    break;
-                }
                 String[] strArr = eachLine.split("=");
-                if (strArr.length < 2) {
+                if (strArr.length < 2)
                     continue;
-                }
-                
                 ht.put(strArr[0].trim(), strArr[1].split(";")[0].trim());
-             
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading param file " + e);
+            throw new IOException(e.toString());
+        } finally {
+            if (br != null)
+                br.close();
+        }
+        try {
+            String sqtSuffix = trimValue(getParam("sqt_suffix"));
+            if (sqtSuffix == null) {
+                param.setSqtSuffix("");
+            } else {
+                param.setSqtSuffix(sqtSuffix);
             }
 
             param.setDatabaseName(trimValue(getParam("database_name")));
             param.setIndexDatabaseName(trimValue(getParam("index_database_name")));
-            
+
             int useIndex = trimValueAsInt(getParam("use_index"), 1);
             param.setUseIndex(useIndex == 1);
-            
+
             int indexType = trimValueAsInt(getParam("index_type"), 1);
             param.setIndexType(indexType == 1 ? DBIndexer.IndexType.INDEX_NORMAL : DBIndexer.IndexType.INDEX_LARGE);
-            
-            int inMemoryIndexI =  trimValueAsInt(getParam("index_inmemory"), 1);
+
+            int inMemoryIndexI = trimValueAsInt(getParam("index_inmemory"), 1);
             boolean inMemoryIndex = inMemoryIndexI == 1;
             param.setInMemoryIndex(inMemoryIndex);
-            
-            int indexFactor =  trimValueAsInt(getParam("index_factor"), 6);
-            param.setIndexFactor(indexFactor);
-            
-            param.setParametersFile(path);
-            //param.setParameters(sb.toString());
 
-           // String pepTolerance = getParam("peptide_mass_tolerance");
-           // if (null == pepTolerance) {
+            int indexFactor = trimValueAsInt(getParam("index_factor"), 6);
+            param.setIndexFactor(indexFactor);
+
+            param.setParametersFile(path);
+
             String pepTolerance = getParam("ppm_peptide_mass_tolerance");
-            if(null == pepTolerance)
+            if (null == pepTolerance) {
                 System.out.println("Error: ppm_peptide_mass_tolerance is missing");
-            //}
-            
-            param.setPeptideMassTolerance(trimValueAsFloat(pepTolerance));            
-            
+            }
+
+            param.setPeptideMassTolerance(trimValueAsFloat(pepTolerance));
             param.setFragmentIonTolerance(trimValueAsFloat(getParam("ppm_fragment_ion_tolerance")));
-            param.setFragmentIonToleranceInt( (int)Double.parseDouble(getParam("ppm_fragment_ion_tolerance").trim()) );
-            
+            param.setFragmentIonToleranceInt((int) Double.parseDouble(getParam("ppm_fragment_ion_tolerance").trim()));
+
             String highRes = getParam("ppm_fragment_ion_tolerance_high");
-            if(null != highRes && "1".equals(highRes.trim()))
+            if (null != highRes && "1".equals(highRes.trim())) {
                 param.setHighResolution(true);
-            else 
+            } else {
                 param.setHighResolution(false);
-            
+            }
+
             String mongoParam = getParam("use_mongodb").trim();
             String seqDBParam = getParam("use_SeqDB").trim();
             String protDBParam = getParam("use_ProtDB").trim();
             if (mongoParam == null || Integer.parseInt(mongoParam) == 0) {
                 param.setUsingMongoDB(false);
+                System.out.println("Must use mongodb");
+                System.exit(1);
             } else {
                 param.setUsingMongoDB(true);
-                String massDBServer = getParam("MassDB_server").trim();
-                int massDBPort = Integer.parseInt(getParam("MassDB_port").trim());
                 String massDBname = getParam("MassDB_dbname").trim();
                 String massDBCollection = getParam("MassDB_collection").trim();
-                param.setMassDBServer(massDBServer);
-                param.setMassDBPort(massDBPort);
+                param.setMongoDBURI(getParam("mongoDB_URI").trim());
                 param.setMassDBName(massDBname);
                 param.setMassDBCollection(massDBCollection);
-                param.setDatabaseName(massDBname+"."+massDBCollection+" [MongoDB]");
-                
+                param.setDatabaseName(massDBname + "." + massDBCollection + " [MongoDB]");
+
                 if (seqDBParam != null && Integer.parseInt(seqDBParam) == 1) {
                     //use SeqDB
                     param.setUsingSeqDB(true);
-                    String seqDBServer = getParam("SeqDB_server");
-                    int seqDBPort = Integer.parseInt(getParam("SeqDB_port"));
                     String seqDBName = getParam("SeqDB_dbname");
                     String seqDBCollection = getParam("SeqDB_collection");
-                    param.setSeqDBServer(seqDBServer);
-                    param.setSeqDBPort(seqDBPort);
                     param.setSeqDBName(seqDBName);
                     param.setSeqDBCollection(seqDBCollection);
-                    
+
                     if (protDBParam != null && Integer.parseInt(protDBParam) == 1) {
                         //use ProtDB
                         param.setUsingProtDB(true);
-                        String protDBServer = getParam("ProtDB_server");
-                        int protDBPort = Integer.parseInt(getParam("ProtDB_port"));
-                        String protDBName = getParam("ProtDB_dbname");
-                        String protDBCollection = getParam("ProtDB_collection");
-                        param.setProtDBServer(protDBServer);
-                        param.setProtDBPort(protDBPort);
-                        param.setProtDBName(protDBName);
-                        param.setProtDBCollection(protDBCollection);
-                    }
-                    else {
+                        param.setProtDBName(getParam("ProtDB_dbname"));
+                        param.setProtDBCollection(getParam("ProtDB_collection"));
+                    } else {
                         param.setUsingProtDB(false);
                         System.out.println("Not using ProtDB MongoDB database -- SQT output will be incomplete");
                     }
-                }
-                else {
+                } else {
                     param.setUsingSeqDB(false);
                     System.out.println("Not using SeqDB MongoDB database -- SQT output will be incomplete");
                 }
             }
 
             String massTypeParent = getParam("mass_type_parent").trim();
-            
+
             if ("1".equals(massTypeParent)) {
                 param.setUseMonoParent(true);
             } else {
@@ -258,35 +164,37 @@ public class SearchParamReader {
             param.setMassTypeParent(trimValueAsInt(massTypeParent));  //; 0=average masses, 1=monoisotopic masses
 
             String massTypeFrag = getParam("mass_type_fragment").trim();
-            
-           // System.out.println("=====---=====" + massTypeParent);
-           // System.out.println("=====---=====" + massTypeFrag);
+
+            // System.out.println("=====---=====" + massTypeParent);
+            // System.out.println("=====---=====" + massTypeFrag);
             if ("1".equals(massTypeFrag)) {
                 param.setUseMonoFragment(true);
             } else {
                 param.setUseMonoFragment(false);
-            }            
+            }
             param.setMassTypeFragment(trimValueAsInt(massTypeFrag));  //; 0=average masses, 1=monoisotopic masses
-                        
+
             param.setNumPeptideOutputLnes(trimValueAsInt(getParam("num_output_lines")));
             param.setRemovePrecursorPeak(trimValueAsInt(getParam("remove_precursor_peak")));
             String ionSeries = getParam("ion_series");
             String arr[] = ionSeries.split(" ");
 
             //System.out.println("===========" + arr[0] + arr[1] + " " + arr[2]);
-            param.setNeutralLossAions( Integer.parseInt(arr[0]) );
-            param.setNeutralLossBions( Integer.parseInt(arr[1]) );            
-            param.setNeutralLossYions( Integer.parseInt(arr[2]) );
-            
+            param.setNeutralLossAions(Integer.parseInt(arr[0]));
+            param.setNeutralLossBions(Integer.parseInt(arr[1]));
+            param.setNeutralLossYions(Integer.parseInt(arr[2]));
+
             int[] ions = new int[9];
             float[] weightArr = new float[12];
-            
-            for(int i=0;i<9;i++)
-                weightArr[i] = Float.parseFloat(arr[i+3]);
-            
-            for(int i=0;i<3;i++)
-                weightArr[i+9] = Float.parseFloat(arr[i]);
-            
+
+            for (int i = 0; i < 9; i++) {
+                weightArr[i] = Float.parseFloat(arr[i + 3]);
+            }
+
+            for (int i = 0; i < 3; i++) {
+                weightArr[i + 9] = Float.parseFloat(arr[i]);
+            }
+
             param.setWeightArr(weightArr);
 
             ions[0] = (int) (10 * Double.parseDouble(arr[3])); //a
@@ -298,17 +206,18 @@ public class SearchParamReader {
             ions[6] = (int) (10 * Double.parseDouble(arr[9]));  //x
             ions[7] = (int) (10 * Double.parseDouble(arr[10])); //y
             ions[8] = (int) (10 * Double.parseDouble(arr[11])); //z
-            
-            int numIonUsed=0;
-            for(int eachIon:ions) {
-                if(eachIon>0)
+
+            int numIonUsed = 0;
+            for (int eachIon : ions) {
+                if (eachIon > 0) {
                     numIonUsed++;
+                }
             }
-                
+
             param.setNumIonSeriesUsed(numIonUsed);
             param.setIonSeries(ions);
             param.setMaxNumDiffMod(trimValueAsInt(getParam("max_num_differential_AA_per_mod")));
-            
+
             Object obj = getParam("peptide_mass_tolerance");
             if (null != obj) {
                 param.setPeptideMassTolerance(trimValueAsFloat(obj.toString()));
@@ -328,7 +237,7 @@ public class SearchParamReader {
             String ppmMassTol = getParam("ppm_peptide_mass_tolerance");
             if (null != ppmMassTol) {
                 param.setUsePPM(true);
-                param.setRelativePeptideMassTolerance(trimValueAsFloat(ppmMassTol)/1000f);
+                param.setRelativePeptideMassTolerance(trimValueAsFloat(ppmMassTol) / 1000f);
             }
 
             param.setIsotopes(trimValueAsInt(getParam("isotopes")));
@@ -336,7 +245,6 @@ public class SearchParamReader {
             if (null != n15enrich) {
                 param.setN15Enrichment(trimValueAsFloat(n15enrich.trim()));
             }
-            
 
             param.setMatchPeakTolerance(trimValueAsFloat(getParam("match_peak_tolerance")));
             param.setNumPeptideOutputLnes(trimValueAsInt(getParam("num_output_lines")));
@@ -344,348 +252,220 @@ public class SearchParamReader {
             //param.setAddCterminus(trimValueAsFloat(getParam("add_C_terminus")));
             //param.setAddNterminus(trimValueAsFloat(getParam("add_N_terminus")));
             AssignMass.setcTerm(trimValueAsFloat(getParam("add_C_terminus")));
-            if(AssignMass.getcTerm()>0)
+            if (AssignMass.getcTerm() > 0) {
                 SearchParams.addStaticParam("cterm", AssignMass.getcTerm());
-            
+            }
+
             AssignMass.setnTerm(trimValueAsFloat(getParam("add_N_terminus")));
-            if(AssignMass.getnTerm()>0)
+            if (AssignMass.getnTerm() > 0) {
                 SearchParams.addStaticParam("nterm", AssignMass.getnTerm());
-            
+            }
+
             AssignMass amassPar = new AssignMass(param.isUseMonoParent());
             param.setHplusparent(amassPar.getHplus());
             param.setHparent(amassPar.getH());
             param.setoHparent(amassPar.getOh());
-            
+
             String minPrecursor = getParam("min_precursor_mass");
-            if(null != minPrecursor)
+            if (null != minPrecursor) {
                 param.setMinPrecursorMass(Float.parseFloat(minPrecursor.trim()));
-            
+            }
+
             String maxPrecursor = getParam("max_precursor_mass");
-            if(null != maxPrecursor)
+            if (null != maxPrecursor) {
                 param.setMaxPrecursorMass(Float.parseFloat(maxPrecursor.trim()));
+            }
             String minFragPeakNum = getParam("min_frag_num");
-            if(null != minFragPeakNum)
+            if (null != minFragPeakNum) {
                 param.setMinFragPeakNum(Integer.parseInt(minFragPeakNum));
-            
-            AssignMass amassFrag = new AssignMass(param.isUseMonoFragment()); 
-            
+            }
+
+            AssignMass amassFrag = new AssignMass(param.isUseMonoFragment());
+
             System.out.println("============" + param.isUseMonoParent() + " " + param.isUseMonoFragment());
-            
-            
+
             //param.setYionfragment(param.getAddCterminus() + amassPar.getOh() + amassPar.getH() + amassPar.getH());
             //param.setBionfragment(param.getAddNterminus() + amassPar.getH());
             AssignMass.setBionfragment(AssignMass.getnTerm() + amassPar.getH());
             AssignMass.setYionfragment(AssignMass.getcTerm() + amassPar.getOh() + amassPar.getH() + amassPar.getH());
-            
+
             //System.out.println("============" + (amassPar.getOh() + amassPar.getH() + amassPar.getH()));
             //System.out.println(AssignMass.getcTerm() + "============" + (amassPar.getOh() + "\t" +  amassPar.getH() + "\t" +  amassPar.getH()));
-            
-            
             param.setBinWidth(amassPar.getBinWidth());
 
             //amassPar.addMass('G', 1.1f);
             float f = Float.parseFloat(getParam("add_C_terminus"));
-            amassPar.setcTerm(f); 
+            amassPar.setcTerm(f);
             //amassFrag.setcTerm(f);
-            
+
             f = Float.parseFloat(getParam("add_N_terminus"));
-            amassPar.setnTerm(f); 
+            amassPar.setnTerm(f);
             //amassFrag.setnTerm(f);
-            
-            f = Float.parseFloat(getParam("add_G_Glycine"));
-            if(param.getN15Enrichment()>0) amassPar.addMass('G', f*param.getN15Enrichment()); 
-            else amassPar.addMass('G', f); 
-                
-            f = Float.parseFloat(getParam("add_A_Alanine"));
-            if(param.getN15Enrichment()>0) amassPar.addMass('A', f*param.getN15Enrichment()); 
-            else amassPar.addMass('A', f);
-            
-            f = Float.parseFloat(getParam("add_S_Serine"));
-            if(param.getN15Enrichment()>0) amassPar.addMass('S', f*param.getN15Enrichment()); 
-            else amassPar.addMass('S', f );
-            
-            f = Float.parseFloat(getParam("add_P_Proline"));
-            if(param.getN15Enrichment()>0) amassPar.addMass('P', f*param.getN15Enrichment()); 
-            else amassPar.addMass('P', f );
-            //amassFrag.addMass('P', f );
-            
-            f = Float.parseFloat(getParam("add_V_Valine"));
-            if(param.getN15Enrichment()>0) amassPar.addMass('V', f*param.getN15Enrichment()); 
-            else amassPar.addMass('V', f );
-            //amassFrag.addMass('V', f );
-            
-            f = Float.parseFloat(getParam("add_T_Threonine"));
-            if(param.getN15Enrichment()>0) amassPar.addMass('T', f*param.getN15Enrichment()); 
-            else amassPar.addMass('T', f );
-            //amassFrag.addMass('T', f );
-  
-        //System.out.println("====" + AssignMass.getMass('C') + " " + param.getN15Enrichment());
-        //System.out.println("====>>" + f);        
-            f = Float.parseFloat(getParam("add_C_Cysteine"));
-            if(param.getN15Enrichment()>0)
-                f = f + param.getN15Enrichment() * (f - 57.02146f);
-                //amassPar.addMass('C', f*param.getN15Enrichment());
-            
-            amassPar.addMass('C', f );
-            
-            /*
-            if (f > 56.9f) {                
-                System.out.println("===" + param.getN15Enrichment() + " " +  f); 
-                f = f + param.getN15Enrichment() * (f - 57.02146f);
-                
-                System.out.println("===" + param.getN15Enrichment() + " " +  f); 
-            }*/
-           
-            
-            
-            //amassFrag.addMass('C', f );
 
-            f = Float.parseFloat(getParam("add_L_Leucine"));
-            if(param.getN15Enrichment()>0) amassPar.addMass('L', f*param.getN15Enrichment()); 
-            else amassPar.addMass('L', f);
-            //amassFrag.addMass('L', f );
+            String add_static_mod = getParam("add_static_mod");
+            String[] staticModArr = add_static_mod.trim().split(" ");
+            if (add_static_mod != null && !"".equals(add_static_mod)) {
+                validateDiffSearchOptions(staticModArr);
+                for (int i = 0; i < staticModArr.length; i += 2) {
+                    String AA = staticModArr[i+1];
+                    assert AA.length() == 1;
+                    f = Float.parseFloat(staticModArr[i]);
+                    if (AA.equals("C") && param.getN15Enrichment() > 0) {
+                        f = f + param.getN15Enrichment() * (f - 57.02146f);
+                    }else if (param.getN15Enrichment() > 0) {
+                        f = f * param.getN15Enrichment();
+                    }
+                    amassPar.addMass((int) AA.charAt(0), f);
+                }
+            }
+            //System.out.println(amassPar.getMass((int) 'C'));
             
-            f = Float.parseFloat(getParam("add_I_Isoleucine"));
-            if(param.getN15Enrichment()>0) amassPar.addMass('I', f*param.getN15Enrichment()); 
-            else amassPar.addMass('I', f );
-            //amassFrag.addMass('I', f );
-            
-            f = Float.parseFloat(getParam("add_X_LorI"));
-            if(param.getN15Enrichment()>0) amassPar.addMass('X', f*param.getN15Enrichment()); 
-            else amassPar.addMass('X', f );
-            //amassFrag.addMass('X', f );
-            
-            f = Float.parseFloat(getParam("add_N_Asparagine"));
-            if(param.getN15Enrichment()>0) amassPar.addMass('N', f*param.getN15Enrichment()); 
-            else amassPar.addMass('N', f );
-            //amassFrag.addMass('N', f );
-            
-            f = Float.parseFloat(getParam("add_O_Ornithine"));
-            if(param.getN15Enrichment()>0) amassPar.addMass('O', f*param.getN15Enrichment()); 
-            else amassPar.addMass('O', f );
-            //amassFrag.addMass('O', f );
-            
-            f = Float.parseFloat(getParam("add_B_avg_NandD"));
-            if(param.getN15Enrichment()>0) amassPar.addMass('B', f*param.getN15Enrichment()); 
-            else amassPar.addMass('B', f );
-            //amassFrag.addMass('B', f );
-            
-            f = Float.parseFloat(getParam("add_D_Aspartic_Acid"));
-            if(param.getN15Enrichment()>0) amassPar.addMass('D', f*param.getN15Enrichment()); 
-            else amassPar.addMass('D', f );
-            //amassFrag.addMass('D', f );
-            
-            f = Float.parseFloat(getParam("add_Q_Glutamine"));
-            if(param.getN15Enrichment()>0) amassPar.addMass('Q', f*param.getN15Enrichment()); 
-            else amassPar.addMass('Q', f );
-            //amassFrag.addMass('Q', f );
-            
-            f = Float.parseFloat(getParam("add_K_Lysine"));
-            if(param.getN15Enrichment()>0) amassPar.addMass('K', f*param.getN15Enrichment()); 
-            else amassPar.addMass('K', f );
-            //amassFrag.addMass('K', f );
-            
-            f = Float.parseFloat(getParam("add_Z_avg_QandE"));
-            if(param.getN15Enrichment()>0) amassPar.addMass('Z', f*param.getN15Enrichment()); 
-            else amassPar.addMass('Z', f );
-            //amassFrag.addMass('Z', f );
-            
-            f = Float.parseFloat(getParam("add_E_Glutamic_Acid"));
-            if(param.getN15Enrichment()>0) amassPar.addMass('E', f*param.getN15Enrichment()); 
-            else amassPar.addMass('E', f );
-            //amassFrag.addMass('E', f );
-            
-            f = Float.parseFloat(getParam("add_M_Methionine"));
-            if(param.getN15Enrichment()>0) amassPar.addMass('M', f*param.getN15Enrichment()); 
-            else amassPar.addMass('M', f );
-            //amassFrag.addMass('M', f );
-            
-            f = Float.parseFloat(getParam("add_H_Histidine"));
-            if(param.getN15Enrichment()>0) amassPar.addMass('H', f*param.getN15Enrichment()); 
-            else amassPar.addMass('H', f );
-            //amassFrag.addMass('H', f );
-            
-            f = Float.parseFloat(getParam("add_F_Phenyalanine"));
-            if(param.getN15Enrichment()>0) amassPar.addMass('F', f*param.getN15Enrichment()); 
-            else amassPar.addMass('F', f );
-            //amassFrag.addMass('F', f );
-            
-            f = Float.parseFloat(getParam("add_R_Arginine"));
-            if(param.getN15Enrichment()>0) amassPar.addMass('R', f*param.getN15Enrichment()); 
-            else amassPar.addMass('R', f );
-            //amassFrag.addMass('R', f );
-            
-            f = Float.parseFloat(getParam("add_Y_Tyrosine"));
-            if(param.getN15Enrichment()>0) amassPar.addMass('Y', f*param.getN15Enrichment()); 
-            else amassPar.addMass('Y', f );
-            //amassFrag.addMass('Y', f );
-            
-            f = Float.parseFloat(getParam("add_W_Tryptophan"));
-            if(param.getN15Enrichment()>0) amassPar.addMass('W', f*param.getN15Enrichment()); 
-            else amassPar.addMass('W', f );
-            //amassFrag.addMass('W', f );
-
             param.setPdAAMassParent(amassPar.getPdAAMass());
             param.setPdAAMassFragment(amassFrag.getPdAAMass());
-            
-            param.setMaxInternalCleavageSites(Integer.parseInt(getParam("max_num_internal_cleavage_sites")));                                    
+
+            param.setMaxInternalCleavageSites(Integer.parseInt(getParam("max_num_internal_cleavage_sites")));
             param.setNumPeptideOutputLnes(Integer.parseInt(getParam("num_output_lines")));
             param.setMaxMissedCleavages(Integer.parseInt(getParam("miscleavage")));
-            param.setEnzymeName( getParam("enzyme_name") );
-            param.setEnzymeResidues( getParam("enzyme_residues") );
-            param.setEnzymeBreakAA( getParam("enzyme_residues") );                            
-            param.setEnzymeCut( getParam("enzyme_cut") );
-            param.setEnzymeNocutResidues( getParam("enzyme_nocut_residues") );
-            param.setEnzymeNoBreakAA( getParam("enzyme_nocut_residues") );
-            
-            if("c".equals( getParam("enzyme_cut") ))                
+            param.setEnzymeName(getParam("enzyme_name"));
+            param.setEnzymeResidues(getParam("enzyme_residues"));
+            param.setEnzymeBreakAA(getParam("enzyme_residues"));
+            param.setEnzymeCut(getParam("enzyme_cut"));
+            param.setEnzymeNocutResidues(getParam("enzyme_nocut_residues"));
+            param.setEnzymeNoBreakAA(getParam("enzyme_nocut_residues"));
+
+            if ("c".equals(getParam("enzyme_cut"))) {
                 param.setEnzymeOffset(1);
-            else //if("n".equals( getParam("enzyme_cut") )                
+            } else //if("n".equals( getParam("enzyme_cut") )                
+            {
                 param.setEnzymeOffset(0);
-            
-            
-
-                            /*
-             dN15Enrichment 		
-
-             // Load ion series to consider, useA, useB, useY are for neutral losses 
-	
-             iNumIonSeriesUsed = 0;
-             for (int i = 0; i < 9; i++) {
-             iIonVal10[i] = 10 * iIonVal[i];
-             iIonVal25[i] = 25 * iIonVal[i];
-             iIonVal50[i] = 50 * iIonVal[i];
-             if (iIonVal[i] > 0) {
-             piSelectedIonSeries[iNumIonSeriesUsed++] = i;
-             }
-             }
-
-
-             // differential mod. search for AAs listed in szDiffChar 
-
-             if (sParam.getDiffMass1() != 0.0 && sParam.getDiffChar1().length() > 0) {
-             sParam.isDiffSearch() = true;
-             }
-             if (sParam.getDiffMass2() != 0.0 && sParam.getDiffChar2().length() > 0) {
-             sParam.isDiffSearch() = true;
-             }
-             if (sParam.getDiffMass3() != 0.0 && sParam.getDiffChar3().length() > 0) {
-             sParam.isDiffSearch() = true;
-             }
-             // if (sParam.isDiffSearch())
-             // iSizepiDiffSearchSites = MAX_PEPTIDE_SIZE*4;
-
-
-             sParam.getPdAAMassParent()[AssignMass.S] += dN15Enrichment * addSmass;
-             pdAAMassFragment[AssignMass.S] += dN15Enrichment * addSmass;
-             }
-             if (addPmass != 0.0) {
-             sParam.getPdAAMassParent()[AssignMass.P] += dN15Enrichment * addPmass;
-             pdAAMassFragment[AssignMass.P] += dN15Enrichment * addPmass;
-             }
-	
-
-            
-             */
-            
-            if (null != getParam("diff_search_options")) {
-                String[] modArr = getParam("diff_search_options").trim().split(" ");
-              
-                //Read each set of residue
-                //e.g. diff_search_options = 80.0 ST -18.0 ST 0.0 X
-                //*, #, @
-
-                Set<Double> modShiftSet = new HashSet<Double>();
-               
-		if(null != getParam("diff_search_options") && !"".equals(getParam("diff_search_options")))
-                for (int i = 0; i < modArr.length; i += 2) {                    
-                    
-                    double massShift = Double.parseDouble(modArr[i]);
-
-                    if (massShift != 0) {
-                        //System.out.println("fdsafsda");
-                        param.setDiffSearch(true);
-                        //symbolMap.put( MOD_SYMBOL[i/2], massShift);
-                        // this.isModification = true;
-
-                        for (int j = 0; j < modArr[i + 1].length(); j++) {
-                        
-                            ModResidue residue = new ModResidue(modArr[i + 1].charAt(j), (float)massShift);                            
-                            //param.addModHt(modArr[i + 1].charAt(j), massShift);
-                            //DiffModification
-                            param.addModResidue(residue);
-    
-                            DiffModification.setDiffModMass(residue.getResidue(), massShift);
-                            //System.out.println("fsdafsda" + " " + residue.getResidue() + " " + massShift);
-                            //System.out.println("fsdafsda" + " " + DiffModification.getDiffModMass('T'));
-                            modShiftSet.add(massShift);
-                        }
-                    }
-                }
-
-                
-                //param.setModShiftSet(modShiftSet);
-                //Float[] modShiftArr = modShiftSet.toArray(new Float[0]);
-		ICombinatoricsVector<Double> initialVector = Factory.createVector( modShiftSet );
-                
-                for(int i=1;i<=param.getMaxNumDiffMod();i++) {
-                    Generator<Double> gen = Factory.createMultiCombinationGenerator(initialVector, i);
-
-                    for (ICombinatoricsVector<Double> combination : gen) {
-                        List<Double> ml = combination.getVector();
-                        List<Double> fl = new ArrayList<Double>();
-                        
-                        for(Iterator<Double> mitr=ml.iterator(); mitr.hasNext(); ) {
-                            // System.out.println("----" + mitr.next());
-                            fl.add( mitr.next() );
-                        }
-                        
-                        param.addModGroupList(fl);
-                    }                    
-                }
-                  
-                /*      
-                        Set<Float> modShiftSet = sParam.getModShiftSet();
-                        //modShiftSet.toArray(pArr);                                
-
-                ICombinatoricsVector<String> initialVector2 = Factory.createVector(
-				new Integer[] { 79, 16} );
-
-                
-		// Create a multi-combination generator to generate 3-combinations of
-		// the initial vector
-
-
-		gen = Factory.createMultiCombinationGenerator(initialVector, 2);
-
-		// Print all possible combinations
-		for (ICombinatoricsVector<String> combination : gen) {
-			System.out.println(combination);
-		}
-
-		gen = Factory.createMultiCombinationGenerator(initialVector, 1);
-
-		// Print all possible combinations
-		for (ICombinatoricsVector<String> combination : gen) {
-			System.out.println(combination);
-		}
-                */
-                                
             }
+            
+            // Reverse peptides?
+            // If true, the db does not contain reverse peptides and each
+            // peptide returned from the query should be reversed
+            String doReversePeptides = getParam("reverse_peptides");
+            if (doReversePeptides != null) {
+                param.doReversePeptides = Integer.parseInt(doReversePeptides) == 1;
+            } else {
+                param.doReversePeptides = false;
+            }
+            System.out.println("doReversePeptides: " + param.doReversePeptides);
+            
+            // Search for diffmods? If 1, do diffmod search. If 0, ignores diff_search_options, diff_search_N, diff_search_C
+            String diff_search = getParam("diff_search");
+            if (diff_search != null) {
+                param.setDiffSearch(Integer.parseInt(diff_search) == 1);
+            } else {
+                param.setDiffSearch(true);
+            }
+            System.out.println("Doing diff search: " + param.isDiffSearch());
 
-        } catch (IOException e) {
+            
+            if (param.isDiffSearch()) {
+
+                String diff_search_options = getParam("diff_search_options");
+                String diff_search_Nterm = getParam("diff_search_Nterm");
+                String diff_search_Cterm = getParam("diff_search_Cterm");
+                
+                // Validate diff_search_options
+                if (diff_search_options != null && !"".equals(diff_search_options))
+                    validateDiffSearchOptions(diff_search_options.trim().split(" "));
+                if (diff_search_Nterm != null && !"".equals(diff_search_Nterm))
+                    validateDiffSearchOptions(diff_search_Nterm.trim().split(" "));
+                if (diff_search_Cterm != null && !"".equals(diff_search_Cterm))
+                    validateDiffSearchOptions(diff_search_Cterm.trim().split(" "));
+    
+                // Parse
+                if (diff_search_options != null && !"".equals(diff_search_options)) {
+                    String[] modArr = diff_search_options.trim().split(" ");
+                    HashMap<Character, ArrayList<Float>> diffModMap = new HashMap<>();
+                    for (char AA: "ARNDBCEQZGHILKMFPSTWYV".toCharArray())
+                        diffModMap.put(AA, new ArrayList<Float>());
+
+                    for (int i = 0; i < modArr.length; i += 2) {
+                        float massShift = (float) Double.parseDouble(modArr[i]);
+                        if (massShift != 0) 
+                            for (int j = 0; j < modArr[i + 1].length(); j++)
+                                diffModMap.get(modArr[i + 1].charAt(j)).add(massShift);
+                    }
+                    param.diffModMap = diffModMap;
+                    System.out.println("diffmods to apply:" + diffModMap);
+                    Set<Float> modMasses = new HashSet<>();
+                    for (Character key: diffModMap.keySet())
+                        modMasses.addAll(diffModMap.get(key));
+                    param.modMasses = modMasses;
+                    System.out.println("list of diffmod masses:" + modMasses);
+                }
+                
+                if (diff_search_Nterm != null && !"".equals(diff_search_Nterm)) {
+                    String[] modArr_N = diff_search_Nterm.trim().split(" ");
+                    HashMap<Character, ArrayList<Float>> diffModMap_N = new HashMap<>();
+                    for (char AA: "ARNDBCEQZGHILKMFPSTWYV".toCharArray())
+                        diffModMap_N.put(AA, new ArrayList<Float>());
+
+                    for (int i = 0; i < modArr_N.length; i += 2) {
+                        float massShift = (float) Double.parseDouble(modArr_N[i]);
+                        if (massShift != 0) 
+                            for (int j = 0; j < modArr_N[i + 1].length(); j++)
+                                diffModMap_N.get(modArr_N[i + 1].charAt(j)).add(massShift);
+                    }
+                    param.diffModMap_N = diffModMap_N;
+                    System.out.println("N-term diffmods to apply:" + diffModMap_N);
+                    Set<Float> modMasses_N = new HashSet<>();
+                    for (Character key: diffModMap_N.keySet())
+                        modMasses_N.addAll(diffModMap_N.get(key));
+                    param.modMasses_N = modMasses_N;
+                    System.out.println("list of diffmod masses N-term:" + modMasses_N);
+                }
+                
+                if (diff_search_Cterm != null && !"".equals(diff_search_Cterm)) {
+                    String[] modArr_C = diff_search_Cterm.trim().split(" ");
+                    HashMap<Character, ArrayList<Float>> diffModMap_C = new HashMap<>();
+                    for (char AA: "ARNDBCEQZGHILKMFPSTWYV".toCharArray())
+                        diffModMap_C.put(AA, new ArrayList<Float>());
+
+                    for (int i = 0; i < modArr_C.length; i += 2) {
+                        float massShift = (float) Double.parseDouble(modArr_C[i]);
+                        if (massShift != 0) 
+                            for (int j = 0; j < modArr_C[i + 1].length(); j++)
+                                diffModMap_C.get(modArr_C[i + 1].charAt(j)).add(massShift);
+                    }
+                    param.diffModMap_C = diffModMap_C;
+                    System.out.println("C-term diffmods to apply:" + diffModMap_C);
+                    Set<Float> modMasses_C = new HashSet<>();
+                    for (Character key: diffModMap_C.keySet())
+                        modMasses_C.addAll(diffModMap_C.get(key));
+                    param.modMasses_C = modMasses_C;
+                    System.out.println("list of diffmod masses C-term:" + modMasses_C);
+                }
+            }
+        }
+        catch (Exception e) {
             System.out.println("Error reading param file " + e);
-            throw new IOException(e.toString());
-        } finally {
-		if(null != br);
-            br.close();
-        }        
+            e.printStackTrace();
+            throw new IOException();
+        } 
     }
 
-    public double[] getMassShiftArr() {
-        return massShiftArr;
-    }
+    private void validateDiffSearchOptions(String[] modArr) throws IOException{
+        String AAs = "ARNDBCEQZGHILKMFPSTWYV";
+        
+        if (modArr.length % 2 !=  0)
+            throw new IOException("invalid diff_search_options. Uneven number of elements");
 
+        for (int i = 0; i < modArr.length; i += 2) {
+            try {
+                float massShift = (float) Double.parseDouble(modArr[i]);
+            } catch (NumberFormatException e){
+                e.printStackTrace();
+                throw new IOException();
+            }
+            for (int j = 0; j < modArr[i + 1].length(); j++)
+                if (!AAs.contains(modArr[i + 1].charAt(j) + ""))
+                    throw new IOException("invalid diff_search_options. Invalid amino acid: " + modArr[i + 1].charAt(j));
+        }
+    }
+    
     public void pepProbeInit() {
     }
 
@@ -709,7 +489,6 @@ public class SearchParamReader {
         return ret;
     }
 
-    
     public int trimValueAsInt(String str) {
         return trimValueAsInt(str, 0);
     }
@@ -746,7 +525,6 @@ public class SearchParamReader {
 
         return str.trim();
     }
-
 
     public Hashtable<String, String> getHashtable() {
         return ht;
@@ -792,12 +570,12 @@ public class SearchParamReader {
      */
     private String getParam(String paramName) {
         //System.out.println("== " + paramName  + "\t" + ht.get(paramName) + " " + ht.contains(paramName));
-        
+
         String paramValue = ht.get(paramName);
         if (paramValue == null) {
             System.out.println("warning: missing parameter: " + paramName);
         }
-        
+
         return paramValue;
     }
 }

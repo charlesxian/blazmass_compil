@@ -1,0 +1,204 @@
+diff --git a/src/blazmass/Blazmass.java b/src/blazmass/Blazmass.java
+index 5c73b84..0f63a05 100644
+--- a/src/blazmass/Blazmass.java
++++ b/src/blazmass/Blazmass.java
+@@ -183,9 +183,9 @@ public class Blazmass {
+ 
+         final IndexerMode indexerMode = sParam.isUseIndex()?IndexerMode.SEARCH_INDEXED: IndexerMode.SEARCH_UNINDEXED;
+         DBIndexer indexer = new DBIndexer(sParam, indexerMode);
+-        indexer.init();
++///        indexer.init();
+         
+-        run(path, new File(path + File.separator + ms2File), sParam, indexer);
++  //      run(path, new File(path + File.separator + ms2File), sParam, indexer);
+         indexer.close();
+     }
+     
+@@ -229,7 +229,8 @@ public class Blazmass {
+             //dirName, threads
+             String threads = args[1];
+             if (threads.trim().equals("1")) {
+-                bmass.runFolder(args[0]); 
++//                bmass.runFolder(args[0]);  //temp commented out by Sandip
++                WorkerManager.run(args[0], threads);                
+             }
+             else {
+                 WorkerManager.run(args[0], threads);
+@@ -242,7 +243,8 @@ public class Blazmass {
+             // path, filename, param file, threads
+             String threads = args[3];
+             if (threads.trim().equals("1")) {
+-                bmass.runFile(args[0], args[1], args[2]); 
++//                bmass.runFile(args[0], args[1], args[2]); //temp commented out by Sandip
++                WorkerManager.run(args[0], args[1], args[2], threads);
+             }
+             else {
+                 WorkerManager.run(args[0], args[1], args[2], threads);
+@@ -1044,22 +1046,42 @@ public class Blazmass {
+             //        + each.getxCorr() + "\t" + each.getzScore() + "\t" + each.getMatchedIon() + "\t" + each.getTotalIon() + "\t");            
+             
+             try {
+-                
+-                List<IndexedProtein> iproteins = indexer.getProteins(iseq);
+-                if (iproteins.size() > 0)
+-                {
+-                    
+-                    for (IndexedProtein iprotein : iproteins) {
+-        //                resultWriter.write("L\t" + iprotein.getAccession());
+-                        sb.append("L\t").append(iprotein.getAccession()).append("\t0\t").append(iseq.getWholeSequence()).append("\n");
++
++                if (sParam.isUsingMongoDB()) {
++                    //custom handling of 'L' lines for MongoDB here...
++                    if (sParam.isUsingSeqDB()) {
++                        List<String> parentLines = mongoconnect.Mongoconnect.getParents(iseq.getSequence(), sParam);
++                        if(parentLines == null) {
++                            System.err.println("Error - found no parent proteins for peptide "+iseq.getSequence());
++                            sb.append("L\t").append("\n");
++                        }
++                        else {
++                            for (String parentLine : parentLines) {
++                                sb.append("L\t").append(parentLine).append("\n");
++                            }
++                        }
++                    }
++                    else {
++                        // if not using SeqDB, no protein / locus information to add in L lines
++                        // (print empty L line)
++                        sb.append("L\t").append("\n");
+                     }
+                 }
+-                else
+-                {
+-                    List proteinId= iseq.getProteinDescArray();
+-                    for(int i=0;i<proteinId.size();i++)
+-                    {
+-                        sb.append("L\t").append(proteinId.get(i)).append("\t0\t").append(iseq.getWholeSequence()).append("\n");
++                else {
++                    // if NOT using MongoDB...
++                    List<IndexedProtein> iproteins = indexer.getProteins(iseq);
++
++                    if (iproteins.size() > 0) {
++                        for (IndexedProtein iprotein : iproteins) {
++            //                resultWriter.write("L\t" + iprotein.getAccession());
++                            sb.append("L\t").append(iprotein.getAccession()).append("\t0\t").append(iseq.getWholeSequence()).append("\n");
++                        }
++                    }
++                    else {
++                        List proteinId= iseq.getProteinDescArray();
++                        for(int i=0;i<proteinId.size();i++) {
++                            sb.append("L\t").append(proteinId.get(i)).append("\t0\t").append(iseq.getWholeSequence()).append("\n");
++                        }
+                     }
+                 }
+ 
+@@ -1097,6 +1119,93 @@ public class Blazmass {
+        
+         int isotopeNum = chargeState * 2 + 1; //robin move it to config file later
+ 
++       
++	if(sParam.isPrecursorHighResolution()) {
++//         if(false) {
++		for (int i = 0; i < isotopeNum; i++) {
++			rList.add(new MassRange(precursorMass - i * AssignMass.DIFFMASSC12C13, ppmTolerance));            
++		}
++	} else {
++		rList.add(new MassRange(precursorMass, ppmTolerance));            
++	}
++       
++//System.out.println( System.currentTimeMillis()); 
++        
++       // pepList = indexer.getSequences(rList);
++        if (sParam.isUsingMongoDB()) {
++            pepList = mongoconnect.Mongoconnect.getSequences(rList,sParam);
++        } else {
++            pepList = indexer.getSequences(rList);
++        }
++        
++        System.out.println("!!>>"+String.valueOf(precursorMass));
++        if (null != pepList && pepList.size() > 0) { // changed from || to && by Sandip 9/23/14...
++            for (Iterator<IndexedSequence> itr = pepList.iterator(); itr.hasNext();) {
++               // System.out.println("Printing the range "+ itr);
++                IndexedSequence iSeq = itr.next();
++                
++        
++
++// System.exit(0);
++                
++                PeptideResult pr = calcScore(iSeq, scoreArray, chargeState, scoreHistogram, sParam, masses);
++
++                System.out.println("!!"+iSeq.getSequence() + "\t" + iSeq.getMass() + "\t" + pr.getxCorr());
++                
++                if (null == pr) {
++                    continue;
++                }
++                        
++                numMatched += 2;
++
++                PeptideResult prtmp = pArr[pArr.length - 1];
++
++                //PeptideResult prtmp = pArr[0];
++                
++                if (null != prtmp) 
++                {
++                    if( prtmp.getxCorr() < pr.getxCorr()) {
++                        pArr[pArr.length - 1] = pr;
++                        Arrays.sort(pArr);                        
++                    }
++                }
++        
++                
++              //  System.out.println("");
++                
++            }
++                System.out.println("!!------------------------------------");
++//                System.out.println("------------------------------------");
++        }
++
++
++        /////////////////////////
++        // 4. modificaiton search
++        /////////////////////////
++
++        return numMatched;
++
++    }
++
++    private int runSearch_orig(DBIndexer indexer, SearchParams sParam, float[] scoreArray, int chargeState, float precursorMass, int[] scoreHistogram,
++        PeptideResult[] pArr, List<Float> masses) throws Exception {
++
++        //long start = System.currentTimeMillis();
++        //System.out.println("search.........." );
++        List<IndexedSequence> pepList = null;
++
++        int numMatched = 0;
++
++        float massTolerance = sParam.getRelativePeptideMassTolerance();
++        float ppmTolerance = this.getPpm(precursorMass, massTolerance);
++    
++        
++        //List<PeptideResult> pList = new ArrayList<PeptideResult>(sParam.getNumPeptideOutputLnes());        
++        
++        List<MassRange> rList = new ArrayList<MassRange>();
++       
++        int isotopeNum = chargeState * 2 + 1; //robin move it to config file later
++
+ 	if(sParam.isPrecursorHighResolution()) {
+ 		for (int i = 0; i < isotopeNum; i++) {
+ 			rList.add(new MassRange(precursorMass - i * AssignMass.DIFFMASSC12C13, ppmTolerance));            
+@@ -1109,6 +1218,8 @@ public class Blazmass {
+         
+         pepList = indexer.getSequences(rList);
+         
++        
++        
+         if (null != pepList || pepList.size() > 0) {
+             for (Iterator<IndexedSequence> itr = pepList.iterator(); itr.hasNext();) {
+                // System.out.println("Printing the range "+ itr);
+@@ -1283,7 +1394,6 @@ public class Blazmass {
+         return numMatched;
+ 
+     }
+-
+     
+                 
+     private int runSearchHigh(DBIndexer indexer, SearchParams sParam, float[] signalArr, float[] backgroundArr, int chargeState, float precursorMass, PeptideResult[] pArr, List<Float> masses) throws Exception {

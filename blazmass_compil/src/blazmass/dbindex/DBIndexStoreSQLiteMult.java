@@ -18,7 +18,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
 /**
  * Using multiple databases to divide index into multiple manageable chunks
  *
@@ -37,8 +36,8 @@ public final class DBIndexStoreSQLiteMult implements DBIndexStore {
     //we divide into buckets based on this
     private static final int MAX_MASS = (int) Constants.MAX_PRECURSOR_MASS + 400;
     //adjust number of buckets to make sure no single bucket ends up with more than 100million sequences
-    private static  int NUM_BUCKETS = 0; //will override in constr
-    private static  int BUCKET_MASS_RANGE = 0; //will override in constr
+    private static int NUM_BUCKETS = 0; //will override in constr
+    private static int BUCKET_MASS_RANGE = 0; //will override in constr
     private static final int MASS_GROUP_FACTOR = 1; //1 ppm per row
     private static final int PPM_PER_ENTRY = 1;
     //commit the buffered row and clear the buffer after this many seq
@@ -46,27 +45,24 @@ public final class DBIndexStoreSQLiteMult implements DBIndexStore {
     private static final int BYTE_PER_SEQUENCE = 4 * 4; //float mass, int offset, length, protein id
     private static final int MAX_MASS_RANGES = 24; //will use optimzed statements for first 24, and by hand for above 24
 
-
     private SearchParams sparam;
     private boolean inMemoryIndex = false;
     private IndexerMode indexerMode;
-    
 
-    public DBIndexStoreSQLiteMult(SearchParams sparam, boolean inMemoryIndex) { 
+    public DBIndexStoreSQLiteMult(SearchParams sparam, boolean inMemoryIndex) {
         inited = false;
         this.sparam = sparam;
         totalSeqCount = 0;
-        
+
         this.inMemoryIndex = inMemoryIndex;
-        
+
         NUM_BUCKETS = sparam.getIndexFactor();
         BUCKET_MASS_RANGE = MAX_MASS / NUM_BUCKETS;
-        
-        
+
         buckets = new DBIndexStoreSQLiteByteIndexMerge[NUM_BUCKETS];
-        
+
         if (inMemoryIndex) {
-          //  throw new IllegalArgumentException("In-memory index not supported");
+            //  throw new IllegalArgumentException("In-memory index not supported");
         }
     }
 
@@ -121,7 +117,6 @@ public final class DBIndexStoreSQLiteMult implements DBIndexStore {
 
         this.dbPathBase = indexDir.getAbsolutePath();
 
-
         logger.log(Level.INFO, "Using database index dir: " + dbPathBase);
 
         if (!indexDir.exists()) {
@@ -141,9 +136,7 @@ public final class DBIndexStoreSQLiteMult implements DBIndexStore {
             }
         }
 
-
         inited = true;
-
 
     }
 
@@ -283,7 +276,7 @@ public final class DBIndexStoreSQLiteMult implements DBIndexStore {
         float maxMass = precMass + tolerance;
 
 //remove:
-System.out.println("==============" + precMass + " ==" + tolerance + " " + minMass + " " + maxMass);
+        System.out.println("==============" + precMass + " ==" + tolerance + " " + minMass + " " + maxMass);
         int[] bucketRange = getBucketsForMassRange(minMass, maxMass);
         if (bucketRange[0] > NUM_BUCKETS - 1 || bucketRange[1] > NUM_BUCKETS - 1) {
             logger.log(Level.WARNING, "Cannot query, unsupported precursor mass: "
@@ -298,7 +291,6 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
 
         //long end = System.currentTimeMillis();
         //logger.log(Level.INFO, "Peptide sequences query took: " + (end - start) + " milisecs, results: " + ret.size());
-
         return ret;
     }
 
@@ -311,7 +303,6 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
         }
 
         //long start = System.currentTimeMillis();
-
         //handle multiple ranges
         if (!inited) {
             throw new DBIndexStoreException("Indexer is not initialized");
@@ -324,7 +315,6 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
             intervals.add(ith);
         }
         List<Interval> mergedIntervals = MergeIntervals.mergeIntervals(intervals);
-        
 
         List<IndexedSequence> ret = new ArrayList<IndexedSequence>();
 
@@ -335,7 +325,7 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
         final List bucketIntervals[] = new ArrayList[buckets.length];
 
         for (Interval massInterval : mergedIntervals) {
-            
+
             float minMass = massInterval.getStart();
             float maxMass = massInterval.getEnd();
 
@@ -363,7 +353,6 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
             }
         }
 
-
         //query the buckets that have mass ranges assigned
         for (int bucket = 0; bucket < buckets.length; ++bucket) {
             List<Interval> queryBucketIntervals = bucketIntervals[bucket];
@@ -375,10 +364,8 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
             ret.addAll(sequencesPerBucket);
         }
 
-
         //long end = System.currentTimeMillis();
         //logger.log(Level.INFO, "Peptide sequences query took: " + (end - start) + " milisecs, results: " + ret.size());
-
         return ret;
 
     }
@@ -498,7 +485,6 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
             logger.log(Level.SEVERE, null, ex);
         }
 
-
         try {
             //test gets
             System.out.println("Testing range gets 1");
@@ -525,11 +511,9 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
             logger.log(Level.SEVERE, null, ex);
         }
 
-
         if (true) {
             return;
         }
-
 
         try {
             store = new DBIndexStoreSQLiteMult(SearchParams.getInstance(), false);
@@ -644,12 +628,10 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
                         "UPDATE " + getIndexTableName() + " SET data = (data || ?) "
                         + "WHERE precursor_mass_key = ?;");
 
-
                 getSeqStatement = con.prepareStatement(
                         "SELECT precursor_mass_key, data "
                         + "FROM " + getIndexTableName() + " "
                         + "WHERE precursor_mass_key BETWEEN ? AND ?;");
-
 
                 getSeqMassRanges2_Statements = new PreparedStatement[MAX_MASS_RANGES];
 
@@ -664,7 +646,6 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
                     getSeqMassRanges2_Statements[st] = con.prepareStatement(stSb.toString());
                 }
 
-
                 getSeqDataStatement = con.prepareStatement(
                         "SELECT data "
                         + "FROM " + getIndexTableName() + " "
@@ -674,7 +655,6 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
                         "SELECT precursor_mass_key "
                         + "FROM " + getIndexTableName() + " "
                         + "WHERE precursor_mass_key = ? LIMIT 1;");
-
 
             } catch (SQLException e) {
                 logger.log(Level.SEVERE, "Error initializing statements in db, path: " + dbPath, e);
@@ -742,8 +722,6 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
                 byteBuffer = new DynByteBuffer();
                 data[rowId] = byteBuffer;
             }
-
-
 
             //store in Little-Endian order
             byte[] seqMassB = DynByteBuffer.toByteArray(precMass);
@@ -820,7 +798,6 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
                     //merge, bytes in db with the bytes in cache
                     //build up updated string
 
-
                     updateAppendSeqStatement.setBytes(1, cached.getData());
                     updateAppendSeqStatement.setInt(2, massKey);
                     updateAppendSeqStatement.executeUpdate();
@@ -838,16 +815,11 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
             //clear cached data
             Arrays.fill(data, null);
 
-
             //logger.log(Level.INFO, "Commit start");
             con.commit();
             //logger.log(Level.INFO, "Commit end");
 
-
             // logger.log(Level.INFO, bucketId + ": Done commiting cached data");
-
-
-
         }
 
         @Override
@@ -898,7 +870,6 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
 
             //logger.log(Level.FINE, "Starting peptide sequences query");
             //long start = System.currentTimeMillis();
-
             float toleranceFactor = tolerance; //precMass * tolerance;
             float minMassF = precMass - toleranceFactor;
             if (minMassF < 0f) {
@@ -934,7 +905,6 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
 
                 }
 
-
             } catch (SQLException e) {
                 String msg = "Error getting peptides ";
                 logger.log(Level.SEVERE, msg, e);
@@ -951,7 +921,6 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
 
             //long end = System.currentTimeMillis();
             //logger.log(Level.INFO, "Peptide sequences query took: " + (end - start) + " milisecs, results: " + ret.size());
-
             return ret;
         }
 
@@ -980,11 +949,9 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
 
             int dataLength = data.length;
 
-
             //if (dataLength % 4 != 0) {
             //  throw new RuntimeException("Unexpected number of peptide items: " + dataLength);
             //}
-
             for (int i = 0; i < dataLength; i += 16) {
                 final int first = i + 4;
                 final int second = i + 8;
@@ -1016,7 +983,6 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
                 //to set it temporarily, before we merge them into a list
                 final IndexedSeqInternal tempSequence = new IndexedSeqInternal(seqMass, offset, length, proteinId, peptideSequence);
 
-
                 List<IndexedSeqInternal> sequences = temp.get(peptideSequence);
                 if (sequences == null) {
                     sequences = new ArrayList<IndexedSeqInternal>();
@@ -1045,7 +1011,6 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
                 mergedSequence.setResidues(residues);
                 toInsert.add(mergedSequence);
             }
-
 
         }
 
@@ -1191,7 +1156,6 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
                 }
             }
 
-
         }
 
         @Override
@@ -1246,7 +1210,6 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
             } catch (SQLException ex) {
                 logger.log(Level.SEVERE, "Error compacting the index after the merge", ex);
             }
-
 
             //now can create the index
             super.createIndex();
@@ -1315,7 +1278,6 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
 
             //logger.log(Level.FINE, "Starting peptide sequences query");
             //long start = System.currentTimeMillis();
-
             float toleranceFactor = tolerance; //precMass * tolerance;
             float minMassF = precMass - toleranceFactor;
             if (minMassF < 0f) {
@@ -1351,7 +1313,6 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
 
                 }
 
-
             } catch (SQLException e) {
                 String msg = "Error getting peptides ";
                 logger.log(Level.SEVERE, msg, e);
@@ -1368,7 +1329,6 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
 
             //long end = System.currentTimeMillis();
             //logger.log(Level.INFO, "Peptide sequences query took: " + (end - start) + " milisecs, results: " + ret.size());
-
             return ret;
         }
 
@@ -1441,7 +1401,6 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
 
                 //float precMass = range.getPrecMass();
                 //float tolerance = range.getTolerance();
-
                 //float toleranceFactor = tolerance; //precMass * tolerance;
                 float minMassF = range.getStart();
                 float maxMassF = range.getEnd();
@@ -1449,7 +1408,6 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
                 //int precMassInt = (int) (precMass * MASS_GROUP_FACTOR);
                 //long toleranceInt = (long) (tolerance * MASS_STORE_MULT);
                 //int toleranceInt = (int) (toleranceFactor * MASS_GROUP_FACTOR); //Robin fixed the ppm calculation
-
                 //figure out the rows to query
                 int minMass = (int) minMassF;
                 //System.out.println(precMassInt + " " + toleranceInt);
@@ -1521,9 +1479,8 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
             int dataLength = data.length;
 
             //if (dataLength % 4 != 0) {
-              //  throw new RuntimeException("Unexpected number of peptide items: " + dataLength);
+            //  throw new RuntimeException("Unexpected number of peptide items: " + dataLength);
             //}
-
             for (int i = 0; i < dataLength;) {
                 final int zeroeth = i;
                 i += 4;
@@ -1560,9 +1517,7 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
                     continue;
                 }
 
-
                 //create sequence object to return
-
                 slice = Arrays.copyOfRange(data, first, second);
                 int offset = DynByteBuffer.toInt(slice);
                 slice = Arrays.copyOfRange(data, second, third);
@@ -1572,7 +1527,6 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
                 int proteinId = DynByteBuffer.toInt(slice);
 
                 //System.out.print("prot id: " + proteinId + " offset: " + offset + " len: " + length);
-
                 String peptideSequence = proteinCache.getPeptideSequence(proteinId, offset, length);
                 //System.out.println("pep: " + peptideSequence);
 
@@ -1602,8 +1556,6 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
 
             } //end for every byte
 
-
-
         }
 
         /**
@@ -1624,9 +1576,8 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
             int dataLength = data.length;
 
            // if (dataLength % 4 != 0) {
-             //   throw new RuntimeException("Unexpected number of peptide items: " + dataLength);
+            //   throw new RuntimeException("Unexpected number of peptide items: " + dataLength);
             //}
-
             final int numRanges = minMasses.length;
 
             //go over every sequence in the data row
@@ -1657,7 +1608,6 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
                     //if (seqMass > minMasses[range]) {
                     //  lesserThanMin = false;
                     //}
-
                     if (seqMass >= minMasses[range]
                             && seqMass <= maxMasses[range]) {
                         qualifiesRange = true;
@@ -1669,7 +1619,6 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
                     }
 
                     //check if makes any range
-
                 }
 
                 //since it's sorted
@@ -1695,9 +1644,7 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
                     continue;
                 }
 
-
                 //create sequence object to return
-
                 slice = Arrays.copyOfRange(data, first, second);
                 int offset = DynByteBuffer.toInt(slice);
                 slice = Arrays.copyOfRange(data, second, third);
@@ -1707,7 +1654,6 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
                 int proteinId = DynByteBuffer.toInt(slice);
 
                 //System.out.print("prot id: " + proteinId + " offset: " + offset + " len: " + length);
-
                 String peptideSequence = proteinCache.getPeptideSequence(proteinId, offset, length);
                 //System.out.println("pep: " + peptideSequence);
 
@@ -1743,16 +1689,14 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
             DynByteBuffer seqDataMerged = new DynByteBuffer();
 
             //to collapse multiple sequences into single one, with multproteins
-            Map<String, List<IndexedSeqInternal>> temp =
-                    new HashMap<String, List<IndexedSeqInternal>>();
+            Map<String, List<IndexedSeqInternal>> temp
+                    = new HashMap<String, List<IndexedSeqInternal>>();
 
             int dataLength = seqData.length;
 
-
            // if (dataLength % 4 != 0) {
-             //   throw new RuntimeException("Unexpected number of peptide items: " + dataLength);
+            //   throw new RuntimeException("Unexpected number of peptide items: " + dataLength);
             //}
-
             for (int i = 0; i < dataLength;) {
                 final int zeroeth = i;
                 i += 4;
@@ -1839,12 +1783,11 @@ System.out.println("==============" + precMass + " ==" + tolerance + " " + minMa
 
             } //end of this sequence
 
-
-
             return seqDataMerged.getData();
         }
     }
 }
+
 /**
  * internal temporarly representation of indexed sequence before sequences are
  * merged into IndexedSequence

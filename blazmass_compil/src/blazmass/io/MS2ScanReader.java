@@ -4,10 +4,14 @@ import blazmass.dbindex.Util;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 /**
  *
@@ -30,6 +34,8 @@ public class MS2ScanReader implements Iterator<MS2Scan> {
     private boolean EOF = false;
     private volatile boolean checkedNext;
     private static final Logger logger = Logger.getLogger(MS2ScanReader.class.getName());
+    
+    
     private static final Object lock = new Object(); //ensure single reader on a resource at a time
     private String curLine;  //current line for peeking
     private static final String SCAN_INDEX_EXT = ".index";
@@ -42,27 +48,28 @@ public class MS2ScanReader implements Iterator<MS2Scan> {
         this.curCacheI = -1;
         this.EOF = false;
         reader = new BufferedReader(new FileReader(filePath));
-
+        
+        
         synchronized (lock) {
             updateCache();
         }
 
     }
-    
+
     /**
-     * get total number of scans from index file if exists, or -1 if it does not (unknown)
+     * get total number of scans from index file if exists, or -1 if it does not
+     * (unknown)
+     *
      * @return total number of scans from the index
      */
     public int getNumScansIdx() {
         String indexFilePath = filePath + SCAN_INDEX_EXT;
         File indexFile = new File(indexFilePath);
-        if (! indexFile.exists() || ! indexFile.canRead()) {
+        if (!indexFile.exists() || !indexFile.canRead()) {
 //            logger.log(Level.WARNING, "Cannot get total number of scans, index file cannot be read: " + indexFilePath);
             return -1;
         }
-        
-        
-        
+
         int totalNumScans;
         try {
             totalNumScans = Util.countLines(indexFilePath);
@@ -70,7 +77,7 @@ public class MS2ScanReader implements Iterator<MS2Scan> {
             logger.log(Level.WARNING, "Cannot get total number of scans, index file lines cannot be counted: " + indexFilePath);
             return -1;
         }
-        
+
         return totalNumScans;
     }
 
@@ -103,16 +110,17 @@ public class MS2ScanReader implements Iterator<MS2Scan> {
                 if (curLine.length() == 0) {
                     continue;
                 }
-
+                //System.out.println(curLine);
                 final char firstChar = curLine.charAt(0);
-                if (firstChar == 'H' || firstChar == 'I' || firstChar == 'D') {                    
+                if (firstChar == 'H' || firstChar == 'I' || firstChar == 'D') {
                     curLine = reader.readLine();
-                    if(curLine.startsWith("I\tActivationType\t")) {
+                    if (curLine.startsWith("I\tActivationType\t")) {
                         String[] arr = curLine.split("\t");
-                        if(arr.length>=3)
+                        if (arr.length >= 3) {
                             curScan.setScanType(arr[2]);
+                        }
                     }
-                    
+
                     continue;
                 } else if (firstChar == 'S') {
                     //new scan, create and add to cache
@@ -121,7 +129,6 @@ public class MS2ScanReader implements Iterator<MS2Scan> {
                     cache[curCacheSize] = curScan;
                     ++curCacheSize;  //scans read in this updateCache()
                     ++numScans; //total number scans read from this file
-
 
                     String[] tokens = curLine.split("\t");
 
@@ -168,8 +175,8 @@ public class MS2ScanReader implements Iterator<MS2Scan> {
                             curScan = null;
                             break;
                         }
-                        
-                        String[] tokens = curLine.split(" ");
+
+                        String[] tokens = curLine.split("\\s+");
                         //if (tokens.length != 2) {  //it can have three columns
                         if (tokens.length < 2) {
                             throw new IOException("Unexpected number of tokens on mass line (need 2): " + curLine + " in scan number: " + numScans);
@@ -184,8 +191,7 @@ public class MS2ScanReader implements Iterator<MS2Scan> {
                         //either next mass or new S line
                         curLine = reader.readLine();
                     }
-                    
-                    
+
                     //check if new spectrum
                     if (curScan == null) {
                         //new S line, check if cache is full
@@ -196,6 +202,7 @@ public class MS2ScanReader implements Iterator<MS2Scan> {
                     }
 
                 } //end reading masses
+                
             } //and while for each line
 
             //logger.log(Level.INFO, "Read into cache scans: " + curCacheSize);
@@ -205,7 +212,6 @@ public class MS2ScanReader implements Iterator<MS2Scan> {
                 close();
             }
 
-            
         } catch (IOException e) {
             logger.log(Level.WARNING, "Error reading MS2 file: " + filePath, e);
             EOF = true;
@@ -230,16 +236,16 @@ public class MS2ScanReader implements Iterator<MS2Scan> {
 
         synchronized (lock) {
             //updateCache();
-            
+
             if (curCacheSize == 0) {
                 return null;
             }
 
             final MS2Scan scan = cache[curCacheI++];
             --curCacheSize;
-            
-            updateCache();
 
+            updateCache();
+            
             return scan;
         }
     }

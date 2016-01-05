@@ -51,14 +51,11 @@ public class MergeIntervals {
     };
 }
 
-
-
- class Interval {
+class Interval {
 
     private float start;
     private float end;
 
-    
     public Interval(float start, float end) {
         this.start = start;
         this.end = end;
@@ -68,17 +65,15 @@ public class MergeIntervals {
         return start;
     }
 
-
     public float getEnd() {
         return end;
     }
 
-  
     @Override
     public String toString() {
         return "Interval{" + "start=" + start + ", end=" + end + '}';
     }
-    
+
     public static Interval massRangeToInterval(MassRange range) {
         float mass = range.getPrecMass();
         float tol = range.getTolerance();
@@ -89,7 +84,6 @@ public class MergeIntervals {
         float massHigh = mass + tol;
 
         return new Interval(massLow, massHigh);
-
 
     }
 }

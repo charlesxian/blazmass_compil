@@ -9,6 +9,7 @@ package blazmass.io;
  * @author rpark2
  */
 public class MassIntensityModel implements Comparable {
+
     private float intensity;
     private int index;
 
@@ -16,7 +17,7 @@ public class MassIntensityModel implements Comparable {
         this.intensity = intensity;
         this.index = index;
     }
-    
+
     public float getIntensity() {
         return intensity;
     }
@@ -32,16 +33,17 @@ public class MassIntensityModel implements Comparable {
     public void setIndex(int index) {
         this.index = index;
     }
-    
+
     public int compareTo(Object o) throws ClassCastException {
 
-        MassIntensityModel m = (MassIntensityModel)o;
+        MassIntensityModel m = (MassIntensityModel) o;
 
-        if(m.getIntensity()<this.intensity)
+        if (m.getIntensity() < this.intensity) {
             return 1;
-        else if(m.getIntensity()>this.intensity)
+        } else if (m.getIntensity() > this.intensity) {
             return -1;
-        else
-            return 0;        
+        } else {
+            return 0;
+        }
     }
 }

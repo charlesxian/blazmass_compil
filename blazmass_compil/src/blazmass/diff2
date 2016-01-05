@@ -1,4 +1,4 @@
-19,50d18
+diff --git a/src/blazmass/ b/src/blazmass/
 <     
 <     public static void assignTheoMass(int[] theorArr, float mass, SearchParams sparam, int cs, HighResMassProcessor hprocess, int value) {
 <               

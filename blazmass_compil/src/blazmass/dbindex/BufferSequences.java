@@ -11,22 +11,21 @@ import java.util.List;
  *
  * @author Harshil
  */
-public class BufferSequences 
-{
+public class BufferSequences {
+
     private String seq;
     private int length;
-    private String resLeft ;
+    private String resLeft;
     private String resRight;
     private List protId = new ArrayList();
-
 
     /**
      * @return the seq
      */
-    public void printObject()
-    {
-        System.out.println("SEQ: " + seq + " protid: "   + getProtId() );
+    public void printObject() {
+        System.out.println("SEQ: " + seq + " protid: " + getProtId());
     }
+
     public String getSeq() {
         return seq;
     }
@@ -94,17 +93,16 @@ public class BufferSequences
         this.protId = protId;
     }
 
-    void addprotId(int proteinId) 
-    {
-       this.protId.add(proteinId);
+    void addprotId(int proteinId) {
+        this.protId.add(proteinId);
     }
 
-    void setData(String sequence, int sequenceLen, String resLeft, String resRight, int proteinId)
-    {
-        this.seq=sequence;this.length=(sequenceLen);this.resLeft=resLeft;this.resRight=resRight;this.protId.add(proteinId);
+    void setData(String sequence, int sequenceLen, String resLeft, String resRight, int proteinId) {
+        this.seq = sequence;
+        this.length = (sequenceLen);
+        this.resLeft = resLeft;
+        this.resRight = resRight;
+        this.protId.add(proteinId);
     }
 
-    
-    
-    
 }

@@ -15,154 +15,156 @@ import java.util.List;
  * @author rpark2
  */
 public class IsotopeCalc {
-    
+
     //private static final int NUMCHARS = 256;
     private static final int NUMCHARS = 128;
-    private static final double [] avgAaMasses = new double[NUMCHARS];
-    private static final double [] monoAaMasses = new double[NUMCHARS];
-    private static final int [] monoIntAaMasses = new int[NUMCHARS];
-    private static final double [][] isotopicDistribution = new double[20][20];
+    private static final double[] avgAaMasses = new double[NUMCHARS];
+    private static final double[] monoAaMasses = new double[NUMCHARS];
+    private static final int[] monoIntAaMasses = new int[NUMCHARS];
+    private static final double[][] isotopicDistribution = new double[20][20];
     public static final int[][] intensePeaks = new int[20][];
     public static final int[] mostIntensePeaks = new int[20];
 
-  
     /**
-     * get the isotopic peaks that has intensity greater than or equals to the threshold 
-     * relative to the most intense peak.  e.g., as mass == 500, the isotopic  
-     * distribution is M+0 = 1, M+1 = 0.27, M+2 = 0.0512 and M+3 = 0.007109.
-     * if the threshold is 0.05, a list of 0, 1, 2 will be returned, 
+     * get the isotopic peaks that has intensity greater than or equals to the
+     * threshold relative to the most intense peak. e.g., as mass == 500, the
+     * isotopic distribution is M+0 = 1, M+1 = 0.27, M+2 = 0.0512 and M+3 =
+     * 0.007109. if the threshold is 0.05, a list of 0, 1, 2 will be returned,
      * and if the threshold is 0.1, then a list of 0, 1 will be returned
      */
     public static List<Integer> mass2IsotopicPeaks(double mass, double threshold) {
         ArrayList<Integer> intensPeaks = new ArrayList<Integer>();
-        int massIndex = ((int)(mass/500 + 0.5)) - 1;
-        massIndex = massIndex < 0? 0 : massIndex;
-         //       System.out.println("\nmass: " + mass + "\tmassIndex: " + massIndex);
-        for(int i = 0; i < 20; i++) {
-            if(isotopicDistribution[massIndex][i] >= threshold) {
+        int massIndex = ((int) (mass / 500 + 0.5)) - 1;
+        massIndex = massIndex < 0 ? 0 : massIndex;
+        //       System.out.println("\nmass: " + mass + "\tmassIndex: " + massIndex);
+        for (int i = 0; i < 20; i++) {
+            if (isotopicDistribution[massIndex][i] >= threshold) {
                 intensPeaks.add(new Integer(i));
                 //System.out.print(i + "\t" + "intens: " + isotopicDistribution[massIndex][i] + "\n");
             }
         }
-        
+
         return intensPeaks;
     }
-    public static int [] mass2IntensePeaks(double mass) {
- 
-        int massIndex = ((int)(mass/500 + 0.5)) - 1;
-        massIndex = massIndex < 0? 0 : massIndex;
+
+    public static int[] mass2IntensePeaks(double mass) {
+
+        int massIndex = ((int) (mass / 500 + 0.5)) - 1;
+        massIndex = massIndex < 0 ? 0 : massIndex;
         return intensePeaks[massIndex];
     }
+
     public static void loadIntensePeaks() {
-        for(int i = 0; i < 20; i++) {
+        for (int i = 0; i < 20; i++) {
             int numPeaks = 0;
-            for(int j = 0; j < 20; j++) {
-                
-                if(isotopicDistribution[i][j] >= .25) {
+            for (int j = 0; j < 20; j++) {
+
+                if (isotopicDistribution[i][j] >= .25) {
                     numPeaks++;
                 } else {
                 }
             }
-            intensePeaks[i]  = new int[numPeaks]; 
-            for(int j = 0; j < 20; j++) {
-                if(isotopicDistribution[i][j] >= .25) {
+            intensePeaks[i] = new int[numPeaks];
+            for (int j = 0; j < 20; j++) {
+                if (isotopicDistribution[i][j] >= .25) {
                     intensePeaks[i][--numPeaks] = j;
                 }
             }
-             
+
         }
     }
+
     public static void loadMostIntensePeaks() {
-        for(int i = 0; i < 20; i++) {
-            for(int j = 0; j < 20; j++) {
-                if(isotopicDistribution[i][j] == 1.0f) {
+        for (int i = 0; i < 20; i++) {
+            for (int j = 0; j < 20; j++) {
+                if (isotopicDistribution[i][j] == 1.0f) {
                     mostIntensePeaks[i] = j;
                     break;
                 }
             }
-             
+
         }
     }
+
     public static int getMostIntensePeak(double mass) {
 
-        int massIndex = ((int)(mass/500 + 0.5)) - 1;
-        massIndex = massIndex < 0? 0 : massIndex;
+        int massIndex = ((int) (mass / 500 + 0.5)) - 1;
+        massIndex = massIndex < 0 ? 0 : massIndex;
         return mostIntensePeaks[massIndex];
     }
     /*
-    public double getPrecursorMass(byte [] seq, int start, int end) {
-        double mass = MassSpecConstants.MASSH2O + MassSpecConstants.MASSPROTON;
-        for(int i = start; i <= end; i++) {
-            mass += getPrecursorMass(seq[i]);
-        }
-        return mass;
-    }
-    public double getPrecursorMass(String sequence) {
-        int len = sequence.length();
-        double mass = MassSpecConstants.MASSH2O + MassSpecConstants.MASSPROTON;
-        for(int i = 0; i < len; i++) {
-            mass += getPrecursorMass(sequence.charAt(i));
-        }
-        return mass;
-    }*/
-   
-    private double [] getDBinWidthMasses(double masses[], double dBinWidth) {
+     public double getPrecursorMass(byte [] seq, int start, int end) {
+     double mass = MassSpecConstants.MASSH2O + MassSpecConstants.MASSPROTON;
+     for(int i = start; i <= end; i++) {
+     mass += getPrecursorMass(seq[i]);
+     }
+     return mass;
+     }
+     public double getPrecursorMass(String sequence) {
+     int len = sequence.length();
+     double mass = MassSpecConstants.MASSH2O + MassSpecConstants.MASSPROTON;
+     for(int i = 0; i < len; i++) {
+     mass += getPrecursorMass(sequence.charAt(i));
+     }
+     return mass;
+     }*/
+
+    private double[] getDBinWidthMasses(double masses[], double dBinWidth) {
         int length = masses.length;
-        double [] dBinWidthMasses = new double[length];
-        for(int i = 0; i < length; i++) {
-            if(masses[i] !=0) {
-                dBinWidthMasses[i] = masses[i]*dBinWidth;
+        double[] dBinWidthMasses = new double[length];
+        for (int i = 0; i < length; i++) {
+            if (masses[i] != 0) {
+                dBinWidthMasses[i] = masses[i] * dBinWidth;
             }
         }
         return dBinWidthMasses;
     }
-    
+
     /*
-    public double[] getPrecMasses(double dBinWidth){
-        return getDBinWidthMasses(getPrecMasses(), dBinWidth);
-    } */
- 
-    public double [] getTheoreticMasses(byte [] seq) {
-        int numIons = (seq.length - 1 ) * 2;
-        double [] masses = new double [numIons];
+     public double[] getPrecMasses(double dBinWidth){
+     return getDBinWidthMasses(getPrecMasses(), dBinWidth);
+     } */
+    public double[] getTheoreticMasses(byte[] seq) {
+        int numIons = (seq.length - 1) * 2;
+        double[] masses = new double[numIons];
 
         return masses;
     }
-    
+
     /**
      *
-     *@param isotope - isotopic type, either 'mono' or 'avg'
-     *@param ms - modifications
+     * @param isotope - isotopic type, either 'mono' or 'avg'
+     * @param ms - modifications
      */
     /*
-    private double [] getMasses(String isotope, Iterator<Modification> ms) {
-        double [] masses = new double[NUMCHARS];
-        String monoIsotope = MassSpecConstants.MONOISOTOPE;
-        String avgIsotope = MassSpecConstants.AVGISOTOPE;
+     private double [] getMasses(String isotope, Iterator<Modification> ms) {
+     double [] masses = new double[NUMCHARS];
+     String monoIsotope = MassSpecConstants.MONOISOTOPE;
+     String avgIsotope = MassSpecConstants.AVGISOTOPE;
 
-        double [] origMasses = null;
-        if (monoIsotope.equals(isotope)) {
-            origMasses = getMonoMasses(); 
-        } else if(avgIsotope.equals(isotope)){
-            origMasses = getAvgMasses();
-        } else {
-            throw new InvalidArgumentException("Unknown isotope type, should be mono or avg");
-        }
+     double [] origMasses = null;
+     if (monoIsotope.equals(isotope)) {
+     origMasses = getMonoMasses(); 
+     } else if(avgIsotope.equals(isotope)){
+     origMasses = getAvgMasses();
+     } else {
+     throw new InvalidArgumentException("Unknown isotope type, should be mono or avg");
+     }
 
-        for(int i = 0; i < NUMCHARS; i++) {
-            masses[i] = origMasses[i];
-        }
+     for(int i = 0; i < NUMCHARS; i++) {
+     masses[i] = origMasses[i];
+     }
 
-        while (ms.hasNext()) {
-            Modification m = ms.next();
-            masses[m.getResidue()] += m.getMassShift();
-        }
-        return masses; 
-    }*/
-
+     while (ms.hasNext()) {
+     Modification m = ms.next();
+     masses[m.getResidue()] += m.getMassShift();
+     }
+     return masses; 
+     }*/
     public static double getAvgMass(byte aa) {
         return avgAaMasses[aa];
     }
+
     public static double getAvgMass(char aa) {
         return avgAaMasses[aa];
     }
@@ -170,55 +172,59 @@ public class IsotopeCalc {
     public static double getMonoMass(byte aa) {
         return monoAaMasses[aa];
     }
+
     public static int getIntMonoMass(byte aa) {
         return monoIntAaMasses[aa];
     }
+
     public static int getIntMonoMass(char aa) {
         return monoIntAaMasses[aa];
     }
+
     public static double getMonoMass(char aa) {
         return monoAaMasses[aa];
     }
 
-    public static double [] getAvgMasses() {
+    public static double[] getAvgMasses() {
         return avgAaMasses;
     }
-    public static double [] getMonoMasses() {
+
+    public static double[] getMonoMasses() {
         return monoAaMasses;
     }
-    public static int [] getIntMonoMasses() {
+
+    public static int[] getIntMonoMasses() {
         return monoIntAaMasses;
     }
-    
+
     /*
-    public static double getMonoMass(String sequence, int chargeState) {
-        int len = sequence.length();
-        double mass = MassSpecConstants.MASSH2O + MassSpecConstants.MASSPROTON * (chargeState-1);
-        for(int i = 0; i < len; i++) {
-            mass += getMonoMass(sequence.charAt(i));
-            if(sequence.charAt(i) == 'C') {
-                mass += 57.02146;
-            }
+     public static double getMonoMass(String sequence, int chargeState) {
+     int len = sequence.length();
+     double mass = MassSpecConstants.MASSH2O + MassSpecConstants.MASSPROTON * (chargeState-1);
+     for(int i = 0; i < len; i++) {
+     mass += getMonoMass(sequence.charAt(i));
+     if(sequence.charAt(i) == 'C') {
+     mass += 57.02146;
+     }
                 
-        }
+     }
 
-        return mass;
-    }*/
+     return mass;
+     }*/
 
     /*
-    public static double getAvgMass(String sequence, int chargeState) {
-        int len = sequence.length();
-        double mass = MassSpecConstants.MASSH2O + MassSpecConstants.MASSPROTON * (chargeState-1);
-        for(int i = 0; i < len; i++) {
-            mass += getAvgMass(sequence.charAt(i));
-            if(sequence.charAt(i) == 'C') {
-                mass += 57.02146;
-            }
-        }
-        return mass;
-    }*/
-
-      static {
+     public static double getAvgMass(String sequence, int chargeState) {
+     int len = sequence.length();
+     double mass = MassSpecConstants.MASSH2O + MassSpecConstants.MASSPROTON * (chargeState-1);
+     for(int i = 0; i < len; i++) {
+     mass += getAvgMass(sequence.charAt(i));
+     if(sequence.charAt(i) == 'C') {
+     mass += 57.02146;
+     }
+     }
+     return mass;
+     }*/
+    static {
         // from averagine
         isotopicDistribution[0][0] = 1.000000;
         isotopicDistribution[0][1] = 0.276950;
@@ -621,48 +627,45 @@ public class IsotopeCalc {
         isotopicDistribution[19][18] = 0.001395;
         isotopicDistribution[19][19] = 0.000000;
 
-
         loadIntensePeaks();
         loadMostIntensePeaks();
     }
-    public static void main(String args []) throws Exception {
+
+    public static void main(String args[]) throws Exception {
         String line = null;
-        
+
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        for(int i = 0; i < 20; i++) {
-            double mass = i*500;
+        for (int i = 0; i < 20; i++) {
+            double mass = i * 500;
             System.out.println(i + "\tmost intense peak for " + mass + ": " + getMostIntensePeak(mass));
-            int [] peaks = mass2IntensePeaks(mass);
-            for(int j : peaks) {
+            int[] peaks = mass2IntensePeaks(mass);
+            for (int j : peaks) {
                 System.out.print(j + "\t");
             }
             System.out.println();
         }
-        
-        while(true) {
+
+        while (true) {
             System.out.print("input the mass: ");
             line = br.readLine();
-            if("end".equals(line) || "exit".equals(line) || "quit".equals(line)) {
+            if ("end".equals(line) || "exit".equals(line) || "quit".equals(line)) {
                 break;
             }
             double mass = Double.parseDouble(line);
             System.out.print("input the threshold: ");
             line = br.readLine();
-            if("end".equals(line) || "exit".equals(line) || "quit".equals(line)) {
+            if ("end".equals(line) || "exit".equals(line) || "quit".equals(line)) {
                 break;
             }
             double threshold = Double.parseDouble(line);
-            List<Integer> peaks = IsotopeCalc.mass2IsotopicPeaks(mass, threshold);        
-            for(Integer i : peaks) {
+            List<Integer> peaks = IsotopeCalc.mass2IsotopicPeaks(mass, threshold);
+            for (Integer i : peaks) {
                 System.out.println(i);
             }
-            
+
             System.out.println();
- 
+
         }
-        
+
     }
 }
-
-
-

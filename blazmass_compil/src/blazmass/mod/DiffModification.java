@@ -9,29 +9,35 @@ package blazmass.mod;
  * @author rpark
  */
 public class DiffModification {
-    public static final int SIZE= 256;
-    private static double[] diffMod = new double[SIZE];
+
+    public static final int SIZE = 256;
+    public static double[] diffMod = new double[SIZE];
     private static boolean[] isDiffMod = new boolean[SIZE];
     //public static void diffModTrue(char ch) {
     //    isDiffMod[ch] = true;
-   // }
-    
+    // }
+
     public static boolean isDiffMod(char ch) {
         return isDiffMod[ch];
     }
-    
+
     public static void setDiffModMass(char ch, double mass) {
         diffMod[ch] = mass;
         isDiffMod[ch] = true;
     }
     
+    public static void clearDiffModMass() {
+        diffMod = new double[SIZE];
+    }
+
     public static double getDiffModMass(char ch) {
         return diffMod[ch];
     }
-    
+
     public static void test() {
-        for(boolean b:isDiffMod )
+        for (boolean b : isDiffMod) {
             System.out.println("==" + b);
+        }
     }
 
     public static double[] getDiffMod() {
@@ -50,5 +56,4 @@ public class DiffModification {
         DiffModification.isDiffMod = isDiffMod;
     }
 
-    
 }

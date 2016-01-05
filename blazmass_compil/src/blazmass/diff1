@@ -1,3 +1,4 @@
+diff --git a/src/blazmass/ b/src/blazmass/
 441,445d440
 < 
 <                     //System.out.println("each scan................." + scan.getScanType());

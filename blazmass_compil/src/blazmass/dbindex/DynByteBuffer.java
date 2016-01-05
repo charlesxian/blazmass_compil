@@ -39,8 +39,9 @@ public class DynByteBuffer {
         curSize = 0;
         curCapacity = DEFAULT_CAPACITY * 4;
         data = new byte[curCapacity];
-        
+
     }
+
     int getSize() {
         return curSize;
     }
@@ -56,7 +57,7 @@ public class DynByteBuffer {
     public static int toInt(byte[] byteBarray) {
         return ByteBuffer.wrap(byteBarray).order(ByteOrder.LITTLE_ENDIAN).getInt();
     }
-    
+
     public static byte[] toByteArray(float theFloat) {
         return ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putFloat(theFloat).array();
     }

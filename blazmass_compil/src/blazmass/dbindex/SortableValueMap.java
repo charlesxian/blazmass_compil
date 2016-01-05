@@ -9,7 +9,7 @@ import java.util.Map;
 
 /**
  * Map that we can sort by value
- * 
+ *
  * @author Adam
  *
  * @param <K>

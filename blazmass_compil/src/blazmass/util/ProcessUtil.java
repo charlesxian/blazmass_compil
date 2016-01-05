@@ -1,6 +1,5 @@
 package blazmass.util;
 
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,9 +9,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Takes care of forking a process and reading output / error streams to either a
- * string buffer or directly to a file writer
- * 
+ * Takes care of forking a process and reading output / error streams to either
+ * a string buffer or directly to a file writer
+ *
  * @author Adam
  */
 public final class ProcessUtil {
@@ -87,7 +86,8 @@ public final class ProcessUtil {
      * and stderr to nowhere.
      *
      * @param stdoutWriter file writer to write stdout to
-     * @param waitFor whether to wait for the process to exit or let it run asynchronously
+     * @param waitFor whether to wait for the process to exit or let it run
+     * asynchronously
      * @param aCommand command to be executed
      * @param params parameters of the command
      * @return string buffer with captured stdout

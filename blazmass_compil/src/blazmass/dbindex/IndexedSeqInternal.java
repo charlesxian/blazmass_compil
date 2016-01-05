@@ -1,19 +1,18 @@
 package blazmass.dbindex;
 
-
 /**
  * internal temporarly representation of indexed sequence before sequences are
  * merged into IndexedSequence
- * 
+ *
  * two IndexedSeqInternal are equal if they sequence strings are equal
- * 
+ *
  * two IndexedSeqInternal sequences are comparable by their mass
  *
  * @author Adam
  */
 class IndexedSeqInternal implements Comparable<IndexedSeqInternal> {
 
-    public IndexedSeqInternal(float mass, int offset, int length, int proteinId, String sequence,String protDescription) {
+    public IndexedSeqInternal(float mass, int offset, int length, int proteinId, String sequence, String protDescription) {
         this.mass = mass;
         this.offset = offset;
         this.length = length;
@@ -22,13 +21,13 @@ class IndexedSeqInternal implements Comparable<IndexedSeqInternal> {
         this.protDescription = protDescription;
 
     }
-     public IndexedSeqInternal(float mass, int offset, int length, int proteinId, String sequence) {
+
+    public IndexedSeqInternal(float mass, int offset, int length, int proteinId, String sequence) {
         this.mass = mass;
         this.offset = offset;
         this.length = length;
         this.proteinId = proteinId;
         this.sequence = sequence;
-       
 
     }
     float mass;
@@ -65,11 +64,9 @@ class IndexedSeqInternal implements Comparable<IndexedSeqInternal> {
     public int compareTo(IndexedSeqInternal o) {
         if (mass < o.mass) {
             return -1;
-        }
-        else if (mass > o.mass) {
+        } else if (mass > o.mass) {
             return 1;
-        }
-        else {
+        } else {
             return 0;
         }
     }
@@ -81,9 +78,5 @@ class IndexedSeqInternal implements Comparable<IndexedSeqInternal> {
     public void setProteinIdArr(String[] proteinIdArr) {
         this.proteinIdArr = proteinIdArr;
     }
-    
-    
 
-    
-    
 }

@@ -9,7 +9,7 @@ package util;
  * @author rpark2
  */
 public class MathUtil {
-    
+
     public static int round(double d) {
 
         if (d > 0) {
@@ -18,5 +18,5 @@ public class MathUtil {
             return (int) (d - 0.5d);
         }
     }
-    
+
 }

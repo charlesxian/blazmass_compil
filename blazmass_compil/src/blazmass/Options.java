@@ -1,20 +1,22 @@
 package blazmass;
 
-public class Options {       
+public class Options {
 
-	 private  int  peptideLines;
-	 private boolean  useEnzyme;
-	 private  int  removePrecursor;
-	 public Options(int peptideLines,boolean useEnzyme, int removePrecursor ){
-		 this.peptideLines=peptideLines;
-		 this.useEnzyme=useEnzyme;
-		 this.removePrecursor=removePrecursor;
-	 }
-	 public Options( ){
-		 peptideLines=-1;
-		 useEnzyme=false;
-		 removePrecursor=-1;
-	 }
+    private int peptideLines;
+    private boolean useEnzyme;
+    private int removePrecursor;
+
+    public Options(int peptideLines, boolean useEnzyme, int removePrecursor) {
+        this.peptideLines = peptideLines;
+        this.useEnzyme = useEnzyme;
+        this.removePrecursor = removePrecursor;
+    }
+
+    public Options() {
+        peptideLines = -1;
+        useEnzyme = false;
+        removePrecursor = -1;
+    }
 
     public int getPeptideLines() {
         return peptideLines;
@@ -40,6 +42,4 @@ public class Options {
         this.useEnzyme = useEnzyme;
     }
 
-         
 }
-

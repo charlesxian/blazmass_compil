@@ -8,7 +8,6 @@ package blazmass.io;
  *
  * @author rpark
  */
-
 import blazmass.AssignMass;
 import java.util.Date;
 import java.util.*;
@@ -16,21 +15,22 @@ import blazmass.Enzyme;
 import blazmass.dbindex.DBIndexer;
 import blazmass.dbindex.DBIndexer.IndexType;
 import blazmass.dbindex.Util;
-        
+
 public class SearchParams {
     
     private String program;
     private String parametersFile;
     private String parameters;
+    private String sqtSuffix;
+
     private float peptideMassTolerance;
-    
     private float fragmentIonTolerance;
     private int fragmentIonToleranceInt;
     private float fragmentIonToleranceBinScale;
-    
+
     private int maxMissedCleavages;
     private int massTypeParent;
-    private int massTypeFragment;   
+    private int massTypeFragment;
     private int numPeptideOutputLnes;
     private int removePrecursorPeak;
 
@@ -40,34 +40,41 @@ public class SearchParams {
     private int enzymeOffset;
     private String databaseName;
     private String indexDatabaseName;
-    
-    private int maxNumDiffMod=3;
-    private boolean variableTolerance=false;
+
+    public boolean onlyDiffMod = false;
+    public HashMap<Character, ArrayList<Float>> diffModMap = new HashMap<>();
+    public HashMap<Character, ArrayList<Float>> diffModMap_N = new HashMap<>();
+    public HashMap<Character, ArrayList<Float>> diffModMap_C = new HashMap<>();
+    public Set<Float> modMasses = new HashSet<>();
+    public Set<Float> modMasses_N = new HashSet<>();
+    public Set<Float> modMasses_C = new HashSet<>();
+    private int maxNumDiffMod = 3;
+    private boolean variableTolerance = false;
     private float variablePeptideMassTolerance;
-    private boolean usePPM =false;
+    private boolean usePPM = false;
     private float relativePeptideMassTolerance;
-    private int isotopes=0;
-    private float n15Enrichment=0.0f;
+    private int isotopes = 0;
+    private float n15Enrichment = 0.0f;
     private float matchPeakTolerance;
-    private int maxInternalCleavageSites=5;
+    private int maxInternalCleavageSites = 5;
     private float hplusparent;
     private float hparent;
     private float oHparent;
     private float[] pdAAMassParent;
-    private float[] pdAAMassFragment;    
+    private float[] pdAAMassFragment;
     private int numIonSeriesUsed;
     private String enzymeBreakAA;
-    private String enzymeNoBreakAA;    
+    private String enzymeNoBreakAA;
     private float binWidth;
     private int[] ionSeries = new int[9];
     private int[] ionToUse;
-    
+
     float diffMass1, diffMass2, diffMass3;
     String diffChar1, diffChar2, diffChar3;
     private boolean useEnzyme;
     private char[] enzymeArr;
     private static SearchParams sparams = null;
-    
+
     private int neutralLossAions;
     private int neutralLossBions;
     private int neutralLossYions;
@@ -75,36 +82,33 @@ public class SearchParams {
     private String enzymeResidues;
     private String enzymeCut;
     private String enzymeNocutResidues;
-    private static float minPrecursorMass=500.0f;
-    private static float maxPrecursorMass=6000.0f;
-    private int minFragPeakNum=8;
+    private static float minPrecursorMass = 500.0f;
+    private static float maxPrecursorMass = 6000.0f;
+    private int minFragPeakNum = 8;
 
     private boolean useIndex = true;
     private DBIndexer.IndexType indexType = DBIndexer.IndexType.INDEX_NORMAL; //default
     private boolean inMemoryIndex = false;
     private int indexFactor = 6;
-    
+
     private Enzyme enzyme = new Enzyme();
     private static StringBuffer staticParams = new StringBuffer();
-    private boolean highResolution=false;
-    private int maxChargeState=6;
+    private boolean highResolution = false;
+    private int maxChargeState = 6;
     float[] weightArr = new float[12];
-
-    private SearchParams() {}
-    
-    private List<ModResidue> modList = new ArrayList<ModResidue>();
+    public boolean doReversePeptides;
+ 
+    private List<ModResidue> modList = new ArrayList<>();
     //private Set<Float> modShiftSet = new HashSet<Float>();
     private List<List<Double>> modGroupList = new ArrayList<List<Double>>();
-    private boolean precursorHighResolution=true;
-    
-    private int scoreWin=10;
-    private boolean neturalLossIsotope=false;
-    
+    private boolean precursorHighResolution = true;
+
+    private int scoreWin = 10;
+    private boolean neturalLossIsotope = false;
+
     // MongoDB params
     private boolean usingMongoDB = false;
-    
-    private String massDBServer;
-    private int massDBPort;
+    private String mongoDBURI;
     private String massDBName;
     private String massDBCollection;
 
@@ -113,16 +117,21 @@ public class SearchParams {
     private int seqDBPort;
     private String seqDBName;
     private String seqDBCollection;
-    
+
     private boolean usingProtDB = false;
     private String protDBServer;
     private int protDBPort;
     private String protDBName;
     private String protDBCollection;
+
+       
+    private SearchParams() {
+    }
     
     public static SearchParams getInstance() {
-        if (sparams == null)
+        if (sparams == null) {
             sparams = new SearchParams();
+        }
 
         return sparams;
     }
@@ -134,8 +143,6 @@ public class SearchParams {
     public void setIndexType(IndexType indexType) {
         this.indexType = indexType;
     }
-    
-    
 
     public boolean isUseIndex() {
         return useIndex;
@@ -160,10 +167,15 @@ public class SearchParams {
     public void setIndexFactor(int indexFactor) {
         this.indexFactor = indexFactor;
     }
-    
-    
-    
-    
+
+    public String getSqtSuffix() {
+        return sqtSuffix;
+    }
+
+    public void setSqtSuffix(String sqtSuffix) {
+        this.sqtSuffix = sqtSuffix;
+    }
+
     public void setMassTypeFragment(int massTypeFragment) {
         this.massTypeFragment = massTypeFragment;
     }
@@ -177,31 +189,28 @@ public class SearchParams {
     }
 
     public void setFragmentIonTolerance(float fragmentIonTolerance) {
-            
+
         this.fragmentIonTolerance = fragmentIonTolerance;
-        
-        
+
         //System.out.println("============================" + fragmentIonTolerance);
-        
-        this.fragmentIonToleranceBinScale = 1000.0f/fragmentIonTolerance;
+        this.fragmentIonToleranceBinScale = 1000.0f / fragmentIonTolerance;
         //System.out.println("============================" + fragmentIonTolerance +  " " + this.fragmentIonToleranceBinScale);
-       
+
         /*
-        if(fragmentIonTolerance<100f)
-            this.neturalLossIsotope=true;
-        else
-            this.neturalLossIsotope=false;
-        */
-        
+         if(fragmentIonTolerance<100f)
+         this.neturalLossIsotope=true;
+         else
+         this.neturalLossIsotope=false;
+         */
      //   if(fragmentIonTolerance>300.0f || fragmentIonTolerance<=0.0f) 
-     //       this.highResolution=false;
-        
+        //       this.highResolution=false;
     }
 
     public void setPeptideMassTolerance(float peptideMassTolerance) {
 
-        if(peptideMassTolerance>900)
-                this.precursorHighResolution=false;
+        if (peptideMassTolerance > 900) {
+            this.precursorHighResolution = false;
+        }
 
         this.peptideMassTolerance = peptideMassTolerance;
     }
@@ -221,7 +230,6 @@ public class SearchParams {
     public String getProgram() {
         return program;
     }
-
 
     public String getParametersFile() {
         return parametersFile;
@@ -297,9 +305,10 @@ public class SearchParams {
 
     public void setEnzymeBreakAA(String enzymeBreakAA) {
         this.enzymeArr = enzymeBreakAA.toCharArray();
-        for(char ch:this.enzymeArr)        
-            enzyme.addEnzyme(ch);        
-                
+        for (char ch : this.enzymeArr) {
+            enzyme.addEnzyme(ch);
+        }
+
         this.enzymeBreakAA = enzymeBreakAA;
     }
 
@@ -340,37 +349,37 @@ public class SearchParams {
     }
 
     public void setIonSeries(int[] ionSeries) {
-        
-        int count=0;
+
+        int count = 0;
         List<Integer> l = new ArrayList<Integer>();
-        
-        for(int i=0;i<ionSeries.length;i++) {            
-            
-            if(ionSeries[i]>0) {
+
+        for (int i = 0; i < ionSeries.length; i++) {
+
+            if (ionSeries[i] > 0) {
                 //System.out.println("++" + i);
                 l.add(i);
-                
+
                 /*
-                switch (i) {                    
-                    /*a* case 0: l.add(0); break;
-                    /*b* case 1: l.add(1); break;
-                    /*c* case 2: l.add(2); break;
-                    /*x* case 6: l.add(6); break;
-                    /*y* case 7: l.add(7); break;
-                    /*z* case 8: l.add(8); break;
-                }*/
+                 switch (i) {                    
+                 /*a* case 0: l.add(0); break;
+                 /*b* case 1: l.add(1); break;
+                 /*c* case 2: l.add(2); break;
+                 /*x* case 6: l.add(6); break;
+                 /*y* case 7: l.add(7); break;
+                 /*z* case 8: l.add(8); break;
+                 }*/
             }
-            
+
             count++;
         }
 
         int[] arr = new int[l.size()];
-        count =0;
-        for(Iterator<Integer> itr=l.iterator();itr.hasNext(); ) {
-            arr[count++] = itr.next();            
+        count = 0;
+        for (Iterator<Integer> itr = l.iterator(); itr.hasNext();) {
+            arr[count++] = itr.next();
         }
-        
-        this.ionToUse = arr;        
+
+        this.ionToUse = arr;
         this.ionSeries = ionSeries;
     }
 
@@ -558,7 +567,6 @@ public class SearchParams {
         this.enzymeArr = enzymeArr;
     }
 
-
     public int getNeutralLossAions() {
         return neutralLossAions;
     }
@@ -602,7 +610,7 @@ public class SearchParams {
     public void addModResidue(ModResidue r) {
         modList.add(r);
     }
-    
+
     public List<ModResidue> getModList() {
         return modList;
     }
@@ -638,7 +646,7 @@ public class SearchParams {
     public void setEnzymeName(String enzymeName) {
         this.enzymeName = enzymeName;
     }
-    
+
     public String getEnzymeCut() {
         return enzymeCut;
     }
@@ -663,8 +671,8 @@ public class SearchParams {
         this.enzymeNocutResidues = enzymeNocutResidues;
     }
 
-    public String getFullIndexFileName() {    
-        
+    public String getFullIndexFileName() {
+
         String uniqueIndexName = databaseName + "_";
 
         //generate a unique string based on current params that affect the index
@@ -674,34 +682,29 @@ public class SearchParams {
         uniqueParams.append(getEnzymeOffset());
         uniqueParams.append(" ").append(getEnzymeResidues());
         uniqueParams.append(" ").append(getEnzymeNocutResidues());
-        
-        //uniqueParams.append(" ").append(getIndexFactor() ) ;
 
+        //uniqueParams.append(" ").append(getIndexFactor() ) ;
         uniqueParams.append(", Cleav: ");
         uniqueParams.append(getMaxInternalCleavageSites());
         uniqueParams.append(getMaxMissedCleavages());
 
         uniqueParams.append(", Static: ").append(SearchParams.getStaticParams());
-                
-        
+
         /*uniqueParams.append(getMaxNumDiffMod());
-        uniqueParams.append("\nMods:");
-        for (final ModResidue mod : getModList()) {
-            uniqueParams.append(mod.toString()).append(" ");
-        }
-        uniqueParams.append("\nMods groups:");
-        for (final List<Float> modGroupList : getModGroupList()) {
-            for (final Float f : modGroupList) {
-                uniqueParams.append(f).append(" ");
-            }
-        }*/
-
+         uniqueParams.append("\nMods:");
+         for (final ModResidue mod : getModList()) {
+         uniqueParams.append(mod.toString()).append(" ");
+         }
+         uniqueParams.append("\nMods groups:");
+         for (final List<Float> modGroupList : getModGroupList()) {
+         for (final Float f : modGroupList) {
+         uniqueParams.append(f).append(" ");
+         }
+         }*/
 //System.out.println("===" + uniqueParams.toString());
-
         final String uniqueParamsStr = uniqueParams.toString();
 
         //logger.log(Level.INFO, "Unique params: " + uniqueParamsStr);
-
         String uniqueParamsStrHash = Util.getMd5(uniqueParamsStr);
         System.out.println("param===========" + uniqueParamsStr + "\t" + uniqueParamsStrHash);
 
@@ -718,14 +721,14 @@ public class SearchParams {
         SearchParams.staticParams.append(str).append(f).append(" ");
     }
 
-    public static StringBuffer getStaticParams() {        
-        
+    public static StringBuffer getStaticParams() {
+
         return staticParams;
     }
 
     public static void setStaticParams(StringBuffer staticParams) {
         SearchParams.staticParams = staticParams;
-    }    
+    }
 
     public float getMinPrecursorMass() {
         return minPrecursorMass;
@@ -764,9 +767,9 @@ public class SearchParams {
     }
 
     public void setFragmentIonToleranceInt(int fragmentIonToleranceInt) {
-                
+
         this.fragmentIonToleranceInt = fragmentIonToleranceInt;
-    }    
+    }
 
     public int getMaxChargeState() {
         return maxChargeState;
@@ -834,19 +837,10 @@ public class SearchParams {
         return usingMongoDB;
     }
 
-    // MassDB MongoDB getters
-    public String getMassDBServer() {
-        return massDBServer;
-    }
-
-    public int getMassDBPort() {
-        return massDBPort;
-    }
-    
     public String getMassDBName() {
         return massDBName;
     }
-    
+
     public String getMassDBCollection() {
         return massDBCollection;
     }
@@ -855,7 +849,7 @@ public class SearchParams {
     public boolean isUsingSeqDB() {
         return usingSeqDB;
     }
-    
+
     public String getSeqDBServer() {
         return seqDBServer;
     }
@@ -876,7 +870,7 @@ public class SearchParams {
     public boolean isUsingProtDB() {
         return usingProtDB;
     }
-    
+
     public String getProtDBServer() {
         return protDBServer;
     }
@@ -898,15 +892,6 @@ public class SearchParams {
         this.usingMongoDB = useMongoDB;
     }
 
-    // MassDB MongoDB setters
-    public void setMassDBServer(String massDBServer) {
-        this.massDBServer = massDBServer;
-    }
-
-    public void setMassDBPort(int massDBPort) {
-        this.massDBPort = massDBPort;
-    }
-
     public void setMassDBName(String massDBName) {
         this.massDBName = massDBName;
     }
@@ -919,7 +904,7 @@ public class SearchParams {
     public void setUsingSeqDB(boolean useSeqDB) {
         this.usingSeqDB = useSeqDB;
     }
-    
+
     public void setSeqDBServer(String seqDBServer) {
         this.seqDBServer = seqDBServer;
     }
@@ -940,7 +925,7 @@ public class SearchParams {
     public void setUsingProtDB(boolean useProtDB) {
         this.usingProtDB = useProtDB;
     }
-    
+
     public void setProtDBServer(String protDBServer) {
         this.protDBServer = protDBServer;
     }
@@ -955,6 +940,14 @@ public class SearchParams {
 
     public void setProtDBCollection(String protDBCollectionName) {
         this.protDBCollection = protDBCollectionName;
+    }
+
+    public String getMongoDBURI() {
+        return this.mongoDBURI;
+    }
+
+    void setMongoDBURI(String trim) {
+        this.mongoDBURI = trim;
     }
 
 }

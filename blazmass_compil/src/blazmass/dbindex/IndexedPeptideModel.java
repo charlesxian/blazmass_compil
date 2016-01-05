@@ -9,8 +9,8 @@ package blazmass.dbindex;
  * @author rpark2
  */
 public class IndexedPeptideModel implements Comparable<IndexedPeptideModel> {
-    
-    private StringBuffer proteinIds=new StringBuffer();
+
+    private StringBuffer proteinIds = new StringBuffer();
     private double mass;
     private String sequence;
     private int startPos;
@@ -18,25 +18,23 @@ public class IndexedPeptideModel implements Comparable<IndexedPeptideModel> {
 
     public void merge(IndexedPeptideModel pm) {
         this.proteinIds.append(pm.getProteinIds());
-        
+
     }
-    
+
     public IndexedPeptideModel(double mass, String proteinId, int startPos, int offset) {
         this.mass = mass;
-        this.proteinIds.append(proteinId).append(",");    
+        this.proteinIds.append(proteinId).append(",");
         this.startPos = startPos;
         this.offset = offset;
     }
-    
-    /*
-    public IndexedPeptideModel(long proteinId, String sequence, int startPos, int offset) {
-        this.proteinIds.append(proteinId).append(",");
-        this.sequence = sequence;
-        this.startPos = startPos;
-        this.offset = offset;
-    }*/
-    
 
+    /*
+     public IndexedPeptideModel(long proteinId, String sequence, int startPos, int offset) {
+     this.proteinIds.append(proteinId).append(",");
+     this.sequence = sequence;
+     this.startPos = startPos;
+     this.offset = offset;
+     }*/
     public String getProteinIds() {
         return this.proteinIds.toString();
     }
@@ -73,18 +71,17 @@ public class IndexedPeptideModel implements Comparable<IndexedPeptideModel> {
         this.mass = mass;
     }
 
-    
     public int compareTo(IndexedPeptideModel pm) {
         double diff = this.mass - pm.getMass();
-        
-        if( diff == 0 ) {
-            return 0; 
-        } else if(diff < 0) {
+
+        if (diff == 0) {
+            return 0;
+        } else if (diff < 0) {
             return -1;
-    
+
         } else {
             return 1;
         }
     }
-    
+
 }

@@ -1,5 +1,9 @@
-dist/
-bin/
-lib/
-lib_local/
+# exclude dsstore and CVS stuff
+.DS_Store
+.cvsignore
+CVS/
 
+# exclude build directory
+build/*
+
+test/

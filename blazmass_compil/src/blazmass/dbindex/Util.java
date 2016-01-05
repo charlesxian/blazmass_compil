@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 
 /**
  * Indexing util
- * 
+ *
  * @author Adam
  */
 public class Util {
@@ -125,8 +125,7 @@ public class Util {
         return cnt;
     }
 
-    
-      static ResidueInfo getResidues(IndexedSequence peptideSequence, int seqOffset, int seqLen, String proteinSequence) {
+    static ResidueInfo getResidues(IndexedSequence peptideSequence, int seqOffset, int seqLen, String proteinSequence) {
         int protLen = proteinSequence.length();
 
         final int resLeftI = seqOffset >= Constants.MAX_INDEX_RESIDUE_LEN ? seqOffset - Constants.MAX_INDEX_RESIDUE_LEN : 0;
@@ -141,7 +140,6 @@ public class Util {
         if (resRightI < protLen) {
             sbRight.append(proteinSequence.substring(resRightI, resRightI + resRightLen));
         }
-
 
         //add -- markers to fill Constants.MAX_INDEX_RESIDUE_LEN length
         final int lLen = sbLeft.length();
@@ -158,6 +156,5 @@ public class Util {
 
         return new ResidueInfo(resLeft, resRight);
     }
-
 
 }
