@@ -36,20 +36,20 @@ use_mongodb = 1
 mongoDB_URI = mongodb://localhost:27017
 
 # MassDB is required
-MassDB_dbname = MassDB_test
-MassDB_collection = MassDB_test
+MassDB_dbname = MassDB_human_influenza_2015_12_17
+MassDB_collection = MassDB_human_influenza_2015_12_17
 
 # Used for looking up parent protein information for identified peptides (Protein ID numbers only). optional
 # Used to fill in L lines in SQT output file
 use_SeqDB = 1
-SeqDB_dbname = SeqDB_test
-SeqDB_collection = SeqDB_test
+SeqDB_dbname = SeqDB_human_influenza_2015_12_17
+SeqDB_collection = SeqDB_human_influenza_2015_12_17
 
 # Used for looking up parent protein information for identified proteins. optional
 # Used to fill in additional information for L lines in SQT output file
 use_ProtDB = 0
-ProtDB_dbname = ProtDB_test
-ProtDB_collection = ProtDB_test
+ProtDB_dbname = ProtDB_human_influenza_2015_12_17
+ProtDB_collection = ProtDB_human_influenza_2015_12_17
 
 
 #######

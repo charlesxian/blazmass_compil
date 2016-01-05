@@ -1,9 +1,9 @@
-# exclude dsstore and CVS stuff
 .DS_Store
 .cvsignore
 CVS/
 
-# exclude build directory
-build/*
 
-test/
+blazmass_compil/build/*
+*~
+*.gz
+mongo_dump/
