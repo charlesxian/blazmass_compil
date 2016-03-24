@@ -123,6 +123,7 @@ public class SearchParams {
     private int protDBPort;
     private String protDBName;
     private String protDBCollection;
+    private boolean searchN15Isotopes;
 
        
     private SearchParams() {
@@ -946,8 +947,17 @@ public class SearchParams {
         return this.mongoDBURI;
     }
 
-    void setMongoDBURI(String trim) {
+    public void setMongoDBURI(String trim) {
         this.mongoDBURI = trim;
     }
 
+    public boolean isSearchN15Isotopes() {
+        return this.searchN15Isotopes;
+    }
+    
+    public void setSearchN15Isotopes(boolean searchN15Isotopes) {
+        if (!isPrecursorHighResolution())
+            throw new IllegalArgumentException("Can't search N15 isotopes in low res mode");
+        this.searchN15Isotopes = searchN15Isotopes;
+    }
 }

@@ -97,7 +97,7 @@ public class MongoConnect {
         try {
             massDB = mongoClient.getDatabase(sParam.getMassDBName());
             massDBCollection = massDB.getCollection(sParam.getMassDBCollection());
-            System.out.println(massDBCollection);
+            System.out.println("Connecting to massdb: " + massDBCollection.getNamespace());
             if (massDBCollection.count() == 0 ){
                 System.out.println("Massdb is empty!");
                 System.exit(1); 
@@ -204,21 +204,8 @@ public class MongoConnect {
      Returns a list of parent proteins, each formatted in SQT L line format.
      */
     public List<String> getParents(String peptideSequence, SearchParams sParam, boolean isReversePeptide) throws Exception {
-
         List<String> parentProteinsOfPeptide = new ArrayList<>();
-
         if (sParam.isUsingSeqDB()) {
-            try {
-                connectToSeqDB(sParam);
-                if (sParam.isUsingProtDB()) {
-                    connectToProtDB(sParam);
-                }
-            } catch (Exception e) {
-                System.out.println("SeqDB/ProtDB connection error");
-                parentProteinsOfPeptide.add("");
-                return parentProteinsOfPeptide; // return list with a single empty string (if not using SeqDB)
-            }
-
             return getParentsFromColl(peptideSequence, sParam, isReversePeptide);
         } else {
             parentProteinsOfPeptide.add("");
@@ -251,8 +238,7 @@ public class MongoConnect {
                 if (parentProteins.isEmpty()) { // this shouldn't happen.  Shouldn't be peptides in SeqDB without parent proteins...
                     parentProteinsOfPeptide.add(""); // return list with a single empty string (if no parent proteins found)
                 } else {
-                    for (Iterator<Document> it = parentProteins.iterator(); it.hasNext();) {
-                        Document parent = it.next();
+                    for (Document parent : parentProteins) {
                         parentProteinsOfPeptide.add(parseParentObjectSimple(peptideSequence, parent, sParam, isReversePeptide));
                     }
                 }
@@ -285,7 +271,7 @@ public class MongoConnect {
             String parentIDString;
 
             if (sParam.isUsingProtDB())
-                parentIDString = parseParentObjectDetailed(parentID, sParam);
+                parentIDString = String.valueOf(parentID) + "||" + parseParentObjectDetailed(parentID, sParam);
             else
                 parentIDString = String.valueOf(parentID);
             

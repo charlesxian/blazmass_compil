@@ -6,6 +6,7 @@ public class AssignMass {
 
     public static final int SIZE = 256;
     public static final float DIFFMASSC12C13 = 1.003354826f;
+    public static final float DIFFMASSN14N15 = 0.9970348934f;
 
     public static final float MADD_DIFF_C12C13 = 1.003354826f;
     public static final int MADD_DIFF_C12C13_PPM = 1003;

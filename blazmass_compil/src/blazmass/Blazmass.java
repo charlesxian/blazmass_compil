@@ -6,7 +6,6 @@ package blazmass;
  */
 import blazmass.dbindex.*;
 import blazmass.dbindex.DBIndexer.IndexerMode;
-import blazmass.io.ResultWriter;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -15,16 +14,11 @@ import java.util.regex.Pattern;
 import blazmass.io.*;
 import blazmass.mod.DiffModification;
 import blazmass.model.*;
-import com.mongodb.BasicDBList;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import com.mongodb.MongoException;
 import java.text.DecimalFormat;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import mongoconnect.MongoSeqIter;
 import mongoconnect.MongoConnect;
-import org.paukov.combinatorics.*;
 import util.MathUtil;
 
 /**
@@ -35,7 +29,7 @@ import util.MathUtil;
 public class Blazmass {
 
     private static final String program = "Blazmass";
-    private static final String version = "0.9991";
+    private static final String version = "0.9992";
 
     //extensions
     public static final String SQT_EXT = "sqt";
@@ -585,16 +579,16 @@ public class Blazmass {
 
                     // ***************  Run search for each charge state ****************
                     System.out.println("Scan: " + scan1 + "\tCharge: " + chargeState);
+                    
                     int numMatched = runSearch(indexer, sParam, scoreArray, chargeState, precursorMass, scoreHistogram, pArr, mongoConnection);
-
                     if (numMatched > 0) {
                         correlation(numMatched, scoreHistogram, pArr);
                     }
-
-                    //System.out.println("=========" + outputResult(indexer, hostname, dTotalIntensity, sParam, numMatched, chargeState, precursorMass, pArr).toString());
-                    resultWriter.write(outputResult(indexer, hostname, dTotalIntensity, sParam, numMatched, chargeState, precursorMass, pArr, mongoConnection).toString());
-                    resultWriter.flush(); //do not flush after every scan, it may block and slow down threads, take advantage of file buffer
+                    String temp = outputResult(indexer, hostname, dTotalIntensity, sParam, numMatched, chargeState, precursorMass, pArr, mongoConnection).toString();
                     
+                    resultWriter.write(temp);
+                    
+                    resultWriter.flush(); //do not flush after every scan, it may block and slow down threads, take advantage of file buffer
                 }
             } //end for each charge state
     }
@@ -636,11 +630,8 @@ public class Blazmass {
                     .append("\t").append(deltCN).append("\t").append(each.getxCorr()).append("\t").append(each.getzScore())
                     .append("\t").append(each.getMatchedIon()).append("\t").append(each.getTotalIon())
                     .append("\t").append(iseq.getSimpleSequence()).append("\tU\n");
-
-            //resultWriter.write("M\t" + count + "\t" + count + "\t" + each.getPeptideMass() + "\t" + deltCN + "\t"
-            //        + each.getxCorr() + "\t" + each.getzScore() + "\t" + each.getMatchedIon() + "\t" + each.getTotalIon() + "\t");            
+        
             try {
-
                 if (sParam.isUsingMongoDB()) {
                     List<String> parentLines;
                     //custom handling of 'L' lines for MongoDB here...
@@ -649,6 +640,7 @@ public class Blazmass {
                             parentLines = mongoConnection.getParents(iseq.getSequence(), sParam, false);
                         }
                         else {
+                            // GSS: This doesn't make sense?
                             String revSequence = new StringBuilder(iseq.getSequence()).reverse().toString();
                             parentLines = mongoConnection.getParents(revSequence, sParam, true);
                         }
@@ -681,12 +673,9 @@ public class Blazmass {
                         }
                     }
                 }
-
             } catch (Exception e) {
-
                 e.printStackTrace();
             }
-
             count++;
         }
 
@@ -752,7 +741,6 @@ public class Blazmass {
         float massTolerance = sParam.getRelativePeptideMassTolerance();
         float ppmTolerance = this.getPpm(precursorMass, massTolerance);
         List<MassRange> rList = new ArrayList<>();
-        
         // If getIsotopes() is 1, it should search isotopic peaks
         // If 0, it will only search the monoisotopic peak
         int isotopeNum = sParam.getIsotopes() * chargeState + 1;
@@ -763,7 +751,16 @@ public class Blazmass {
         } else {
             rList.add(new MassRange(precursorMass, ppmTolerance));
         }
-        //System.out.println(rList);
+        
+        /* N15 mode
+        */
+        if (sParam.isSearchN15Isotopes()){
+            float diffMass = (AssignMass.DIFFMASSC12C13 + AssignMass.DIFFMASSN14N15) / 2;
+            for (int i = 1; i < isotopeNum; i++) {
+                rList.add(new MassRange(precursorMass + i * diffMass, ppmTolerance));
+            }
+        }
+        
         System.out.println("Working on no mod: " + precursorMass);
         if (sParam.isUsingMongoDB()) {
             MongoSeqIter msi = mongoConnection.getSequencesIter(rList, sParam);

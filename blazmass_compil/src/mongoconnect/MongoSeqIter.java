@@ -2,10 +2,6 @@
 package mongoconnect;
 
 import blazmass.dbindex.IndexedSequence;
-import blazmass.io.SearchParams;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCursor;
 import java.util.List;

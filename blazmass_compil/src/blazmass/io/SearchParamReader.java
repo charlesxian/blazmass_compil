@@ -241,7 +241,15 @@ public class SearchParamReader {
             }
 
             param.setIsotopes(trimValueAsInt(getParam("isotopes")));
+            String search_N15_isotopes = getParam("search_N15_isotopes");
+            if (search_N15_isotopes == null || Integer.parseInt(search_N15_isotopes.trim()) == 0)
+                param.setSearchN15Isotopes(false);
+            else
+                param.setSearchN15Isotopes(true);
+            
             String n15enrich = getParam("n15_enrichment");
+            // I think this modifies the mass of the amino acids by this exact percent? I dont think this should be changed
+            // because then it won't match up wit the masses in the mongo massdb
             if (null != n15enrich) {
                 param.setN15Enrichment(trimValueAsFloat(n15enrich.trim()));
             }
@@ -312,7 +320,7 @@ public class SearchParamReader {
                     f = Float.parseFloat(staticModArr[i]);
                     if (AA.equals("C") && param.getN15Enrichment() > 0) {
                         f = f + param.getN15Enrichment() * (f - 57.02146f);
-                    }else if (param.getN15Enrichment() > 0) {
+                    } else if (param.getN15Enrichment() > 0) {
                         f = f * param.getN15Enrichment();
                     }
                     amassPar.addMass((int) AA.charAt(0), f);
